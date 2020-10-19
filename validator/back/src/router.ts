@@ -8,7 +8,8 @@ export default function(app: Express.Express, env: Env) {
     const username = await env.mongo.auth.username(req.session?.authId || '');
     if (!username) return res.send(htmlPage(`<a href="/auth">Login with Lichess to continue</a>`));
     const stats = await env.mongo.puzzle.stats();
-    const data = { stats, username };
+    const puzzle = await env.mongo.puzzle.next();
+    const data = { stats, username, puzzle };
     return res.send(htmlPage(`
     <main></main>
     <script src="/dist/puzzle-validator.dev.js"></script>
