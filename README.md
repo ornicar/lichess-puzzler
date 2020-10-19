@@ -27,7 +27,7 @@ mongodb puzzle:
   gameId: string,
   fen: string,
   ply: number,
-  moves: [san],
+  moves: [uci],
   review: { // after a review was done
     at: date,
     score: 0-5, // quality

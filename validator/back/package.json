@@ -1,5 +1,5 @@
 {
-  "name": "lichess-puzzle-validator",
+  "name": "lichess-puzzle-validator-back",
   "version": "0.0.1",
   "main": "index.js",
   "author": "Thibault Duplessis <t@lichess.org>",
