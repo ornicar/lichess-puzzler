@@ -30,7 +30,7 @@ export class PuzzleMongo {
     this.coll.findOne(this.selectReviewed(false));
 
   review = (puzzle: Puzzle, review: Review): Promise<UpdateWriteOpResult> =>
-    this.coll.updateOne({ _id: puzzle.id }, { $set: { review: review } });
+    this.coll.updateOne({ _id: puzzle._id }, { $set: { review: review } });
 
   stats = (): Promise<Stats> =>
     Promise.all(

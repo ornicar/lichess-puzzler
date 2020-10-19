@@ -6,9 +6,13 @@ import { parseFen } from 'chessops/fen';
 import { Chess } from 'chessops/chess';
 import { chessgroundDests } from 'chessops/compat';
 import { Color } from 'chessground/types';
+import { parseUci } from 'chessops';
 
 export default function(ctrl: Ctrl): VNode {
   const puzzle = ctrl.data.puzzle;
+  console.log(ctrl.data.puzzle.moves);
+  console.log(ctrl.data.puzzle.moves.map(uci => parseUci(uci)!));
+  console.log(ctrl.movesAsSan());
   return h('main', [
     h('section.top', [
       h('h1', 'Lichess Puzzle Validator'),
@@ -29,8 +33,17 @@ export default function(ctrl: Ctrl): VNode {
       ]),
       h('div.puzzle__ui', [
         h('div.puzzle__info', [
-          'From game ',
-          h('a', { attrs: { href: `https://lichess.org/${puzzle.gameId}` } }, `#${puzzle.gameId}`) 
+          h('p', [
+            h('a', { attrs: { href: `/puzzle/${puzzle._id}` } }, `Candidate #${puzzle._id}`)
+          ]),
+          h('p', [
+            'From game ',
+            h('a', { attrs: { href: `https://lichess.org/${puzzle.gameId}` } }, `#${puzzle.gameId}`)
+          ]),
+          h('p', [
+            'Solution: ',
+            ctrl.movesAsSan()
+          ])
         ])
       ])
     ])

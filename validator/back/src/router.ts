@@ -1,21 +1,35 @@
 import Express from 'express';
 import Env from './env';
 import * as oauth from './oauth';
+import { Puzzle } from './puzzle';
+import { Response as ExResponse } from 'express';
+
+type HttpResponse = ExResponse<string>
 
 export default function(app: Express.Express, env: Env) {
 
   app.get('/', async (req, res) => {
-    const username = await env.mongo.auth.username(req.session?.authId || '');
+    const puzzle = await env.mongo.puzzle.next();
+    renderPuzzle(req.session, res, puzzle);
+  });
+
+  app.get('/puzzle/:id', async (req, res) => {
+    const puzzle = await env.mongo.puzzle.get(parseInt(req.params.id));
+    renderPuzzle(req.session, res, puzzle);
+  });
+
+  const renderPuzzle = async (session: any, res: HttpResponse, puzzle: Puzzle | null) => {
+    if (!puzzle) return res.status(404).end();
+    const username = await env.mongo.auth.username(session?.authId || '');
     if (!username) return res.send(htmlPage(`<a href="/auth">Login with Lichess to continue</a>`));
     const stats = await env.mongo.puzzle.stats();
-    const puzzle = await env.mongo.puzzle.next();
     const data = { stats, username, puzzle };
     return res.send(htmlPage(`
     <main></main>
     <script src="/dist/puzzle-validator.dev.js"></script>
     <script>PuzzleValidator.start(${JSON.stringify(data)})</script>
 `));
-  });
+  }
 
   app.get('/auth', (_, res) => {
     console.log(oauth.authorizationUri);

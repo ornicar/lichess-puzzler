@@ -5,7 +5,7 @@ type Topic = string;
 type UserId = string;
 
 export interface Puzzle {
-  id: number;
+  _id: number;
   createdAt: Date;
   gameId: string;
   fen: string;
