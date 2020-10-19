@@ -5,9 +5,15 @@
   "author": "Thibault Duplessis <t@lichess.org>",
   "license": "MIT",
   "dependencies": {
+    "@types/cookie-session": "^2.0.41",
     "@types/mongodb": "^3.5.28",
+    "@types/node-fetch": "^2.5.7",
+    "@types/simple-oauth2": "^4.1.0",
+    "cookie-session": "^1.4.0",
     "express": "^4.17.1",
-    "mongodb": "^3.6.2"
+    "mongodb": "^3.6.2",
+    "node-fetch": "^2.6.1",
+    "simple-oauth2": "^4.1.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.8",

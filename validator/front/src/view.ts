@@ -5,7 +5,7 @@ import Ctrl from './ctrl';
 export default function(ctrl: Ctrl): VNode {
   return h('main', [
     h('h1', 'Lichess Puzzle Validator'),
-    'snabbdom view',
+    h('section', `Logged in as ${ctrl.data.username}`),
     JSON.stringify(ctrl.data)
   ]);
 }

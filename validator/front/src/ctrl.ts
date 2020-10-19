@@ -1,4 +1,4 @@
-import {ServerData} from "./types";
+import { ServerData } from "./types";
 
 export default class Ctrl {
 

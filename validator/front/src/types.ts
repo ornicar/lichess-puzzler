@@ -1,5 +1,6 @@
 export interface ServerData {
-  stats: Stats
+  stats: Stats;
+  username: string;
 }
 
 export interface Stats {

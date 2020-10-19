@@ -3,3 +3,7 @@ body {
   color: #bababa;
   font: 16px 'PT Serif';
 }
+
+a, a:visited {
+  color: #bababa;
+}
