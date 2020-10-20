@@ -3,3 +3,5 @@ yarn-error.log
 build/
 data/
 dist/
+
+venv/
