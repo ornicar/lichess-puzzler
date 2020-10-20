@@ -1,8 +1,8 @@
 export type Uci = string;
 export type San = string;
 type Score = number;
+type Comment = string;
 type Rating = number;
-type Topic = string;
 type UserId = string;
 
 export interface Puzzle {
@@ -19,6 +19,6 @@ export interface Review {
   by: UserId;
   at: Date;
   score: Score;
+  comment: Comment;
   rating: Rating;
-  topics: Topic[];
 }

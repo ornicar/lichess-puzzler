@@ -22,14 +22,30 @@ export default function(app: Express.Express, env: Env) {
     if (!puzzle) return res.status(404).end();
     const username = await env.mongo.auth.username(session?.authId || '');
     if (!username) return res.send(htmlPage(`<a href="/auth">Login with Lichess to continue</a>`));
-    const stats = await env.mongo.puzzle.stats();
-    const data = { stats, username, puzzle };
+    const data = { username, puzzle };
     return res.send(htmlPage(`
     <main></main>
     <script src="/dist/puzzle-validator.dev.js"></script>
     <script>PuzzleValidator.start(${JSON.stringify(data)})</script>
 `));
   }
+
+  app.post('/review/:id', async (req, res) => {
+    const puzzle = await env.mongo.puzzle.get(parseInt(req.params.id));
+    if (!puzzle) return res.status(404).end();
+    const username = await env.mongo.auth.username(req.session?.authId || '');
+    if (!username) return res.status(403).end();
+    await env.mongo.puzzle.review(puzzle, {
+      by: username,
+      at: new Date(),
+      score: parseInt(req.query.score as string), 
+      comment: req.query.comment as string,
+      rating: parseInt(req.query.rating as string),
+    });
+    const next = await env.mongo.puzzle.next();
+    if (!next) return res.status(404).end();
+    res.send(JSON.stringify({ username, puzzle: next }));
+  });
 
   app.get('/auth', (_, res) => {
     console.log(oauth.authorizationUri);

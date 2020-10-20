@@ -9,14 +9,29 @@ import { chessgroundDests } from 'chessops/compat';
 
 export default class Ctrl {
 
+  data: ServerData;
   chessground: Chessground;
   chess: Chess;
   solution: San[];
   moves: Uci[] = [];
 
-  constructor(readonly data: ServerData, readonly redraw: () => void) {
+  constructor(data: ServerData, readonly redraw: () => void) {
+    this.init(data);
+  }
+
+  private init = (data: ServerData) => {
+    this.data = data;
     this.chess = this.initialChess();
     this.solution = makeSanVariation(this.chess, this.data.puzzle.moves.map(uci => parseUci(uci)!)).replace(/\d\.+ /g, '').split(' ');
+  }
+
+  review = (score: number, comment: string, rating: number) => {
+    fetch(`/review/${this.data.puzzle._id}?score=${score}&comment=${comment}&rating=${rating}`, {
+      method: 'post'
+    })
+      .then(res => res.json())
+      .then(this.init)
+      .then(this.redraw);
   }
 
   setChessground(cg: Chessground) {
