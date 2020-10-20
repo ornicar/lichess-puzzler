@@ -44,6 +44,26 @@ export default function(ctrl: Ctrl): VNode {
                 class: { done: i < nbMovesIn }
               }, san)
             )
+          ]),
+          h('p', [
+            h('a', {
+              attrs: {
+                href: `http://lichess.org/analysis/${ctrl.currentFen().replace(' ', '_')}`,
+                target: '_blank'
+              }
+            }, 'Analyse on Lichess')
+          ]),
+          h('p', [
+            h('button', {
+              attrs: {
+                disabled: !ctrl.moves.length
+              },
+              hook: {
+                insert(vnode) {
+                  (vnode.elm as HTMLElement).addEventListener('click', ctrl.back)
+                }
+              }
+            }, 'Rewind one move')
           ])
         ])
       ])

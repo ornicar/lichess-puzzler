@@ -15,8 +15,7 @@ export default class Ctrl {
   moves: Uci[] = [];
 
   constructor(readonly data: ServerData, readonly redraw: () => void) {
-    const setup = parseFen(data.puzzle.fen).unwrap();
-    this.chess = Chess.fromSetup(setup).unwrap();
+    this.chess = this.initialChess();
     this.solution = makeSanVariation(this.chess, this.data.puzzle.moves.map(uci => parseUci(uci)!)).replace(/\d\.+ /g, '').split(' ');
   }
 
@@ -27,18 +26,18 @@ export default class Ctrl {
   onMove = (uci: Uci) => {
     this.moves.push(uci);
     this.chess.play(parseUci(uci)!);
-    this.chessground.set({
-      fen: makeFen(this.chess.toSetup()),
-      turnColor: this.chess.turn,
-      movable: {
-        color: this.chess.turn,
-        dests: chessgroundDests(this.chess)
-      },
-      check: this.chess.isCheck(),
-      lastMove: [uci.substr(0, 2) as Key, uci.substr(2, 2) as Key]
-    });
+    this.chessground.set(this.cgConfig(uci));
     const reply = this.findReply();
-    if (reply) setTimeout(() => this.onMove(reply) , 200);
+    if (reply) setTimeout(() => this.onMove(reply), 200);
+    this.redraw();
+  }
+
+  back = () => {
+    if (!this.moves.length) return;
+    this.moves = this.moves.slice(0, -1);
+    this.chess = this.initialChess();
+    this.moves.forEach(move => this.chess.play(parseUci(move)!));
+    this.chessground.set(this.cgConfig(this.moves[this.moves.length - 1]));
     this.redraw();
   }
 
@@ -48,6 +47,8 @@ export default class Ctrl {
     return this.data.puzzle.moves[this.moves.length];
   }
 
+  currentFen = () => makeFen(this.chess.toSetup());
+
   nbMovesIn = () => {
     let nb = 0;
     for (let move of this.moves) {
@@ -56,4 +57,17 @@ export default class Ctrl {
     }
     return nb;
   }
+
+  private cgConfig = (lastMove?: Uci) => ({
+    fen: this.currentFen(),
+    turnColor: this.chess.turn,
+    movable: {
+      color: this.chess.turn,
+      dests: chessgroundDests(this.chess)
+    },
+    check: this.chess.isCheck(),
+    lastMove: lastMove ? [lastMove.substr(0, 2) as Key, lastMove.substr(2, 2) as Key] : undefined
+  });
+
+  private initialChess = () => Chess.fromSetup(parseFen(this.data.puzzle.fen).unwrap()).unwrap();
 }
