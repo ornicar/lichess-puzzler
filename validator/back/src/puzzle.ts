@@ -1,4 +1,5 @@
-type Uci = string;
+export type Uci = string;
+export type San = string;
 type Score = number;
 type Rating = number;
 type Topic = string;

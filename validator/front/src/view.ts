@@ -5,14 +5,11 @@ import Ctrl from './ctrl';
 import { parseFen } from 'chessops/fen';
 import { Chess } from 'chessops/chess';
 import { chessgroundDests } from 'chessops/compat';
-import { Color } from 'chessground/types';
-import { parseUci } from 'chessops';
+import { Color, Key } from 'chessground/types';
 
 export default function(ctrl: Ctrl): VNode {
-  const puzzle = ctrl.data.puzzle;
-  console.log(ctrl.data.puzzle.moves);
-  console.log(ctrl.data.puzzle.moves.map(uci => parseUci(uci)!));
-  console.log(ctrl.movesAsSan());
+  const puzzle = ctrl.data.puzzle,
+    nbMovesIn = ctrl.nbMovesIn();
   return h('main', [
     h('section.top', [
       h('h1', 'Lichess Puzzle Validator'),
@@ -42,7 +39,11 @@ export default function(ctrl: Ctrl): VNode {
           ]),
           h('p', [
             'Solution: ',
-            ctrl.movesAsSan()
+            ...ctrl.solution.map((san, i) =>
+              h('san', {
+                class: { done: i < nbMovesIn }
+              }, san)
+            )
           ])
         ])
       ])
@@ -66,7 +67,9 @@ const cgConfig = (ctrl: Ctrl) => {
       dests: chessgroundDests(chess)
     },
     events: {
-      move: ctrl.onMove
+      move(orig: Key, dest: Key) {
+        ctrl.onMove(`${orig}${dest}`);
+      }
     },
     premovable: {
       enabled: false
