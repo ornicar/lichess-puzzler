@@ -9,7 +9,8 @@ import chess.engine
 from chess import Move, Color, Board
 from chess.engine import SimpleEngine, Mate, Cp, Score, InfoDict
 from chess.pgn import Game, GameNode
-from typing import List, Any, Optional, Tuple, Dict, NewType
+from dataclasses import dataclass
+from typing import List, Optional, Tuple, Dict, Literal
 
 # Initialize Logging Module
 logger = logging.getLogger(__name__)
@@ -20,19 +21,19 @@ logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 
 version = "0.0.1"
 post_url = "http://localhost:8000/puzzle"
-get_move_limit = chess.engine.Limit(depth = 40, time = 10, nodes = 12 * 1000 * 1000)
+get_move_limit = chess.engine.Limit(depth = 40, time = 10, nodes = 12_000_000)
 has_mate_limit = get_move_limit
 mate_soon = Mate(20)
 juicy_advantage = Cp(500)
 
-Kind = NewType('Kind', str)
+Kind = Literal["mate"]  # Literal["mate", "other"]
 
+@dataclass
 class EngineMove:
-    def __init__(self, move: Move, score: Score) -> None:
-        self.move = move
-        self.score = score
+    move: Move
+    score: Score
 
-def setup_logging(args: Any) -> None:
+def setup_logging(args: argparse.Namespace) -> None:
     """
     Sets logging module verbosity according to runtime arguments
     """
@@ -43,7 +44,7 @@ def setup_logging(args: Any) -> None:
             logger.setLevel(logging.INFO)
 
 
-def parse_args() -> Any:
+def parse_args() -> argparse.Namespace:
     """
     Define an argument parser and return the parsed arguments
     """
@@ -60,10 +61,7 @@ def parse_args() -> Any:
 
 def material_count(board: Board, side: Color) -> int:
     values = { chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9 }
-    material = 0
-    for piece_type in values:
-        material += len(board.pieces(piece_type, side)) * values[piece_type]
-    return material
+    return sum(len(board.pieces(piece_type, side)) * value for piece_type, value in values.items())
 
 def is_down_in_material(board: Board, winner: Color) -> bool:
     return material_count(board, winner) < material_count(board, not winner)
@@ -181,12 +179,12 @@ def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Tuple[GameNode, L
             logger.info("Mate found on {}#{}. Probing...".format(game_url, ply_of(node.board())))
             solution = cook_mate(engine, node, winner)
             if solution is not None:
-                return node, solution, Kind("mate")
+                return node, solution, "mate"
         elif score > juicy_advantage:
             logger.info("Advantage found on {}#{}. Probing...".format(game_url, ply_of(node.board())))
             solution = cook_advantage(engine, node, winner)
             if solution is not None:
-                return node, solution, Kind("mate")
+                return node, solution, "mate"
         else:
             print(score)
 
@@ -216,7 +214,7 @@ def main() -> None:
             else:
                 node, solution, kind = res
                 # Compose and print the puzzle
-                puzzle : Dict[str, Any] = {
+                puzzle = {
                     'game_id': game.headers.get("Site", "?")[20:],
                     'fen': node.board().fen(),
                     'ply': ply_of(node.board()),
