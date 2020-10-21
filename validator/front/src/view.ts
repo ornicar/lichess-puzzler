@@ -52,7 +52,7 @@ export default function(ctrl: Ctrl): VNode {
             )
           ]),
           h('div', [
-            radios('score', 'Quality', [1, 2, 3, 4, 5].map(s => [s, s]), puzzle.review),
+            radios('score', 'Quality (required)', [1, 2, 3, 4, 5].map(s => [s, s]), puzzle.review),
             radios('comment', 'Comment', comments, puzzle.review),
             radios('rating', 'Rating', [800, 1200, 1600, 2000, 2400, 2800].map(s => [s, s]), puzzle.review),
             h('button.submit', {
@@ -79,12 +79,12 @@ export default function(ctrl: Ctrl): VNode {
 }
 
 const comments: Array<[string, string]> = [
-  ['ok', 'OK'],
+  ['', 'N/A'],
   ['boring', 'Boring'],
+  ['weird', 'Weird'],
   ['wrong', 'Wrong'],
   ['long', 'Too long'],
-  ['short', 'Too short'],
-  ['other', 'Other']
+  ['short', 'Too short']
 ];
 
 const cgConfig = (ctrl: Ctrl) => {
@@ -135,7 +135,7 @@ const radios = (name: string, title: string, values: Array<[any, any]>, review?:
               name: name,
               id: `${name}-${key}`,
               value: key,
-              checked: !!review && (review as any)[name] == key
+              checked: review ? (review as any)[name] == key : key == ''
             }
           }),
           h('label', {

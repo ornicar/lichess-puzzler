@@ -7,7 +7,7 @@ import chess
 import chess.pgn
 import chess.engine
 from chess import Move, Color, Board
-from chess.engine import SimpleEngine, Mate, Cp, Score
+from chess.engine import SimpleEngine, Mate, Cp, Score, InfoDict
 from chess.pgn import Game, GameNode
 from typing import List, Any, Optional, Tuple, Dict, NewType
 
@@ -20,11 +20,17 @@ logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 
 version = "0.0.1"
 post_url = "http://localhost:8000/puzzle"
-get_move_limit = chess.engine.Limit(depth = 30, time = 5)
-has_mate_limit = chess.engine.Limit(depth = 30, time = 5)
+get_move_limit = chess.engine.Limit(depth = 40, time = 10, nodes = 12 * 1000 * 1000)
+has_mate_limit = get_move_limit
 mate_soon = Mate(20)
+juicy_advantage = Cp(500)
 
 Kind = NewType('Kind', str)
+
+class EngineMove:
+    def __init__(self, move: Move, score: Score) -> None:
+        self.move = move
+        self.score = score
 
 def setup_logging(args: Any) -> None:
     """
@@ -52,51 +58,6 @@ def parse_args() -> Any:
     return parser.parse_args()
 
 
-def has_mate_in_more_than_one(engine: SimpleEngine, node: GameNode) -> bool:
-    score = node.eval()
-    return score is not None and mate_soon < score.relative < Mate(1)
-
-
-def get_only_defensive_move(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[Move]:
-    """
-    only returns a move if all other moves are utterly terrible
-    """
-    logger.debug("Getting defensive move...")
-    info = engine.analyse(node.board(), multipv = 2, limit = get_move_limit)
-
-    if len(info) < 1:
-        return None
-
-    best_move = info[0]
-    best_score = best_move["score"].pov(winner)
-
-    if best_score < Mate(1) and len(info) > 1:
-        second_move = info[1]
-        second_score = second_move["score"].pov(winner)
-        much_worse = second_score == Mate(1) and best_score < Mate(3)
-        if not much_worse:
-            print("A second defensive move is not that worse")
-            return None
-        print("The second defensive move is much worse")
-
-    return info[0]["pv"][0]
-
-
-def get_only_mate_move(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[Move]:
-    logger.debug("Getting only mate move...")
-    info = engine.analyse(node.board(), multipv = 2, limit = get_move_limit)
-
-    if len(info) < 1 or info[0]["score"].pov(winner) < mate_soon:
-        logger.info("Best move is not a mate, we're probably not searching deep enough")
-        return None
-
-    if len(info) > 1 and info[1]["score"].pov(winner) > Cp(-400):
-        logger.debug("Second best move is not terrible")
-        return None
-
-    return info[0]["pv"][0]
-
-
 def material_count(board: Board, side: Color) -> int:
     values = { chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9 }
     material = 0
@@ -107,28 +68,89 @@ def material_count(board: Board, side: Color) -> int:
 def is_down_in_material(board: Board, winner: Color) -> bool:
     return material_count(board, winner) < material_count(board, not winner)
 
-def cook(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[List[Move]]:
+
+def get_two_best_moves(engine: SimpleEngine, board: Board, winner: Color) -> Tuple[EngineMove, Optional[EngineMove]]:
+    info = engine.analyse(board, multipv = 2, limit = get_move_limit)
+    best_move = EngineMove(info[0]["pv"][0], info[0]["score"].pov(winner))
+    second_move = EngineMove(info[1]["pv"][0], info[1]["score"].pov(winner)) if len(info) > 1 else None
+    return best_move, second_move
+
+
+def cook_mate(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[List[Move]]:
     """
-    Recursively calculate puzzle solution
+    Recursively calculate mate solution
     """
 
     if node.board().is_game_over():
         return []
 
+    best_move, second_move = get_two_best_moves(engine, node.board(), winner)
+
     if node.board().turn == winner:
-        move = get_only_mate_move(engine, node, winner)
+        logger.debug("Getting only mate move...")
+
+        if best_move.score < mate_soon:
+            logger.info("Best move is not a mate, we're probably not searching deep enough")
+            return None
+
+        if second_move is not None and second_move.score > Cp(-300):
+            logger.debug("Second best move is not terrible")
+            return None
+
     else:
-        move = get_only_defensive_move(engine, node, winner)
+        logger.debug("Getting defensive move...")
 
-    if move is None:
-        return None
+        if best_move.score < Mate(1) and second_move is not None:
+            much_worse = second_move.score == Mate(1) and best_move.score < Mate(3)
+            if not much_worse:
+                logger.info("A second defensive move is not that worse")
+                return None
 
-    next_moves = cook(engine, node.add_main_variation(move), winner)
+    next_moves = cook_mate(engine, node.add_main_variation(best_move.move), winner)
 
     if next_moves is None:
         return None
 
-    return [move] + next_moves
+    return [best_move.move] + next_moves
+
+
+def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[List[Move]]:
+    """
+    Recursively calculate advantage solution
+    """
+
+    best_move, second_move = get_two_best_moves(engine, node.board(), winner)
+
+    if node.board().turn == winner:
+        logger.debug("Getting only advantage move...")
+
+        if best_move.score < juicy_advantage:
+            logger.info("Best move is not a juicy advantage, we're probably not searching deep enough")
+            return None
+
+        if second_move is not None and second_move.score > Cp(-300):
+            logger.debug("Second best move is not terrible")
+            return None
+
+    else:
+        logger.debug("Getting defensive move...")
+
+        if best_move.score.is_mate():
+            logger.info("Expected advantage, got mate?!")
+            return None
+
+        if second_move is not None:
+            much_worse = second_move.score < Mate(2)
+            if not much_worse:
+                logger.info("A second defensive move is not that worse")
+                return None
+
+    next_moves = cook_advantage(engine, node.add_main_variation(best_move.move), winner)
+
+    if next_moves is None:
+        return None
+
+    return [best_move.move] + next_moves
 
 
 def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Tuple[GameNode, List[Move], Kind]]:
@@ -149,16 +171,24 @@ def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Tuple[GameNode, L
             logger.debug("Skipping game without eval on move {}".format(node.board().fullmove_number))
             return None
 
-        score = ev.relative
         winner = node.board().turn
+        score = ev.pov(winner)
 
         # was the opponent winning until their last move
-        # and now I have a mate
-        if prev_score < Cp(-300) and is_down_in_material(node.board(), winner) and has_mate_in_more_than_one(engine, node):
+        if prev_score > Cp(-300) or not is_down_in_material(node.board(), winner):
+            pass
+        elif mate_soon < score < Mate(1):
             logger.info("Mate found on {}#{}. Probing...".format(game_url, ply_of(node.board())))
-            solution = cook(engine, node, winner)
-            if solution:
+            solution = cook_mate(engine, node, winner)
+            if solution is not None:
                 return node, solution, Kind("mate")
+        elif score > juicy_advantage:
+            logger.info("Advantage found on {}#{}. Probing...".format(game_url, ply_of(node.board())))
+            solution = cook_advantage(engine, node, winner)
+            if solution is not None:
+                return node, solution, Kind("mate")
+        else:
+            print(score)
 
         prev_score = score
 
