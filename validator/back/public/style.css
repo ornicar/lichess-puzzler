@@ -108,6 +108,10 @@ button {
 .radios label:hover {
   background: hsla(0, 0%, 90%, 0.1);
 }
+.radios label:active {
+  background: #0DFF92;
+  color: #fff;
+}
 
 .radios input:checked~label {
   color: #0DFF92;

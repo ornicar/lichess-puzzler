@@ -20,8 +20,8 @@ logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 
 version = "0.0.1"
 post_url = "http://localhost:8000/puzzle"
-get_move_limit = chess.engine.Limit(depth = 30, time = 3)
-has_mate_limit = chess.engine.Limit(depth = 30, time = 3)
+get_move_limit = chess.engine.Limit(depth = 30, time = 5)
+has_mate_limit = chess.engine.Limit(depth = 30, time = 5)
 mate_soon = Mate(20)
 
 Kind = NewType('Kind', str)
@@ -68,10 +68,10 @@ def get_only_defensive_move(engine: SimpleEngine, node: GameNode, winner: Color)
         return None
 
     best_move = info[0]
+    best_score = best_move["score"].pov(winner)
 
-    if len(info) > 1:
+    if best_score < Mate(1) and len(info) > 1:
         second_move = info[1]
-        best_score = best_move["score"].pov(winner)
         second_score = second_move["score"].pov(winner)
         much_worse = second_score == Mate(1) and best_score < Mate(3)
         if not much_worse:
@@ -90,8 +90,8 @@ def get_only_mate_move(engine: SimpleEngine, node: GameNode, winner: Color) -> O
         logger.info("Best move is not a mate, we're probably not searching deep enough")
         return None
 
-    if len(info) > 1 and info[1]["score"].pov(winner) < mate_soon:
-        logger.debug("Second best move is also a mate")
+    if len(info) > 1 and info[1]["score"].pov(winner) > Cp(-400):
+        logger.debug("Second best move is not terrible")
         return None
 
     return info[0]["pv"][0]
