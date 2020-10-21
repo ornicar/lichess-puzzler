@@ -7,7 +7,7 @@ import chess
 import chess.pgn
 import chess.engine
 from chess import Move, Color, Board
-from chess.engine import SimpleEngine
+from chess.engine import SimpleEngine, Mate, Cp, Score
 from chess.pgn import Game, GameNode
 from typing import List, Any, Optional, Tuple, Dict, NewType
 
@@ -20,8 +20,9 @@ logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 
 version = "0.0.1"
 post_url = "http://localhost:8000/puzzle"
-get_move_limit = chess.engine.Limit(depth = 20)
-has_mate_limit = chess.engine.Limit(depth = 20)
+get_move_limit = chess.engine.Limit(depth = 30, time = 3)
+has_mate_limit = chess.engine.Limit(depth = 30, time = 3)
+mate_soon = Mate(20)
 
 Kind = NewType('Kind', str)
 
@@ -52,65 +53,61 @@ def parse_args() -> Any:
 
 
 def has_mate_in_more_than_one(engine: SimpleEngine, node: GameNode) -> bool:
+    score = node.eval()
+    return score is not None and mate_soon < score.relative < Mate(1)
+
+
+def get_only_defensive_move(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[Move]:
     """
-    Returns a boolean indicating whether the side to move has a mating line available
-    """
-    ev = node.eval()
-    if not ev or not ev.is_mate():
-        return False
-
-    found = ev.relative != chess.engine.Mate(-1) and ev.relative < chess.engine.Mate(1)
-
-    if found:
-        print(ev.relative)
-
-    return found
-
-
-def get_only_defensive_move(engine: SimpleEngine, node: GameNode) -> Optional[Move]:
-    """
-    Get a move for a position presumed to be defending during a mating attack
+    only returns a move if all other moves are utterly terrible
     """
     logger.debug("Getting defensive move...")
     info = engine.analyse(node.board(), multipv = 2, limit = get_move_limit)
 
-    if not info[0]:
+    if len(info) < 1:
         return None
 
+    best_move = info[0]
+
     if len(info) > 1:
-        return None
+        second_move = info[1]
+        best_score = best_move["score"].pov(winner)
+        second_score = second_move["score"].pov(winner)
+        much_worse = second_score == Mate(1) and best_score < Mate(3)
+        if not much_worse:
+            print("A second defensive move is not that worse")
+            return None
+        print("The second defensive move is much worse")
 
     return info[0]["pv"][0]
 
 
-# notes for if I ever refactor this function
-#
-#   while time.time() <= end_time and threads <= 50:
-#       threads = threads+1
-#       pmate,mate = determine_mates(..., threads)
-#       moves = analyze_mates(pmate,mate,info_handler)
-#       if moves is not None:
-#           return moves
-#   throw TimeoutError
-def get_only_mate_move(engine: SimpleEngine, node: GameNode) -> Optional[Move]:
-    """
-    Takes a GameNode and returns an only moves leading to mate
-    """
+def get_only_mate_move(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[Move]:
     logger.debug("Getting only mate move...")
     info = engine.analyse(node.board(), multipv = 2, limit = get_move_limit)
 
-    if not info[0] or not info[0]["score"].is_mate():
-        logger.debug("Best move is not a mate")
+    if len(info) < 1 or info[0]["score"].pov(winner) < mate_soon:
+        logger.info("Best move is not a mate, we're probably not searching deep enough")
         return None
 
-    if len(info) > 1 and info[1]["score"].is_mate():
+    if len(info) > 1 and info[1]["score"].pov(winner) < mate_soon:
         logger.debug("Second best move is also a mate")
         return None
 
     return info[0]["pv"][0]
 
 
-def cook(engine: SimpleEngine, node: GameNode, side_to_mate: Color) -> Optional[List[Move]]:
+def material_count(board: Board, side: Color) -> int:
+    values = { chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9 }
+    material = 0
+    for piece_type in values:
+        material += len(board.pieces(piece_type, side)) * values[piece_type]
+    return material
+
+def is_down_in_material(board: Board, winner: Color) -> bool:
+    return material_count(board, winner) < material_count(board, not winner)
+
+def cook(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[List[Move]]:
     """
     Recursively calculate puzzle solution
     """
@@ -118,15 +115,15 @@ def cook(engine: SimpleEngine, node: GameNode, side_to_mate: Color) -> Optional[
     if node.board().is_game_over():
         return []
 
-    if node.board().turn == side_to_mate:
-        move = get_only_mate_move(engine, node)
+    if node.board().turn == winner:
+        move = get_only_mate_move(engine, node, winner)
     else:
-        move = get_only_defensive_move(engine, node)
+        move = get_only_defensive_move(engine, node, winner)
 
     if move is None:
         return None
 
-    next_moves = cook(engine, node.add_main_variation(move), side_to_mate)
+    next_moves = cook(engine, node.add_main_variation(move), winner)
 
     if next_moves is None:
         return None
@@ -139,20 +136,36 @@ def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Tuple[GameNode, L
     Evaluate the moves in a game looking for puzzles
     """
 
-    logger.debug("Analyzing game {}...".format(game.headers.get("Site", "?")))
+    game_url = game.headers.get("Site", "?")
+    logger.debug("Analyzing game {}...".format(game_url))
+
+    prev_score: Score = Cp(0)
 
     for node in game.mainline():
 
-        if has_mate_in_more_than_one(engine, node):
-            logger.debug("Mate found on ply {}. Probing...".format(ply_of(node.board())))
-            solution = cook(engine, node, node.board().turn)
+        ev = node.eval()
+
+        if not ev:
+            logger.debug("Skipping game without eval on move {}".format(node.board().fullmove_number))
+            return None
+
+        score = ev.relative
+        winner = node.board().turn
+
+        # was the opponent winning until their last move
+        # and now I have a mate
+        if prev_score < Cp(-300) and is_down_in_material(node.board(), winner) and has_mate_in_more_than_one(engine, node):
+            logger.info("Mate found on {}#{}. Probing...".format(game_url, ply_of(node.board())))
+            solution = cook(engine, node, winner)
             if solution:
                 return node, solution, Kind("mate")
+
+        prev_score = score
 
     return None
 
 def ply_of(board: Board) -> int:
-    return board.fullmove_number * 2 - 1 if board.turn == chess.BLACK else 2
+    return board.fullmove_number * 2 - (1 if board.turn == chess.BLACK else 2)
 
 def main() -> None:
     args = parse_args()
@@ -160,7 +173,7 @@ def main() -> None:
 
     # setup the engine
     enginepath = args.engine
-    engine = chess.engine.SimpleEngine.popen_uci(enginepath)
+    engine = SimpleEngine.popen_uci(enginepath)
     engine.configure({'Threads': args.threads})
 
     with open(args.file) as pgn:
