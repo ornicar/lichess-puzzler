@@ -5,6 +5,8 @@ type Comment = string;
 type Rating = number;
 type UserId = string;
 
+type Kind = 'mate' | 'material';
+
 export interface Puzzle {
   _id: number;
   createdAt: Date;
@@ -12,6 +14,7 @@ export interface Puzzle {
   fen: string;
   ply: number;
   moves: Uci[];
+  kind: Kind;
   review?: Review;
   generator: string;
 }

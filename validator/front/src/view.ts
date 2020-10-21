@@ -35,7 +35,7 @@ export default function(ctrl: Ctrl): VNode {
           ]),
           h('p', [
             'From game ',
-            h('a', { attrs: { href: `https://lichess.org/${puzzle.gameId}` } }, `#${puzzle.gameId}`)
+            h('a', { attrs: { href: `https://lichess.org/${puzzle.gameId}#${puzzle.ply}` } }, `#${puzzle.gameId}`)
           ]),
           h('p', [
             'Solution: ',

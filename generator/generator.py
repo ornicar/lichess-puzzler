@@ -9,13 +9,12 @@ import chess.engine
 from chess import Move, Color, Board
 from chess.engine import SimpleEngine
 from chess.pgn import Game, GameNode
-from typing import List, Any, Optional, Tuple, Dict
+from typing import List, Any, Optional, Tuple, Dict, NewType
 
 # Initialize Logging Module
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M')
-logger.setLevel(logging.DEBUG)
 # Uncomment this for very verbose python-chess logging
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -23,6 +22,8 @@ version = "0.0.1"
 post_url = "http://localhost:8000/puzzle"
 get_move_limit = chess.engine.Limit(depth = 20)
 has_mate_limit = chess.engine.Limit(depth = 20)
+
+Kind = NewType('Kind', str)
 
 def setup_logging(args: Any) -> None:
     """
@@ -45,23 +46,25 @@ def parse_args() -> Any:
     parser.add_argument("--file", "-f", help="input PGN file", required=True, metavar="FILE.pgn")
     parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
-    parser.add_argument("--nodb", "-n", help="don't log games to the db", action='store_true')
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
 
     return parser.parse_args()
 
 
-def has_mate(engine: SimpleEngine, node: GameNode) -> bool:
+def has_mate_in_more_than_one(engine: SimpleEngine, node: GameNode) -> bool:
     """
     Returns a boolean indicating whether the side to move has a mating line available
     """
     ev = node.eval()
     if not ev or not ev.is_mate():
-        return False;
+        return False
 
-    info = engine.analyse(node.board(), limit = has_mate_limit, multipv = 1)
+    found = ev.relative != chess.engine.Mate(-1) and ev.relative < chess.engine.Mate(1)
 
-    return info[0]["score"].is_mate()
+    if found:
+        print(ev.relative)
+
+    return found
 
 
 def get_only_defensive_move(engine: SimpleEngine, node: GameNode) -> Optional[Move]:
@@ -131,7 +134,7 @@ def cook(engine: SimpleEngine, node: GameNode, side_to_mate: Color) -> Optional[
     return [move] + next_moves
 
 
-def analyze_game(engine: SimpleEngine, game: Game) -> Tuple[Optional[GameNode], Optional[List[Move]]]:
+def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Tuple[GameNode, List[Move], Kind]]:
     """
     Evaluate the moves in a game looking for puzzles
     """
@@ -140,13 +143,13 @@ def analyze_game(engine: SimpleEngine, game: Game) -> Tuple[Optional[GameNode], 
 
     for node in game.mainline():
 
-        if has_mate(engine, node):
+        if has_mate_in_more_than_one(engine, node):
             logger.debug("Mate found on ply {}. Probing...".format(ply_of(node.board())))
             solution = cook(engine, node, node.board().turn)
             if solution:
-                return node, solution
+                return node, solution, Kind("mate")
 
-    return None, None
+    return None
 
 def ply_of(board: Board) -> int:
     return board.fullmove_number * 2 - 1 if board.turn == chess.BLACK else 2
@@ -162,27 +165,24 @@ def main() -> None:
 
     with open(args.file) as pgn:
         for game in iter(lambda: chess.pgn.read_game(pgn), None):
-            header_site = game.headers.get("Site", "?")
-            logger.info("{}".format(header_site))
 
-            node, solution = analyze_game(engine, game)
+            res = analyze_game(engine, game)
 
-            if node is None or solution is None:
+            if res is None:
                 logger.debug("No only move sequence found.")
-
             else:
-
+                node, solution, kind = res
                 # Compose and print the puzzle
-                logger.info("Printing puzzle...")
                 puzzle : Dict[str, Any] = {
-                    'game_id': header_site[20:],
+                    'game_id': game.headers.get("Site", "?")[20:],
                     'fen': node.board().fen(),
                     'ply': ply_of(node.board()),
                     'moves': list(map(lambda m : m.uci(), solution)),
+                    'kind': kind,
                     'generator_version': version,
                 }
                 r = requests.post(post_url, json=puzzle)
-                print(r.text if r.ok else "FAILURE {}".format(r.text))
+                logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
 
 
 if __name__ == "__main__":

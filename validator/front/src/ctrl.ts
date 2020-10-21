@@ -21,6 +21,7 @@ export default class Ctrl {
 
   private init = (data: ServerData) => {
     this.data = data;
+    this.moves = [];
     this.chess = this.initialChess();
     this.solution = makeSanVariation(this.chess, this.data.puzzle.moves.map(uci => parseUci(uci)!)).replace(/\d\.+ /g, '').split(' ');
   }
@@ -70,6 +71,9 @@ export default class Ctrl {
       if (move == this.data.puzzle.moves[nb]) nb++;
       else break;
     }
+    console.log(this.moves);
+    console.log(this.data.puzzle.moves);
+    console.log(nb);
     return nb;
   }
 

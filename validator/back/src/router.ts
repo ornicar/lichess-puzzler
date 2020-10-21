@@ -56,6 +56,7 @@ export default function(app: Express.Express, env: Env) {
       fen: req.body.fen,
       ply: req.body.ply,
       moves: req.body.moves,
+      kind: req.body.kind,
       generator: req.body.generator_version,
       createdAt: new Date()
     };
@@ -63,7 +64,7 @@ export default function(app: Express.Express, env: Env) {
       await env.mongo.puzzle.insert(puzzle);
       res.send(`Created ${config.http.url}/puzzle/${puzzle._id}`);
     } catch (e) {
-      const msg = e.code == 11000 ? 'Game already in the puzzle DB!' : e;
+      const msg = e.code == 11000 ? `Game ${puzzle.gameId} already in the puzzle DB!` : e;
       res.status(400).send(msg);
     }
   });
