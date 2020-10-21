@@ -46,7 +46,12 @@ a:visited {
   opacity: 1;
 }
 
-.puzzle__ui button {
+.puzzle__info__title em {
+  margin-left: 1em;
+  opacity: .3;
+}
+
+button {
   border-radius: 5px;
   background: hsla(0, 0%, 90%, 0.1);
   color: #bababa;
@@ -57,13 +62,13 @@ a:visited {
 
 .puzzle__ui button.submit {
   margin-top: 1em;
-  padding: .7em;
+  padding: 1em;
   width: 100%;
   color: #eaeaea;
 }
 
 .radios {
-  margin-top: 1em;
+  margin-top: 1.5em;
 }
 
 .radios strong {
@@ -97,7 +102,7 @@ a:visited {
   text-align: center;
   border-radius: 5px;
   cursor: pointer;
-  padding: .4em .5em;
+  padding: .6em;
 }
 
 .radios label:hover {

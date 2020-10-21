@@ -71,9 +71,6 @@ export default class Ctrl {
       if (move == this.data.puzzle.moves[nb]) nb++;
       else break;
     }
-    console.log(this.moves);
-    console.log(this.data.puzzle.moves);
-    console.log(nb);
     return nb;
   }
 

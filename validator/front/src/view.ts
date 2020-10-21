@@ -6,6 +6,7 @@ import { parseFen } from 'chessops/fen';
 import { Chess } from 'chessops/chess';
 import { chessgroundDests } from 'chessops/compat';
 import { Color, Key } from 'chessground/types';
+import {Review} from '../../back/src/puzzle';
 
 export default function(ctrl: Ctrl): VNode {
   const puzzle = ctrl.data.puzzle,
@@ -30,8 +31,13 @@ export default function(ctrl: Ctrl): VNode {
       ]),
       h('div.puzzle__ui', [
         h('div.puzzle__info', [
-          h('p', [
-            h('a', { attrs: { href: `/puzzle/${puzzle._id}` } }, `Candidate #${puzzle._id}`)
+          h('p.puzzle__info__title', [
+            h('a', {
+              attrs: { href: `/puzzle/${puzzle._id}` }
+            }, `Candidate #${puzzle._id}`),
+            h('em', {
+              attrs: { title: 'Generator version' }
+            }, puzzle.generator)
           ]),
           h('p', [
             'From game ',
@@ -45,26 +51,10 @@ export default function(ctrl: Ctrl): VNode {
               }, san)
             )
           ]),
-          h('p', [
-            h('a', {
-              attrs: {
-                href: `http://lichess.org/analysis/${ctrl.currentFen().replace(' ', '_')}`,
-                target: '_blank'
-              }
-            }, 'Analyse on Lichess')
-          ]),
-          h('p', [
-            h('button', {
-              attrs: {
-                disabled: !ctrl.moves.length
-              },
-              hook: onClick(ctrl.back)
-            }, 'Rewind one move')
-          ]),
           h('div', [
-            radios('score', 'Quality', [1, 2, 3, 4, 5].map(s => [s, s])),
-            radios('comment', 'Comment', comments),
-            radios('rating', 'Rating', [800, 1200, 1600, 2000, 2400, 2800].map(s => [s, s])),
+            radios('score', 'Quality', [1, 2, 3, 4, 5].map(s => [s, s]), puzzle.review),
+            radios('comment', 'Comment', comments, puzzle.review),
+            radios('rating', 'Rating', [800, 1200, 1600, 2000, 2400, 2800].map(s => [s, s]), puzzle.review),
             h('button.submit', {
               hook: onClick(ev => {
                 const score = parseInt(((ev.target as HTMLElement).parentNode!.querySelector('input[name="score"]:checked') as HTMLInputElement)?.value);
@@ -76,6 +66,14 @@ export default function(ctrl: Ctrl): VNode {
           ])
         ])
       ])
+    ]),
+    h('p', [
+      h('button', {
+        attrs: {
+          disabled: !ctrl.moves.length
+        },
+        hook: onClick(ctrl.back)
+      }, 'Rewind one move')
     ])
   ]);
 }
@@ -125,7 +123,7 @@ const onClick = (f: (event: MouseEvent) => any) => ({
   }
 });
 
-const radios = (name: string, title: string, values: Array<[any, any]>) =>
+const radios = (name: string, title: string, values: Array<[any, any]>, review?: Review) =>
   h(`div.radios.${name}`, [
     h('strong', title),
     h('div.choices',
@@ -136,7 +134,8 @@ const radios = (name: string, title: string, values: Array<[any, any]>) =>
               type: 'radio',
               name: name,
               id: `${name}-${key}`,
-              value: key
+              value: key,
+              checked: !!review && (review as any)[name] == key
             }
           }),
           h('label', {
