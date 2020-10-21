@@ -13,6 +13,7 @@ export interface Puzzle {
   ply: number;
   moves: Uci[];
   review?: Review;
+  generator: string;
 }
 
 export interface Review {

@@ -30,7 +30,7 @@ a:visited {
 }
 
 .puzzle__ui {
-  margin-left: 3em;
+  margin-left: 2em;
   padding: 1em 2em;
   background: hsla(0, 0%, 90%, 0.1);
 }
@@ -54,8 +54,10 @@ a:visited {
   padding: .3em .7em;
   cursor: pointer;
 }
+
 .puzzle__ui button.submit {
   margin-top: 1em;
+  padding: .7em;
   width: 100%;
   color: #eaeaea;
 }
@@ -63,37 +65,44 @@ a:visited {
 .radios {
   margin-top: 1em;
 }
+
 .radios strong {
   text-transform: uppercase;
   font-weight: normal;
   letter-spacing: 3px;
   opacity: .6;
 }
+
 .radios .choices {
   display: flex;
   flex-flow: row wrap;
   align-content: stretch;
   margin-top: .3em;
 }
+
 .radios .choices div {
   flex: 1 1 auto;
   display: flex;
   align-content: stretch;
 }
+
 .radios input {
   position: absolute;
   left: -999999px;
 }
+
 .radios label {
   flex: 1 1 auto;
   text-align: center;
   border-radius: 5px;
   cursor: pointer;
-  padding: .3em .5em;
+  padding: .4em .5em;
 }
+
 .radios label:hover {
   background: hsla(0, 0%, 90%, 0.1);
 }
+
 .radios input:checked~label {
   color: #0DFF92;
   background: hsla(0, 0%, 90%, 0.1);
@@ -107,6 +116,27 @@ a:visited {
   height: 640px;
   position: relative;
   display: block;
+}
+
+@media (max-width: 1100px) {
+  .cg-wrap {
+    width: 420px;
+    height: 420px;
+  }
+}
+
+@media (max-width: 950px) {
+  .cg-wrap {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+@media (max-width: 700px) {
+  .cg-wrap {
+    width: 240px;
+    height: 240px;
+  }
 }
 
 cg-helper {

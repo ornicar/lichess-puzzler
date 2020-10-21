@@ -21,7 +21,9 @@ export default class Mongo {
 
 export class PuzzleMongo {
 
-  constructor(readonly coll: Collection) { }
+  constructor(readonly coll: Collection) {
+    this.coll.createIndex({ gameId: 1 }, { unique: true });
+  }
 
   get = (id: number): Promise<Puzzle | null> =>
     this.coll.findOne({ _id: id });
@@ -41,6 +43,14 @@ export class PuzzleMongo {
       nbCandidates,
       nbReviewed
     }));
+
+  nextId = async (): Promise<number> => {
+    const last = await this.coll.find().sort({ _id: -1 }).limit(1).next();
+    return last ? last._id + 1 : 1;
+  }
+
+  insert = (puzzle: Puzzle): Promise<any> =>
+    this.coll.insertOne(puzzle);
 
   private selectReviewed = (v: boolean) => ({ review: { $exists: v } });
 }

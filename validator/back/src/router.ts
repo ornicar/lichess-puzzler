@@ -3,6 +3,7 @@ import Env from './env';
 import * as oauth from './oauth';
 import { Puzzle } from './puzzle';
 import { Response as ExResponse } from 'express';
+import {config} from './config';
 
 type HttpResponse = ExResponse<string>
 
@@ -45,6 +46,26 @@ export default function(app: Express.Express, env: Env) {
     const next = await env.mongo.puzzle.next();
     if (!next) return res.status(404).end();
     res.send(JSON.stringify({ username, puzzle: next }));
+  });
+
+  app.post('/puzzle', async (req, res) => {
+    const nextId = await env.mongo.puzzle.nextId(); // race condition :D
+    const puzzle: Puzzle = {
+      _id: nextId,
+      gameId: req.body.game_id,
+      fen: req.body.fen,
+      ply: req.body.ply,
+      moves: req.body.moves,
+      generator: req.body.generator_version,
+      createdAt: new Date()
+    };
+    try {
+      await env.mongo.puzzle.insert(puzzle);
+      res.send(`Created ${config.http.url}/puzzle/${puzzle._id}`);
+    } catch (e) {
+      const msg = e.code == 11000 ? 'Game already in the puzzle DB!' : e;
+      res.status(400).send(msg);
+    }
   });
 
   app.get('/logout', (req, res) => {

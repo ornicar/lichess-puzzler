@@ -25,13 +25,13 @@ export default class Ctrl {
     this.solution = makeSanVariation(this.chess, this.data.puzzle.moves.map(uci => parseUci(uci)!)).replace(/\d\.+ /g, '').split(' ');
   }
 
-  review = (score: number, comment: string, rating: number) => {
-    fetch(`/review/${this.data.puzzle._id}?score=${score}&comment=${comment}&rating=${rating}`, {
+  review = async (score: number, comment: string, rating: number) => {
+    const data = await fetch(`/review/${this.data.puzzle._id}?score=${score}&comment=${comment}&rating=${rating}`, {
       method: 'post'
-    })
-      .then(res => res.json())
-      .then(this.init)
-      .then(this.redraw);
+    }).then(res => res.json());
+    this.init(data);
+    this.redraw();
+    history.replaceState({}, '', `/puzzle/${data.puzzle._id}`);
   }
 
   setChessground(cg: Chessground) {

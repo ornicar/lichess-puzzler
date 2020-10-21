@@ -2,10 +2,11 @@ import logging
 import json
 import time
 import argparse
+import requests
 import chess
 import chess.pgn
 import chess.engine
-from chess import Move, Color
+from chess import Move, Color, Board
 from chess.engine import SimpleEngine
 from chess.pgn import Game, GameNode
 from typing import List, Any, Optional, Tuple, Dict
@@ -18,6 +19,8 @@ logger.setLevel(logging.DEBUG)
 # Uncomment this for very verbose python-chess logging
 # logging.basicConfig(level=logging.DEBUG)
 
+version = "0.0.1"
+post_url = "http://localhost:8000/puzzle"
 get_move_limit = chess.engine.Limit(depth = 20)
 has_mate_limit = chess.engine.Limit(depth = 20)
 
@@ -71,7 +74,7 @@ def get_only_defensive_move(engine: SimpleEngine, node: GameNode) -> Optional[Mo
     if not info[0]:
         return None
 
-    if info[1]:
+    if len(info) > 1:
         return None
 
     return info[0]["pv"][0]
@@ -138,13 +141,15 @@ def analyze_game(engine: SimpleEngine, game: Game) -> Tuple[Optional[GameNode], 
     for node in game.mainline():
 
         if has_mate(engine, node):
-            logger.debug("Mate found on move {}. Probing...".format(node.board().fullmove_number))
+            logger.debug("Mate found on ply {}. Probing...".format(ply_of(node.board())))
             solution = cook(engine, node, node.board().turn)
             if solution:
                 return node, solution
 
     return None, None
 
+def ply_of(board: Board) -> int:
+    return board.fullmove_number * 2 - 1 if board.turn == chess.BLACK else 2
 
 def main() -> None:
     args = parse_args()
@@ -169,12 +174,15 @@ def main() -> None:
 
                 # Compose and print the puzzle
                 logger.info("Printing puzzle...")
-                puzzle : Dict[str, Any] = {}
-                puzzle["fen"] = node.board().fen()
-                puzzle["solution"] = list(map(lambda m : m.uci(), solution))
-                puzzle["game_id"] = header_site
-                jsondata = json.dumps(puzzle)
-                print(jsondata)
+                puzzle : Dict[str, Any] = {
+                    'game_id': header_site[20:],
+                    'fen': node.board().fen(),
+                    'ply': ply_of(node.board()),
+                    'moves': list(map(lambda m : m.uci(), solution)),
+                    'generator_version': version,
+                }
+                r = requests.post(post_url, json=puzzle)
+                print(r.text if r.ok else "FAILURE {}".format(r.text))
 
 
 if __name__ == "__main__":

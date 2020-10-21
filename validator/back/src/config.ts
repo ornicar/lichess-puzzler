@@ -1,4 +1,8 @@
 export const config = {
+  http: {
+    port: 8000,
+    url: 'http://localhost:8000'
+  },
   mongodb: {
     url: 'mongodb://localhost:27017',
     dbName: 'puzzler'
