@@ -35,6 +35,7 @@ export default function(ctrl: Ctrl): VNode {
             h('a', {
               attrs: { href: `/puzzle/${puzzle._id}` }
             }, `Candidate #${puzzle._id}`),
+            h('em', puzzle.kind),
             h('em', {
               attrs: { title: 'Generator version' }
             }, puzzle.generator)
