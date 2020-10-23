@@ -34,6 +34,13 @@ class EngineMove:
     move: Move
     score: Score
 
+@dataclass
+class NextMovePair:
+    best: EngineMove
+    second: Optional[EngineMove]
+    def is_only_move(self) -> bool:
+        return self.second is None or is_much_better(self.best.score, self.second.score)
+
 def setup_logging(args: argparse.Namespace) -> None:
     """
     Sets logging module verbosity according to runtime arguments
@@ -68,11 +75,11 @@ def is_down_in_material(board: Board, winner: Color) -> bool:
     return material_count(board, winner) < material_count(board, not winner)
 
 
-def get_two_best_moves(engine: SimpleEngine, board: Board, winner: Color) -> Tuple[EngineMove, Optional[EngineMove]]:
+def get_next_move_pair(engine: SimpleEngine, board: Board, winner: Color) -> NextMovePair:
     info = engine.analyse(board, multipv = 2, limit = get_move_limit)
-    best_move = EngineMove(info[0]["pv"][0], info[0]["score"].pov(winner))
-    second_move = EngineMove(info[1]["pv"][0], info[1]["score"].pov(winner)) if len(info) > 1 else None
-    return best_move, second_move
+    best = EngineMove(info[0]["pv"][0], info[0]["score"].pov(winner))
+    second = EngineMove(info[1]["pv"][0], info[1]["score"].pov(winner)) if len(info) > 1 else None
+    return NextMovePair(best, second)
 
 
 def cook_mate(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[List[Move]]:
@@ -83,17 +90,16 @@ def cook_mate(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[L
     if node.board().is_game_over():
         return []
 
-    best_move, second_move = get_two_best_moves(engine, node.board(), winner)
+    next = get_next_move_pair(engine, node.board(), winner)
+
+    if not next.is_only_move():
+        return None
 
     if node.board().turn == winner:
         logger.debug("Getting only mate move...")
 
         if best_move.score < mate_soon:
             logger.info("Best move is not a mate, we're probably not searching deep enough")
-            return None
-
-        if second_move is not None and second_move.score > Cp(-300):
-            logger.debug("Second best move is not terrible")
             return None
 
     else:
@@ -118,9 +124,6 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
     Recursively calculate advantage solution
     """
 
-    best_move, second_move = get_two_best_moves(engine, node.board(), winner)
-    move = best_move.move
-
     is_capture = "x" in node.san() # monkaS
     up_in_material = is_down_in_material(node.board(), not winner)
 
@@ -128,28 +131,18 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
         logger.info("Not a capture and we're up in material, end of the line")
         return []
 
-    if node.board().turn == winner:
-        logger.debug("Getting only advantage move...")
+    next = get_next_move_pair(engine, node.board(), winner)
 
-        if best_move.score < juicy_advantage:
-            logger.info("Best move is not a juicy advantage, we're probably not searching deep enough")
-            return None
+    if not next.is_only_move():
+        return None
 
-        if second_move is not None and not is_much_better(best_move.score, second_move.score):
-            logger.debug("Second best move is not terrible: {}".format(second_move.move))
-            return None
+    if next.best.score < juicy_advantage:
+        logger.info("Best move is not a juicy advantage, we're probably not searching deep enough")
+        return None
 
-    else:
-        logger.debug("Getting defensive move...")
-
-        if best_move.score.is_mate():
-            logger.info("Expected advantage, got mate?!")
-            return None
-
-        if second_move is not None:
-            if not is_much_better(best_move.score, second_move.score):
-                logger.debug("A second defensive move is not that worse: {}".format(second_move.move))
-                return None
+    if next.best.score.is_mate():
+        logger.info("Expected advantage, got mate?!")
+        return None
 
     next_moves = cook_advantage(engine, node.add_main_variation(move), winner)
 
@@ -172,7 +165,12 @@ def win_chances(score: Score) -> float:
 
 
 def is_much_better(score: Score, than: Score) -> bool:
+    if score == Mate(1) and than < Mate(2):
+        return True
     return win_chances(score) > win_chances(than) + 0.3
+
+def is_much_worse(score: Score, than: Score) -> bool:
+    return is_much_better(than, score)
 
 def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Tuple[GameNode, List[Move], Kind]]:
     """
@@ -207,18 +205,18 @@ def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Tuple[GameNode, L
             logger.debug("{} mate in one".format(ply))
             pass
         elif score > mate_soon:
-            pass
-            # logger.info("Mate {}#{}. Probing...".format(game_url, ply))
-            # solution = cook_mate(engine, node, winner)
-            # if solution is not None:
-            #     return node, solution, "mate"
+            # pass
+            logger.info("Mate {}#{}. Probing...".format(game_url, ply))
+            solution = cook_mate(engine, node, winner)
+            if solution is not None:
+                return node, solution, "mate"
         elif score > juicy_advantage:
             # logger.info("Advantage {}#{}. {} -> {}. Probing...".format(game_url, ply, prev_score, score))
             solution = cook_advantage(engine, node, winner)
             if solution is not None and len(solution) > 2:
                 return node, solution, "material"
         else:
-            print(score)
+            pass
 
         prev_score = -score
 
