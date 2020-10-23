@@ -1,2 +1,2 @@
-python-chess==1.1.0
+python-chess==1.2.0
 aiohttp==3.6.3

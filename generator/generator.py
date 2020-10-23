@@ -8,10 +8,10 @@ import chess.pgn
 import chess.engine
 import math
 from chess import Move, Color, Board
-from chess.engine import SimpleEngine, Mate, Cp, Score, InfoDict
+from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess.pgn import Game, GameNode
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Dict, Literal
+from typing import List, Optional, Tuple, Literal, Union
 
 # Initialize Logging Module
 logger = logging.getLogger(__name__)
@@ -30,6 +30,12 @@ juicy_advantage = Cp(300)
 Kind = Literal["mate", "material"]  # Literal["mate", "other"]
 
 @dataclass
+class Puzzle:
+    node: GameNode
+    moves: List[Move]
+    kind: Kind
+
+@dataclass
 class EngineMove:
     move: Move
     score: Score
@@ -40,31 +46,6 @@ class NextMovePair:
     second: Optional[EngineMove]
     def is_only_move(self) -> bool:
         return self.second is None or is_much_better(self.best.score, self.second.score)
-
-def setup_logging(args: argparse.Namespace) -> None:
-    """
-    Sets logging module verbosity according to runtime arguments
-    """
-    if args.verbose:
-        if args.verbose == 2:
-            logger.setLevel(logging.DEBUG)
-        elif args.verbose == 1:
-            logger.setLevel(logging.INFO)
-
-
-def parse_args() -> argparse.Namespace:
-    """
-    Define an argument parser and return the parsed arguments
-    """
-    parser = argparse.ArgumentParser(
-        prog='generator.py',
-        description='takes a pgn file and produces chess puzzles')
-    parser.add_argument("--file", "-f", help="input PGN file", required=True, metavar="FILE.pgn")
-    parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
-    parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
-    parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
-
-    return parser.parse_args()
 
 
 def material_count(board: Board, side: Color) -> int:
@@ -82,6 +63,11 @@ def get_next_move_pair(engine: SimpleEngine, board: Board, winner: Color) -> Nex
     return NextMovePair(best, second)
 
 
+def get_only_move(engine: SimpleEngine, board: Board, winner: Color) -> Optional[EngineMove]:
+    pair = get_next_move_pair(engine, board, winner)
+    return pair.best if pair.is_only_move() else None
+
+
 def cook_mate(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[List[Move]]:
     """
     Recursively calculate mate solution
@@ -90,33 +76,21 @@ def cook_mate(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[L
     if node.board().is_game_over():
         return []
 
-    next = get_next_move_pair(engine, node.board(), winner)
+    next = get_only_move(engine, node.board(), winner)
 
-    if not next.is_only_move():
+    if not next:
         return None
 
-    if node.board().turn == winner:
-        logger.debug("Getting only mate move...")
+    if node.board().turn == winner and next.score < mate_soon:
+        logger.info("Best move is not a mate, we're probably not searching deep enough")
+        return None
 
-        if best_move.score < mate_soon:
-            logger.info("Best move is not a mate, we're probably not searching deep enough")
-            return None
-
-    else:
-        logger.debug("Getting defensive move...")
-
-        if best_move.score < Mate(1) and second_move is not None:
-            much_worse = second_move.score == Mate(1) and best_move.score < Mate(3)
-            if not much_worse:
-                logger.debug("A second defensive move is not that worse: {}".format(second_move.move))
-                return None
-
-    next_moves = cook_mate(engine, node.add_main_variation(best_move.move), winner)
+    next_moves = cook_mate(engine, node.add_main_variation(next.move), winner)
 
     if next_moves is None:
         return None
 
-    return [best_move.move] + next_moves
+    return [next.move] + next_moves
 
 
 def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[List[Move]]:
@@ -131,25 +105,25 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
         logger.info("Not a capture and we're up in material, end of the line")
         return []
 
-    next = get_next_move_pair(engine, node.board(), winner)
+    next = get_only_move(engine, node.board(), winner)
 
-    if not next.is_only_move():
+    if not next:
         return None
 
-    if next.best.score < juicy_advantage:
+    if next.score < juicy_advantage:
         logger.info("Best move is not a juicy advantage, we're probably not searching deep enough")
         return None
 
-    if next.best.score.is_mate():
+    if next.score.is_mate():
         logger.info("Expected advantage, got mate?!")
         return None
 
-    next_moves = cook_advantage(engine, node.add_main_variation(move), winner)
+    next_moves = cook_advantage(engine, node.add_main_variation(next.move), winner)
 
     if next_moves is None:
         return None
 
-    return [move] + next_moves
+    return [next.move] + next_moves
 
 
 def win_chances(score: Score) -> float:
@@ -172,86 +146,110 @@ def is_much_better(score: Score, than: Score) -> bool:
 def is_much_worse(score: Score, than: Score) -> bool:
     return is_much_better(than, score)
 
-def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Tuple[GameNode, List[Move], Kind]]:
-    """
-    Evaluate the moves in a game looking for puzzles
-    """
+def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
 
-    game_url = game.headers.get("Site", "?")
-    logger.debug("Analyzing game {}...".format(game_url))
+    logger.debug("Analyzing game {}...".format(game.headers.get("Site")))
 
-    prev_score: Score = Cp(0)
+    prev_score: Score = Cp(20)
 
     for node in game.mainline():
 
-        ply = ply_of(node.board())
-        ev = node.eval()
+        current_eval = node.eval()
 
-        if not ev:
-            # logger.debug("Skipping game without eval on ply {}".format(ply_of(node.board())))
+        if not current_eval:
+            # logger.debug("Skipping game without eval on ply {}".format(node.ply()))
             return None
 
-        winner = node.board().turn
-        score = ev.pov(winner)
+        result = analyze_position(engine, node, prev_score, current_eval)
 
-        # was the opponent winning until their last move
-        if prev_score > Cp(-100):
-            logger.debug("{} no mistake made {} -> {}".format(ply, prev_score, score))
-            pass
-        elif not is_down_in_material(node.board(), winner):
-            logger.debug("{} not down in material {} {} {}".format(ply, winner, material_count(node.board(), winner), material_count(node.board(), not winner)))
-            pass
-        elif score >= Mate(1):
-            logger.debug("{} mate in one".format(ply))
-            pass
-        elif score > mate_soon:
-            # pass
-            logger.info("Mate {}#{}. Probing...".format(game_url, ply))
-            solution = cook_mate(engine, node, winner)
-            if solution is not None:
-                return node, solution, "mate"
-        elif score > juicy_advantage:
-            # logger.info("Advantage {}#{}. {} -> {}. Probing...".format(game_url, ply, prev_score, score))
-            solution = cook_advantage(engine, node, winner)
-            if solution is not None and len(solution) > 2:
-                return node, solution, "material"
-        else:
-            pass
+        if isinstance(result, Puzzle):
+            return result
 
-        prev_score = -score
+        prev_score = -result
 
     return None
 
-def ply_of(board: Board) -> int:
-    return board.fullmove_number * 2 - (1 if board.turn == chess.BLACK else 2)
+
+def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, current_eval: PovScore) -> Union[Puzzle, Score]:
+
+    winner = node.board().turn
+    score = current_eval.pov(winner)
+
+    # was the opponent winning until their last move
+    if prev_score > Cp(-100):
+        logger.debug("{} no losing position to start with {} -> {}".format(node.ply(), prev_score, score))
+        return score
+    elif not is_down_in_material(node.board(), winner):
+        logger.debug("{} not down in material {} {} {}".format(node.ply(), winner, material_count(node.board(), winner), material_count(node.board(), not winner)))
+        return score
+    elif score >= Mate(1):
+        logger.debug("{} mate in one".format(node.ply()))
+        return score
+    elif score > mate_soon:
+        logger.info("Mate {}#{}. Probing...".format(node.game().headers.get("Site"), node.ply()))
+        solution = cook_mate(engine, node, winner)
+        return Puzzle(node, solution, "mate") if solution is not None else score
+    elif score > juicy_advantage:
+        # logger.info("Advantage {}#{}. {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
+        solution = cook_advantage(engine, node, winner)
+        return Puzzle(node, solution, "material") if solution is not None and len(solution) > 2 else score
+    else:
+        return score
+
+
+def setup_logging(args: argparse.Namespace) -> None:
+    if args.verbose:
+        if args.verbose == 2:
+            logger.setLevel(logging.DEBUG)
+        elif args.verbose == 1:
+            logger.setLevel(logging.INFO)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog='generator.py',
+        description='takes a pgn file and produces chess puzzles')
+    parser.add_argument("--file", "-f", help="input PGN file", required=True, metavar="FILE.pgn")
+    parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
+    parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
+    parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
+
+    return parser.parse_args()
+
+
+def make_engine(args: argparse.Namespace) -> SimpleEngine:
+    engine = SimpleEngine.popen_uci(args.engine)
+    engine.configure({'Threads': args.threads})
+    return engine
+
 
 def main() -> None:
     args = parse_args()
     setup_logging(args)
+    engine = make_engine(args)
 
     # setup the engine
-    enginepath = args.engine
-    engine = SimpleEngine.popen_uci(enginepath)
-    engine.configure({'Threads': args.threads})
 
-    with open(args.file) as pgn:
-        for game in iter(lambda: chess.pgn.read_game(pgn), None):
+    game = Game.from_board(Board("2r2rk1/6pp/1p3q2/pB1bN3/P2Q4/2P4P/1P4nK/3RR3 b - - 4 32"))
+    print(analyze_game(engine, game))
 
-            res = analyze_game(engine, game)
+    # with open(args.file) as pgn:
+    #     for game in iter(lambda: chess.pgn.read_game(pgn), None):
 
-            if res is not None:
-                node, solution, kind = res
-                # Compose and print the puzzle
-                puzzle = {
-                    'game_id': game.headers.get("Site", "?")[20:],
-                    'fen': node.board().fen(),
-                    'ply': ply_of(node.board()),
-                    'moves': list(map(lambda m : m.uci(), solution)),
-                    'kind': kind,
-                    'generator_version': version,
-                }
-                r = requests.post(post_url, json=puzzle)
-                logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
+    #         puzzle = analyze_game(engine, game)
+
+    #         if puzzle is not None:
+    #             # Compose and print the puzzle
+    #             puzzle = {
+    #                 'game_id': game.headers.get("Site", "?")[20:],
+    #                 'fen': node.board().fen(),
+    #                 'ply': ply_of(node.board()),
+    #                 'moves': list(map(lambda m : m.uci(), solution)),
+    #                 'kind': kind,
+    #                 'generator_version': version,
+    #             }
+    #             r = requests.post(post_url, json=puzzle)
+    #             logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
 
 
 if __name__ == "__main__":
