@@ -20,7 +20,7 @@ export default function(app: Express.Express, env: Env) {
   });
 
   const renderPuzzle = async (session: any, res: HttpResponse, puzzle: Puzzle | null) => {
-    if (!puzzle) return res.status(404).end();
+    if (!puzzle) return res.status(404).end('No puzzle in DB');
     const username = await env.mongo.auth.username(session?.authId || '');
     if (!username) return res.send(htmlPage(`<a href="/auth">Login with Lichess to continue</a>`));
     const data = { username, puzzle };

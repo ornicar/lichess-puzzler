@@ -27,7 +27,7 @@ export default function(ctrl: Ctrl): VNode {
               ctrl.setChessground(Chessground(vnode.elm as HTMLElement, cgConfig(ctrl)));
             }
           }
-        }, 'chessground here')
+        })
       ]),
       h('div.puzzle__ui', [
         h('div.puzzle__info', [
