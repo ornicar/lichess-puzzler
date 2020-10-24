@@ -7,6 +7,7 @@ import chess
 import chess.pgn
 import chess.engine
 import math
+import copy
 from chess import Move, Color, Board
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess.pgn import Game, GameNode
@@ -117,7 +118,7 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
     next = get_next_move(engine, node.board(), winner)
 
     if not next:
-        return None
+        return []
 
     if next.score < juicy_advantage:
         logger.info("Best move is not a juicy advantage, we're probably not searching deep enough")
@@ -158,7 +159,7 @@ def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
         current_eval = node.eval()
 
         if not current_eval:
-            # logger.debug("Skipping game without eval on ply {}".format(node.ply()))
+            logger.debug("Skipping game without eval on ply {}".format(node.ply()))
             return None
 
         result = analyze_position(engine, node, prev_score, current_eval)
@@ -175,24 +176,27 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
 
     winner = node.board().turn
     score = current_eval.pov(winner)
+    game_url = node.game().headers.get("Site")
+
+    logger.debug("{} {} to {}".format(node.ply(), node.move.uci() if node.move else None, score))
 
     # # was the opponent winning until their last move
     # if prev_score > Cp(-100):
     #     logger.debug("{} no losing position to start with {} -> {}".format(node.ply(), prev_score, score))
     #     return score
     if is_up_in_material(node.board(), winner):
-        logger.debug("{} not down in material {} {} {}".format(node.ply(), winner, material_count(node.board(), winner), material_count(node.board(), not winner)))
+        # logger.debug("{} not down in material {} {} {}".format(node.ply(), winner, material_count(node.board(), winner), material_count(node.board(), not winner)))
         return score
     elif score >= Mate(1):
         logger.debug("{} mate in one".format(node.ply()))
         return score
     elif score > mate_soon:
-        logger.info("Mate {}#{}. Probing...".format(node.game().headers.get("Site"), node.ply()))
-        solution = cook_mate(engine, node, winner)
+        logger.info("Mate {}#{}. Probing...".format(game_url, node.ply()))
+        solution = cook_mate(engine, copy.deepcopy(node), winner)
         return Puzzle(node, solution, "mate") if solution is not None else score
     elif score > juicy_advantage:
-        # logger.info("Advantage {}#{}. {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
-        solution = cook_advantage(engine, node, winner)
+        logger.info("Advantage {}#{}. {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
+        solution = cook_advantage(engine, copy.deepcopy(node), winner)
         return Puzzle(node, solution, "material") if solution is not None and len(solution) > 2 else score
     else:
         return score
@@ -228,29 +232,25 @@ def main() -> None:
     setup_logging(args)
     engine = make_engine(args)
 
-    # setup the engine
+    with open(args.file) as pgn:
+        for game in iter(lambda: chess.pgn.read_game(pgn), None):
 
-    game = Game.from_board(Board("2r2rk1/6pp/1p3q2/pB1bN3/P2Q4/2P4P/1P4nK/3RR3 b - - 4 32"))
-    print(analyze_game(engine, game))
+            puzzle = analyze_game(engine, game)
 
-    # with open(args.file) as pgn:
-    #     for game in iter(lambda: chess.pgn.read_game(pgn), None):
+            if puzzle is not None:
+                # Compose and print the puzzle
+                json = {
+                    'game_id': game.headers.get("Site", "?")[20:],
+                    'fen': puzzle.node.board().fen(),
+                    'ply': puzzle.node.ply(),
+                    'moves': list(map(lambda m : m.uci(), puzzle.moves)),
+                    'kind': puzzle.kind,
+                    'generator_version': version,
+                }
+                r = requests.post(post_url, json=json)
+                logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
 
-    #         puzzle = analyze_game(engine, game)
-
-    #         if puzzle is not None:
-    #             # Compose and print the puzzle
-    #             puzzle = {
-    #                 'game_id': game.headers.get("Site", "?")[20:],
-    #                 'fen': node.board().fen(),
-    #                 'ply': ply_of(node.board()),
-    #                 'moves': list(map(lambda m : m.uci(), solution)),
-    #                 'kind': kind,
-    #                 'generator_version': version,
-    #             }
-    #             r = requests.post(post_url, json=puzzle)
-    #             logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
-
+    engine.close()
 
 if __name__ == "__main__":
     main()
