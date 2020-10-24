@@ -44,16 +44,28 @@ class EngineMove:
 class NextMovePair:
     best: EngineMove
     second: Optional[EngineMove]
-    def is_only_move(self) -> bool:
-        return self.second is None or is_much_better(self.best.score, self.second.score)
+
+    def is_valid_attack(self) -> bool:
+        if self.second is None:
+            return True
+        if self.best.score == Mate(1) and self.second.score < Mate(2):
+            return True
+        return win_chances(self.best.score) > win_chances(self.second.score) + 0.3
+
+    def is_valid_defense(self) -> bool:
+        if self.second is None:
+            return True
+        if self.second.score == Mate(1) and self.best.score < Mate(2):
+            return True
+        return win_chances(self.second.score) > win_chances(self.best.score) + 0.2
 
 
 def material_count(board: Board, side: Color) -> int:
     values = { chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9 }
     return sum(len(board.pieces(piece_type, side)) * value for piece_type, value in values.items())
 
-def is_down_in_material(board: Board, winner: Color) -> bool:
-    return material_count(board, winner) < material_count(board, not winner)
+def is_up_in_material(board: Board, side: Color) -> bool:
+    return material_count(board, side) > material_count(board, not side)
 
 
 def get_next_move_pair(engine: SimpleEngine, board: Board, winner: Color) -> NextMovePair:
@@ -63,25 +75,25 @@ def get_next_move_pair(engine: SimpleEngine, board: Board, winner: Color) -> Nex
     return NextMovePair(best, second)
 
 
-def get_only_move(engine: SimpleEngine, board: Board, winner: Color) -> Optional[EngineMove]:
-    pair = get_next_move_pair(engine, board, winner)
-    return pair.best if pair.is_only_move() else None
-
+def get_next_move(engine: SimpleEngine, board: Board, winner: Color) -> Optional[EngineMove]:
+    next = get_next_move_pair(engine, board, winner)
+    if board.turn == winner and not next.is_valid_attack():
+        return None
+    if board.turn != winner and not next.is_valid_defense():
+        return None
+    return next.best
 
 def cook_mate(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[List[Move]]:
-    """
-    Recursively calculate mate solution
-    """
 
     if node.board().is_game_over():
         return []
 
-    next = get_only_move(engine, node.board(), winner)
+    next = get_next_move(engine, node.board(), winner)
 
     if not next:
         return None
 
-    if node.board().turn == winner and next.score < mate_soon:
+    if next.score < mate_soon:
         logger.info("Best move is not a mate, we're probably not searching deep enough")
         return None
 
@@ -94,18 +106,15 @@ def cook_mate(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[L
 
 
 def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[List[Move]]:
-    """
-    Recursively calculate advantage solution
-    """
 
     is_capture = "x" in node.san() # monkaS
-    up_in_material = is_down_in_material(node.board(), not winner)
+    up_in_material = is_up_in_material(node.board(), winner)
 
     if not is_capture and up_in_material and len(node.board().checkers()) == 0:
         logger.info("Not a capture and we're up in material, end of the line")
         return []
 
-    next = get_only_move(engine, node.board(), winner)
+    next = get_next_move(engine, node.board(), winner)
 
     if not next:
         return None
@@ -138,14 +147,6 @@ def win_chances(score: Score) -> float:
     return 2 / (1 + math.exp(-0.004 * cp)) - 1 if cp is not None else 0
 
 
-def is_much_better(score: Score, than: Score) -> bool:
-    if score == Mate(1) and than < Mate(2):
-        return True
-    return win_chances(score) > win_chances(than) + 0.3
-
-def is_much_worse(score: Score, than: Score) -> bool:
-    return is_much_better(than, score)
-
 def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
 
     logger.debug("Analyzing game {}...".format(game.headers.get("Site")))
@@ -175,11 +176,11 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
     winner = node.board().turn
     score = current_eval.pov(winner)
 
-    # was the opponent winning until their last move
-    if prev_score > Cp(-100):
-        logger.debug("{} no losing position to start with {} -> {}".format(node.ply(), prev_score, score))
-        return score
-    elif not is_down_in_material(node.board(), winner):
+    # # was the opponent winning until their last move
+    # if prev_score > Cp(-100):
+    #     logger.debug("{} no losing position to start with {} -> {}".format(node.ply(), prev_score, score))
+    #     return score
+    if is_up_in_material(node.board(), winner):
         logger.debug("{} not down in material {} {} {}".format(node.ply(), winner, material_count(node.board(), winner), material_count(node.board(), not winner)))
         return score
     elif score >= Mate(1):
@@ -210,7 +211,6 @@ def parse_args() -> argparse.Namespace:
         prog='generator.py',
         description='takes a pgn file and produces chess puzzles')
     parser.add_argument("--file", "-f", help="input PGN file", required=True, metavar="FILE.pgn")
-    parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
 
@@ -218,7 +218,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def make_engine(args: argparse.Namespace) -> SimpleEngine:
-    engine = SimpleEngine.popen_uci(args.engine)
+    engine = SimpleEngine.popen_uci("stockfish")
     engine.configure({'Threads': args.threads})
     return engine
 
