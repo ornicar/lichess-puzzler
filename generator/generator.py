@@ -54,11 +54,9 @@ class NextMovePair:
         return win_chances(self.best.score) > win_chances(self.second.score) + 0.3
 
     def is_valid_defense(self) -> bool:
-        if self.second is None:
+        if self.second is None or self.second.score == Mate(1):
             return True
-        if self.second.score == Mate(1):
-            return True
-        return win_chances(self.second.score) > win_chances(self.best.score) + 0.2
+        return win_chances(self.second.score) > win_chances(self.best.score) + 0.3
 
 
 def material_count(board: Board, side: Color) -> int:
@@ -181,7 +179,7 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
     logger.debug("{} {} to {}".format(node.ply(), node.move.uci() if node.move else None, score))
 
     # # was the opponent winning until their last move
-    if prev_score > Cp(-100):
+    if prev_score > Cp(0):
         logger.debug("{} no losing position to start with {} -> {}".format(node.ply(), prev_score, score))
         return score
     if is_up_in_material(node.board(), winner):
