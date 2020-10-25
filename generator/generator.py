@@ -26,7 +26,7 @@ post_url = "http://localhost:8000/puzzle"
 get_move_limit = chess.engine.Limit(depth = 40, time = 10, nodes = 12_000_000)
 has_mate_limit = get_move_limit
 mate_soon = Mate(20)
-juicy_advantage = Cp(300)
+juicy_advantage = Cp(500)
 
 Kind = Literal["mate", "material"]  # Literal["mate", "other"]
 
@@ -56,7 +56,7 @@ class NextMovePair:
     def is_valid_defense(self) -> bool:
         if self.second is None:
             return True
-        if self.second.score == Mate(1) and self.best.score < Mate(2):
+        if self.second.score == Mate(1):
             return True
         return win_chances(self.second.score) > win_chances(self.best.score) + 0.2
 
@@ -181,9 +181,9 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
     logger.debug("{} {} to {}".format(node.ply(), node.move.uci() if node.move else None, score))
 
     # # was the opponent winning until their last move
-    # if prev_score > Cp(-100):
-    #     logger.debug("{} no losing position to start with {} -> {}".format(node.ply(), prev_score, score))
-    #     return score
+    if prev_score > Cp(-100):
+        logger.debug("{} no losing position to start with {} -> {}".format(node.ply(), prev_score, score))
+        return score
     if is_up_in_material(node.board(), winner):
         # logger.debug("{} not down in material {} {} {}".format(node.ply(), winner, material_count(node.board(), winner), material_count(node.board(), not winner)))
         return score
