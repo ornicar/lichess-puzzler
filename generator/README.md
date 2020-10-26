@@ -19,3 +19,9 @@ That is where we need manual validation
 - the opponent should play human-like moves, not obscure stockfish lines
 
 - a puzzle should always start after a mistake/blunder of the opponent?
+
+```
+python3 -m venv venv
+. venv/bin/activate
+python3 generator.py -f file.pgn -t 6 -v -u http://localhost:8000/puzzle
+```

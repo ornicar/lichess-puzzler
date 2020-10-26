@@ -22,7 +22,6 @@ logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 # logging.basicConfig(level=logging.DEBUG)
 
 version = "0.0.1"
-post_url = "http://localhost:8000/puzzle"
 get_move_limit = chess.engine.Limit(depth = 40, time = 10, nodes = 12_000_000)
 has_mate_limit = get_move_limit
 mate_soon = Mate(20)
@@ -173,7 +172,8 @@ def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
 
 def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, current_eval: PovScore) -> Union[Puzzle, Score]:
 
-    winner = node.board().turn
+    board = node.board()
+    winner = board.turn
     score = current_eval.pov(winner)
     game_url = node.game().headers.get("Site")
 
@@ -183,8 +183,8 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
     if prev_score > Cp(0):
         logger.debug("{} no losing position to start with {} -> {}".format(node.ply(), prev_score, score))
         return score
-    if is_up_in_material(node.board(), winner):
-        logger.debug("{} already up in material {} {} {}".format(node.ply(), winner, material_count(node.board(), winner), material_count(node.board(), not winner)))
+    if is_up_in_material(board, winner):
+        logger.debug("{} already up in material {} {} {}".format(node.ply(), winner, material_count(board, winner), material_count(board, not winner)))
         return score
     elif score >= Mate(1):
         logger.debug("{} mate in one".format(node.ply()))
@@ -218,6 +218,7 @@ def parse_args() -> argparse.Namespace:
         description='takes a pgn file and produces chess puzzles')
     parser.add_argument("--file", "-f", help="input PGN file", required=True, metavar="FILE.pgn")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
+    parser.add_argument("--url", "-u", help="where to post puzzles", default="http://localhost:8000/puzzle")
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
 
     return parser.parse_args()
@@ -249,7 +250,7 @@ def main() -> None:
                     'kind': puzzle.kind,
                     'generator_version': version,
                 }
-                r = requests.post(post_url, json=json)
+                r = requests.post(args.url, json=json)
                 logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
 
     engine.close()
