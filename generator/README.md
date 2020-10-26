@@ -23,5 +23,6 @@ That is where we need manual validation
 ```
 python3 -m venv venv
 . venv/bin/activate
+pip install -r requirements.txt
 python3 generator.py -f file.pgn -t 6 -v -u http://localhost:8000/puzzle
 ```
