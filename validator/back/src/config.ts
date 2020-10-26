@@ -1,6 +1,6 @@
 export const config = {
   http: {
-    port: 8000,
+    port: process.env.PORT || 8000,
     url: 'http://localhost:8000'
   },
   mongodb: {

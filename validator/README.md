@@ -4,6 +4,7 @@
 
 ```
 cd front
+yarn install
 yarn dev
 cd ../back
 export OAUTH_APP_SECRET='lichessOauthAppSecret'
