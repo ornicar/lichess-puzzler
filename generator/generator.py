@@ -186,23 +186,26 @@ def main() -> None:
     engine = make_engine(args)
 
     with open(args.file) as pgn:
-        game: Game
-        for game in iter(lambda: chess.pgn.read_game(pgn), None):
+        for line in pgn:
+            if line.startswith("[Site "):
+                site = line
+            elif "%eval" in line: 
+                game : Game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
 
-            puzzle = analyze_game(engine, game)
+                puzzle = analyze_game(engine, game)
 
-            if puzzle is not None:
-                # Compose and print the puzzle
-                json = {
-                    'game_id': game.headers.get("Site", "?")[20:],
-                    'fen': puzzle.node.board().fen(),
-                    'ply': puzzle.node.ply(),
-                    'moves': list(map(lambda m : m.uci(), puzzle.moves)),
-                    'kind': puzzle.kind,
-                    'generator_version': version,
-                }
-                r = requests.post(args.url, json=json)
-                logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
+                if puzzle is not None:
+                    # Compose and print the puzzle
+                    json = {
+                        'game_id': game.headers.get("Site", "?")[20:],
+                        'fen': puzzle.node.board().fen(),
+                        'ply': puzzle.node.ply(),
+                        'moves': list(map(lambda m : m.uci(), puzzle.moves)),
+                        'kind': puzzle.kind,
+                        'generator_version': version,
+                    }
+                    r = requests.post(args.url, json=json)
+                    logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
 
     engine.close()
 
