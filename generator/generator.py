@@ -55,7 +55,7 @@ class NextMovePair:
     def is_valid_defense(self) -> bool:
         if self.second is None or self.second.score == Mate(1):
             return True
-        return win_chances(self.second.score) > win_chances(self.best.score) + 0.3
+        return win_chances(self.second.score) > win_chances(self.best.score) + 0.2
 
 
 def material_count(board: Board, side: Color) -> int:
@@ -76,8 +76,10 @@ def get_next_move_pair(engine: SimpleEngine, board: Board, winner: Color) -> Nex
 def get_next_move(engine: SimpleEngine, board: Board, winner: Color) -> Optional[EngineMove]:
     next = get_next_move_pair(engine, board, winner)
     if board.turn == winner and not next.is_valid_attack():
+        # logger.debug("No valid attack {}".format(next))
         return None
     if board.turn != winner and not next.is_valid_defense():
+        # logger.debug("No valid defense {}".format(next))
         return None
     return next.best
 
@@ -108,13 +110,13 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
     is_capture = "x" in node.san() # monkaS
     up_in_material = is_up_in_material(node.board(), winner)
 
-    if node.board().is_repetition(1):
+    if node.board().is_repetition(2):
         logger.info("Found repetition, canceling")
         return None
 
-    if not is_capture and up_in_material and len(node.board().checkers()) == 0:
-        logger.info("Not a capture and we're up in material, end of the line")
-        return []
+    # if not is_capture and up_in_material and len(node.board().checkers()) == 0:
+    #     logger.info("Not a capture and we're up in material, end of the line")
+    #     return []
 
     next = get_next_move(engine, node.board(), winner)
 
@@ -192,6 +194,9 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
         solution = cook_mate(engine, copy.deepcopy(node), winner)
         return Puzzle(node, solution, "mate") if solution is not None else score
     elif score >= Cp(0) and win_chances(score) > win_chances(prev_score) + 0.5:
+        if score < Cp(400) and material_count(board, winner) > material_count(board, not winner) - 5:
+            logger.info("Not clearly winning and not from being down in material, aborting")
+            return score
         logger.info("Advantage {}#{}. {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
         solution = cook_advantage(engine, copy.deepcopy(node), winner)
         return Puzzle(node, solution, "material") if solution is not None and len(solution) > 2 else score

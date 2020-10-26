@@ -60,7 +60,8 @@ export default function(ctrl: Ctrl): VNode {
               hook: onClick(ev => {
                 const score = parseInt(((ev.target as HTMLElement).parentNode!.querySelector('input[name="score"]:checked') as HTMLInputElement)?.value);
                 const comment = ((ev.target as HTMLElement).parentNode!.querySelector('input[name="comment"]:checked') as HTMLInputElement)?.value;
-                const rating = parseInt(((ev.target as HTMLElement).parentNode!.querySelector('input[name="rating"]:checked') as HTMLInputElement)?.value);
+                /* const rating = parseInt(((ev.target as HTMLElement).parentNode!.querySelector('input[name="rating"]:checked') as HTMLInputElement)?.value); */
+                const rating = 0;
                 if (score) ctrl.review(score, comment, rating);
               })
             }, 'Review & next')
