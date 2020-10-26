@@ -33,12 +33,14 @@ a:visited {
   margin-left: 2em;
   padding: 1em 2em;
   background: hsla(0, 0%, 90%, 0.1);
+  overflow: hidden;
 }
 
 .puzzle__ui san {
   margin: 0 .3ch;
   opacity: .3;
   font-weight: bold;
+  display: inline-block;
 }
 
 .puzzle__ui san.done {

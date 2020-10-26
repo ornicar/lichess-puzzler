@@ -55,7 +55,7 @@ export default function(ctrl: Ctrl): VNode {
           h('div', [
             radios('score', 'Quality (required)', [1, 2, 3, 4, 5].map(s => [s, s]), puzzle.review),
             radios('comment', 'Comment', comments, puzzle.review),
-            radios('rating', 'Rating', [800, 1200, 1600, 2000, 2400, 2800].map(s => [s, s]), puzzle.review),
+            /* radios('rating', 'Rating', [800, 1200, 1600, 2000, 2400, 2800].map(s => [s, s]), puzzle.review), */
             h('button.submit', {
               hook: onClick(ev => {
                 const score = parseInt(((ev.target as HTMLElement).parentNode!.querySelector('input[name="score"]:checked') as HTMLInputElement)?.value);
