@@ -26,7 +26,6 @@ post_url = "http://localhost:8000/puzzle"
 get_move_limit = chess.engine.Limit(depth = 40, time = 10, nodes = 12_000_000)
 has_mate_limit = get_move_limit
 mate_soon = Mate(20)
-juicy_advantage = Cp(500)
 
 Kind = Literal["mate", "material"]  # Literal["mate", "other"]
 
@@ -51,7 +50,7 @@ class NextMovePair:
             return True
         if self.best.score == Mate(1) and self.second.score < Mate(2):
             return True
-        return win_chances(self.best.score) > win_chances(self.second.score) + 0.3
+        return win_chances(self.best.score) > win_chances(self.second.score) + 0.5
 
     def is_valid_defense(self) -> bool:
         if self.second is None or self.second.score == Mate(1):
@@ -109,6 +108,10 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
     is_capture = "x" in node.san() # monkaS
     up_in_material = is_up_in_material(node.board(), winner)
 
+    if node.board().is_repetition(1):
+        logger.info("Found repetition, canceling")
+        return None
+
     if not is_capture and up_in_material and len(node.board().checkers()) == 0:
         logger.info("Not a capture and we're up in material, end of the line")
         return []
@@ -118,13 +121,9 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
     if not next:
         return []
 
-    if next.score < juicy_advantage:
-        logger.info("Best move is not a juicy advantage, we're probably not searching deep enough")
-        return None
-
     if next.score.is_mate():
         logger.info("Expected advantage, got mate?!")
-        return None
+        return []
 
     next_moves = cook_advantage(engine, node.add_main_variation(next.move), winner)
 
@@ -183,7 +182,7 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
         logger.debug("{} no losing position to start with {} -> {}".format(node.ply(), prev_score, score))
         return score
     if is_up_in_material(node.board(), winner):
-        # logger.debug("{} not down in material {} {} {}".format(node.ply(), winner, material_count(node.board(), winner), material_count(node.board(), not winner)))
+        logger.debug("{} already up in material {} {} {}".format(node.ply(), winner, material_count(node.board(), winner), material_count(node.board(), not winner)))
         return score
     elif score >= Mate(1):
         logger.debug("{} mate in one".format(node.ply()))
@@ -192,7 +191,7 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
         logger.info("Mate {}#{}. Probing...".format(game_url, node.ply()))
         solution = cook_mate(engine, copy.deepcopy(node), winner)
         return Puzzle(node, solution, "mate") if solution is not None else score
-    elif score > juicy_advantage:
+    elif score >= Cp(0) and win_chances(score) > win_chances(prev_score) + 0.5:
         logger.info("Advantage {}#{}. {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
         solution = cook_advantage(engine, copy.deepcopy(node), winner)
         return Puzzle(node, solution, "material") if solution is not None and len(solution) > 2 else score

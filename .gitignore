@@ -3,5 +3,5 @@ yarn-error.log
 build/
 data/
 dist/
-
 venv/
+__pycache__/
