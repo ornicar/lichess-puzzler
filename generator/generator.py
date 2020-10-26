@@ -6,13 +6,13 @@ import requests
 import chess
 import chess.pgn
 import chess.engine
-import math
 import copy
 from chess import Move, Color, Board
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess.pgn import Game, GameNode
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Literal, Union
+from util import EngineMove, get_next_move_pair, material_count, is_up_in_material, win_chances
 
 # Initialize Logging Module
 logger = logging.getLogger(__name__)
@@ -23,7 +23,6 @@ logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 
 version = "0.0.1"
 get_move_limit = chess.engine.Limit(depth = 40, time = 10, nodes = 12_000_000)
-has_mate_limit = get_move_limit
 mate_soon = Mate(20)
 
 Kind = Literal["mate", "material"]  # Literal["mate", "other"]
@@ -34,46 +33,9 @@ class Puzzle:
     moves: List[Move]
     kind: Kind
 
-@dataclass
-class EngineMove:
-    move: Move
-    score: Score
-
-@dataclass
-class NextMovePair:
-    best: EngineMove
-    second: Optional[EngineMove]
-
-    def is_valid_attack(self) -> bool:
-        if self.second is None:
-            return True
-        if self.best.score == Mate(1) and self.second.score < Mate(2):
-            return True
-        return win_chances(self.best.score) > win_chances(self.second.score) + 0.5
-
-    def is_valid_defense(self) -> bool:
-        if self.second is None or self.second.score == Mate(1):
-            return True
-        return win_chances(self.second.score) > win_chances(self.best.score) + 0.2
-
-
-def material_count(board: Board, side: Color) -> int:
-    values = { chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9 }
-    return sum(len(board.pieces(piece_type, side)) * value for piece_type, value in values.items())
-
-def is_up_in_material(board: Board, side: Color) -> bool:
-    return material_count(board, side) > material_count(board, not side)
-
-
-def get_next_move_pair(engine: SimpleEngine, board: Board, winner: Color) -> NextMovePair:
-    info = engine.analyse(board, multipv = 2, limit = get_move_limit)
-    best = EngineMove(info[0]["pv"][0], info[0]["score"].pov(winner))
-    second = EngineMove(info[1]["pv"][0], info[1]["score"].pov(winner)) if len(info) > 1 else None
-    return NextMovePair(best, second)
-
 
 def get_next_move(engine: SimpleEngine, board: Board, winner: Color) -> Optional[EngineMove]:
-    next = get_next_move_pair(engine, board, winner)
+    next = get_next_move_pair(engine, board, winner, get_move_limit)
     if board.turn == winner and not next.is_valid_attack():
         # logger.debug("No valid attack {}".format(next))
         return None
@@ -132,18 +94,6 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
         return None
 
     return [next.move] + next_moves
-
-
-def win_chances(score: Score) -> float:
-    """
-    winning chances from -1 to 1 https://graphsketch.com/?eqn1_color=1&eqn1_eqn=100+*+%282+%2F+%281+%2B+exp%28-0.005+*+x%29%29+-+1%29&eqn2_color=2&eqn2_eqn=100+*+%282+%2F+%281+%2B+exp%28-0.004+*+x%29%29+-+1%29&eqn3_color=3&eqn3_eqn=&eqn4_color=4&eqn4_eqn=&eqn5_color=5&eqn5_eqn=&eqn6_color=6&eqn6_eqn=&x_min=-1000&x_max=1000&y_min=-100&y_max=100&x_tick=100&y_tick=10&x_label_freq=2&y_label_freq=2&do_grid=0&do_grid=1&bold_labeled_lines=0&bold_labeled_lines=1&line_width=4&image_w=850&image_h=525
-    """
-    mate = score.mate()
-    if mate is not None:
-        return 1 if mate > 0 else 0
-
-    cp = score.score()
-    return 2 / (1 + math.exp(-0.004 * cp)) - 1 if cp is not None else 0
 
 
 def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
@@ -236,6 +186,7 @@ def main() -> None:
     engine = make_engine(args)
 
     with open(args.file) as pgn:
+        game: Game
         for game in iter(lambda: chess.pgn.read_game(pgn), None):
 
             puzzle = analyze_game(engine, game)
