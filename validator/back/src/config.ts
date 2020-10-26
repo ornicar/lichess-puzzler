@@ -1,7 +1,8 @@
+const port = process.env.PORT || 8000;
 export const config = {
   http: {
-    port: process.env.PORT || 8000,
-    url: 'http://localhost:8000'
+    port: port,
+    url: `http://localhost:${port}`
   },
   mongodb: {
     url: 'mongodb://localhost:27017',
@@ -14,7 +15,7 @@ export const config = {
     client: {
       id: 'QUH0Q8AYGOGHEcNT',
       secret: process.env.OAUTH_APP_SECRET!,
-      redirectUri: 'http://localhost:8000/oauth-callback',
+      redirectUri: `http://localhost:${port}/oauth-callback`,
       scopes: ['preference:read']
     },
     server: {
