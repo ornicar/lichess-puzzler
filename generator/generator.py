@@ -7,6 +7,7 @@ import chess
 import chess.pgn
 import chess.engine
 import copy
+from io import StringIO
 from chess import Move, Color, Board
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess.pgn import Game, GameNode
@@ -125,6 +126,10 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
     board = node.board()
     winner = board.turn
     score = current_eval.pov(winner)
+
+    if board.legal_moves.count() < 2:
+        return score
+
     game_url = node.game().headers.get("Site")
 
     logger.debug("{} {} to {}".format(node.ply(), node.move.uci() if node.move else None, score))
