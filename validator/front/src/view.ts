@@ -75,7 +75,7 @@ export default function(ctrl: Ctrl): VNode {
           disabled: !ctrl.moves.length
         },
         hook: onClick(ctrl.back)
-      }, 'Rewind one move')
+      }, '< Rewind')
     ])
   ]);
 }

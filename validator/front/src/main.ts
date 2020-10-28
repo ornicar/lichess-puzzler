@@ -2,13 +2,13 @@ import { init } from 'snabbdom';
 import { VNode } from 'snabbdom/vnode'
 import klass from 'snabbdom/modules/class';
 import attributes from 'snabbdom/modules/attributes';
-/* import { Chessground } from 'chessground'; */
+import * as Mousetrap  from 'mousetrap';
 import Ctrl from './ctrl';
 
 const patch = init([klass, attributes]);
 
 import view from './view';
-import {ServerData} from './types';
+import { ServerData } from './types';
 
 export function start(data: ServerData) {
 
@@ -27,4 +27,6 @@ export function start(data: ServerData) {
   vnode = patch(element, blueprint);
 
   redraw();
+
+  Mousetrap.bind('left', ctrl.back);
 };
