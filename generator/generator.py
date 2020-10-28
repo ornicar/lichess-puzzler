@@ -25,7 +25,7 @@ logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 # Uncomment this for very verbose python-chess logging
 # logging.basicConfig(level=logging.DEBUG)
 
-version = 7
+version = 8
 get_move_limit = chess.engine.Limit(depth = 40, time = 15, nodes = 20_000_000)
 mate_soon = Mate(20)
 
