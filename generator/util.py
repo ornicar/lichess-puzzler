@@ -61,9 +61,13 @@ def win_chances(score: Score) -> float:
 def exclude_time_control(line: str) -> bool:
     if not line.startswith("[TimeControl "):
         return False
-    seconds, increment = line[1:][:-2].split()[1].replace("\"", "").split("+")
-    t = int(seconds) + int(increment) * 40
-    return t < 480
+    try:
+        seconds, increment = line[1:][:-2].split()[1].replace("\"", "").split("+")
+        t = int(seconds) + int(increment) * 40
+        return t < 480
+    except:
+        print("Can't parse time control: {}".format(line))
+        return True
 
 def exclude_rating(line: str) -> bool:
     if not line.startswith("[WhiteElo ") and not line.startswith("[BlackElo "):
