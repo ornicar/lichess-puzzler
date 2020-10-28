@@ -210,8 +210,12 @@ def main() -> None:
                         'kind': puzzle.kind,
                         'generator_version': version,
                     }
-                    r = requests.post(args.url, json=json)
-                    logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
+                    try:
+                        r = requests.post(args.url, json=json)
+                        logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
+                    except Exception as e:
+                        logger.error("Couldn't post puzzle: {}".format(e))
+                    
 
     engine.close()
 
