@@ -11,7 +11,7 @@ def set_seen(game: Game) -> None:
     try:
         db.seen.insert({"_id": id_of(game)})
     except pymongo.errors.DuplicateKeyError:
-        print("Already seen that game, we have")
+        pass
 
 def id_of(game: Game) -> str:
     return game.headers.get("Site", "?")[20:]
