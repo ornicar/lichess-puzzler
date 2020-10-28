@@ -38,7 +38,7 @@ export default function(ctrl: Ctrl): VNode {
             h('em', puzzle.kind),
             h('em', {
               attrs: { title: 'Generator version' }
-            }, puzzle.generator)
+            }, `gen v${puzzle.generator}`)
           ]),
           h('p', [
             'From game ',
