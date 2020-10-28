@@ -174,7 +174,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
     parser.add_argument("--file", "-f", help="input PGN file", required=True, metavar="FILE.pgn")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
-    parser.add_argument("--url", "-u", help="where to post puzzles", default="http://localhost:8000/puzzle")
+    parser.add_argument("--url", "-u", help="where to post puzzles", default="http://localhost:8000/puzzle?token=changeme")
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
 
     return parser.parse_args()

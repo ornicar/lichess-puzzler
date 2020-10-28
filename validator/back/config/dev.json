@@ -4,6 +4,7 @@
     "url": "http://localhost:8000",
     "cookieSecret": "dontPutThatOnProd"
   },
+  "generatorToken": "changeme",
   "oauth": {
     "app": {
       "id": "yourAppIdHere",

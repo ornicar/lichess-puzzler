@@ -21,6 +21,10 @@ const schema = convict({
       default: 'changeme'
     }
   },
+  generatorToken: {
+    format: String,
+    default: 'changeme'
+  },
   mongodb: {
     url: {
       format: String,
@@ -49,6 +53,7 @@ interface Config {
     url: string;
     cookieSecret: string;
   };
+  generatorToken: string;
   mongodb: {
     url: string;
     name: string;
@@ -71,6 +76,7 @@ interface Config {
 export const config: Config = {
   env: schema.get('env'),
   http: schema.get('http'),
+  generatorToken: schema.get('generatorToken'),
   mongodb: schema.get('mongodb'),
   oauth: {
     app: {
