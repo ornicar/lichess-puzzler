@@ -82,7 +82,7 @@ export const config: Config = {
     app: {
       id: schema.get('oauth.app.id'),
       secret: schema.get('oauth.app.secret'),
-      redirectUri: `http://localhost:${schema.get('http.port')}/oauth-callback`,
+      redirectUri: `${schema.get('http.url')}/oauth-callback`,
       scopes: []
     },
     server: {
