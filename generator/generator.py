@@ -9,6 +9,7 @@ import chess.engine
 import copy
 import sys
 import mongo
+import util
 from io import StringIO
 from chess import Move, Color, Board
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
@@ -202,9 +203,14 @@ def main() -> None:
     engine = make_engine(args)
 
     with open(args.file) as pgn:
+        skip_next = False
         for line in pgn:
             if line.startswith("[Site "):
                 site = line
+            elif util.exclude_time_control(line) or util.exclude_rating(line):
+                skip_next = True
+            elif line.startswith("1. ") and skip_next:
+                skip_next = False
             elif "%eval" in line:
                 game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
                 if mongo.is_seen(site[27:35]):
@@ -234,5 +240,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-sys.setrecursionlimit(10000)# vim: ft=python expandtab smarttab shiftwidth=4 softtabstop=4 fileencoding=UTF-8:

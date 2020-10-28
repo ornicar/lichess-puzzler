@@ -57,3 +57,19 @@ def win_chances(score: Score) -> float:
 
     cp = score.score()
     return 2 / (1 + math.exp(-0.004 * cp)) - 1 if cp is not None else 0
+
+def exclude_time_control(line: str) -> bool:
+    if not line.startswith("[TimeControl "):
+        return False
+    val = line[1:][:-1].split()[1]
+    seconds, increment = line[1:][:-2].split()[1].replace("\"", "").split("+")
+    t = int(seconds) + int(increment) * 40
+    return t < 480
+
+def exclude_rating(line: str) -> bool:
+    if not line.startswith("[WhiteElo ") and not line.startswith("[BlackElo "):
+        return False
+    try:
+        return int(line[11:15]) < 1600
+    except:
+        return False
