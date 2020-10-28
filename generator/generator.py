@@ -13,7 +13,7 @@ from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess.pgn import Game, GameNode
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Literal, Union
-from util import EngineMove, get_next_move_pair, material_count, is_up_in_material, win_chances
+from util import EngineMove, get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 
 # Initialize Logging Module
 logger = logging.getLogger(__name__)
@@ -153,8 +153,11 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
             logger.info("Not clearly winning and not from being down in material, aborting")
             return score
         logger.info("Advantage {}#{}. {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
-        solution = cook_advantage(engine, copy.deepcopy(node), winner)
-        return Puzzle(node, solution, "material") if solution is not None and len(solution) > 2 else score
+        puzzle_node = copy.deepcopy(node)
+        solution = cook_advantage(engine, puzzle_node, winner)
+        valid = (solution is not None and len(solution) > 2 and
+                material_diff(puzzle_node.board(), winner) > material_diff(board, winner))
+        return Puzzle(node, solution, "material") if valid and solution is not None else score
     else:
         return score
 
@@ -171,8 +174,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog='generator.py',
         description='takes a pgn file and produces chess puzzles')
-    parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
     parser.add_argument("--file", "-f", help="input PGN file", required=True, metavar="FILE.pgn")
+    parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
     parser.add_argument("--url", "-u", help="where to post puzzles", default="http://localhost:8000/puzzle?token=changeme")
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
@@ -195,8 +198,8 @@ def main() -> None:
         for line in pgn:
             if line.startswith("[Site "):
                 site = line
-            elif "%eval" in line: 
-                game : Game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
+            elif "%eval" in line:
+                game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
 
                 puzzle = analyze_game(engine, game)
 
@@ -215,7 +218,7 @@ def main() -> None:
                         logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
                     except Exception as e:
                         logger.error("Couldn't post puzzle: {}".format(e))
-                    
+
 
     engine.close()
 

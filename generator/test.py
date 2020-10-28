@@ -10,6 +10,8 @@ import generator
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog='test.py')
+    parser.add_argument("method", help="test method")
+    parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
     return parser.parse_args()
@@ -23,29 +25,30 @@ class TestGenerator(unittest.TestCase):
 
     def test_puzzle_1(self) -> None:
         # https://lichess.org/analysis/standard/3q1k2/p7/1p2Q2p/5P1K/1P4P1/P7/8/8_w_-_-_5_57#112
-        self.run_puzzle("3q1k2/p7/1p2Q2p/5P1K/1P4P1/P7/8/8 w - - 5 57", 
+        self.get_puzzle("3q1k2/p7/1p2Q2p/5P1K/1P4P1/P7/8/8 w - - 5 57", 
                 Cp(-1000), "h5g6", Mate(2), "d8g5 g6h7 g5g7")
 
     def test_puzzle_2(self) -> None:
         # https://lichess.org/nq1x9tln/black#76
-        self.run_puzzle("3R4/1Q2nk2/4p2p/4n3/BP3ppP/P7/5PP1/2r3K1 w - - 2 39", 
+        self.get_puzzle("3R4/1Q2nk2/4p2p/4n3/BP3ppP/P7/5PP1/2r3K1 w - - 2 39", 
                 Cp(-1000), "g1h2", Mate(4), "g4g3 f2g3 e5g4 h2h3 g4f2 h3h2 c1h1")
 
     def test_puzzle_3(self) -> None:
         # https://lichess.org/wQptHOX6/white#61
-        self.run_puzzle("1r4k1/5p1p/pr1p2p1/q2Bb3/2P5/P1R3PP/KB1R1Q2/8 b - - 1 31", 
+        self.get_puzzle("1r4k1/5p1p/pr1p2p1/q2Bb3/2P5/P1R3PP/KB1R1Q2/8 b - - 1 31", 
                 Cp(-4), "e5c3", Mate(3), "f2f7 g8h8 f7f6 c3f6 b2f6")
 
     def test_puzzle_4(self) -> None:
         # https://lichess.org/eVww5aBo#122
-        self.run_puzzle("8/8/3Rpk2/2PpNp2/KP1P4/4r3/P1n5/8 w - - 3 62", 
+        self.get_puzzle("8/8/3Rpk2/2PpNp2/KP1P4/4r3/P1n5/8 w - - 3 62", 
                 Cp(0), "d6d7", Cp(580), "e3a3 a4b5 c2d4 b5b6 f6e5")
 
     # can't be done because there are 2 possible defensive moves
     # def test_puzzle_5(self) -> None:
     #     # https://lichess.org/2YRgIXwk/black#32
-    #     self.run_puzzle("r1b3k1/pp3p1p/2pp2p1/8/2P2q2/2N1r2P/PP2BPP1/R2Q1K1R w - - 0 17",
+    #     self.get_puzzle("r1b3k1/pp3p1p/2pp2p1/8/2P2q2/2N1r2P/PP2BPP1/R2Q1K1R w - - 0 17",
     #             Cp(-520), "d1d2", Cp(410), "e3h3 h1h3 f4d2")
+
 
     def test_not_puzzle_1(self) -> None:
         # https://lichess.org/LywqL7uc#32
@@ -57,7 +60,12 @@ class TestGenerator(unittest.TestCase):
         self.not_puzzle("5b1r/kpQ2ppp/4p3/4P3/1P4q1/8/P3N3/1nK2B2 b - - 0 26",
                 Cp(-1520), "b1a3", Cp(0))
 
-    def run_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
+    def test_not_puzzle_3(self) -> None:
+        # https://lichess.org/StRzB2gY#59
+        self.not_puzzle("7k/p6p/4p1p1/8/1q1p3P/2r1P1P1/P4Q2/5RK1 b - - 1 30", 
+                Cp(0), "d4e3", Cp(580))
+
+    def get_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
         board = Board(fen)
         game = Game.from_board(board)
         node = game.add_main_variation(Move.from_uci(move))

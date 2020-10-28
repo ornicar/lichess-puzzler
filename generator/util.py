@@ -33,8 +33,11 @@ def material_count(board: Board, side: Color) -> int:
     values = { chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9 }
     return sum(len(board.pieces(piece_type, side)) * value for piece_type, value in values.items())
 
+def material_diff(board: Board, side: Color) -> int:
+    return material_count(board, side) - material_count(board, not side)
+
 def is_up_in_material(board: Board, side: Color) -> bool:
-    return material_count(board, side) > material_count(board, not side)
+    return material_diff(board, side) > 0
 
 
 def get_next_move_pair(engine: SimpleEngine, board: Board, winner: Color, limit: chess.engine.Limit) -> NextMovePair:
