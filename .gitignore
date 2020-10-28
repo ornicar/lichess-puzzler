@@ -1,8 +1,11 @@
 node_modules
 yarn-error.log
 build/
+validator/back/config/prod.json
+validator/back/config/local.json
 data/
 dist/
 venv/
 __pycache__/
 .mypy_cache
+.vim
