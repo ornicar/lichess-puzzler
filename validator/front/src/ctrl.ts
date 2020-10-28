@@ -48,6 +48,8 @@ export default class Ctrl {
     this.redraw();
   }
 
+  orientation = () => this.data.puzzle.ply % 2 == 0 ? 'white' : 'black';
+
   isComplete = () =>
     this.moves.join(' ') == this.data.puzzle.moves.join(' ');
 

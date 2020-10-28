@@ -6,11 +6,12 @@ import { parseFen } from 'chessops/fen';
 import { Chess } from 'chessops/chess';
 import { chessgroundDests } from 'chessops/compat';
 import { Color, Key } from 'chessground/types';
-import {Review} from '../../back/src/puzzle';
+import { Review } from '../../back/src/puzzle';
 
 export default function(ctrl: Ctrl): VNode {
   const puzzle = ctrl.data.puzzle,
-    nbMovesIn = ctrl.nbMovesIn();
+    nbMovesIn = ctrl.nbMovesIn(),
+    gameUrl = `https://lichess.org/${puzzle.gameId}${ctrl.orientation() == 'white' ? '' : '/black'}#${puzzle.ply}`;
   return h(`main.puzzle-${puzzle._id}`, [
     h('section.top', [
       h('h1', h('a', { attrs: { href: '/' } }, 'Lichess Puzzle Validator')),
@@ -42,7 +43,12 @@ export default function(ctrl: Ctrl): VNode {
           ]),
           h('p', [
             'From game ',
-            h('a', { attrs: { href: `https://lichess.org/${puzzle.gameId}#${puzzle.ply}` } }, `#${puzzle.gameId}`)
+            h('a', {
+              attrs: {
+                href: gameUrl,
+                target: '_blank'
+              }
+            }, `#${puzzle.gameId}`)
           ]),
           h('p', [
             'Solution: ',
@@ -103,7 +109,7 @@ const comments: Array<[string, string]> = [
 
 const cgConfig = (ctrl: Ctrl) => {
   const p = ctrl.data.puzzle,
-    color: Color = p.ply % 2 == 0 ? 'white' : 'black',
+    color: Color = ctrl.orientation(),
     setup = parseFen(p.fen).unwrap(),
     chess = Chess.fromSetup(setup).unwrap();
   return {
