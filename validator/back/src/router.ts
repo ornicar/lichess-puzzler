@@ -77,10 +77,7 @@ export default function(app: Express.Express, env: Env) {
     res.redirect('/');
   });
 
-  app.get('/auth', (_, res) => {
-    console.log(oauth.authorizationUri);
-    res.redirect(oauth.authorizationUri);
-  });
+  app.get('/auth', (_, res) => res.redirect(oauth.authorizationUri));
 
   app.get('/oauth-callback', async (req, res) => {
     try {
