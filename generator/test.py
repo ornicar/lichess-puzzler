@@ -1,5 +1,4 @@
 import unittest
-import argparse
 from generator import Puzzle
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess import Move, Color, Board, WHITE, BLACK
