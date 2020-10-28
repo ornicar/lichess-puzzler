@@ -13,7 +13,7 @@ export default function(ctrl: Ctrl): VNode {
     nbMovesIn = ctrl.nbMovesIn();
   return h(`main.puzzle-${puzzle._id}`, [
     h('section.top', [
-      h('h1', 'Lichess Puzzle Validator'),
+      h('h1', h('a', { attrs: { href: '/' } }, 'Lichess Puzzle Validator')),
       h('div.top__right', [
         h('strong', ctrl.data.username),
         h('a', { attrs: { href: '/logout' } }, 'Log out')
