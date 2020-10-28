@@ -61,7 +61,6 @@ def win_chances(score: Score) -> float:
 def exclude_time_control(line: str) -> bool:
     if not line.startswith("[TimeControl "):
         return False
-    val = line[1:][:-1].split()[1]
     seconds, increment = line[1:][:-2].split()[1].replace("\"", "").split("+")
     t = int(seconds) + int(increment) * 40
     return t < 480
