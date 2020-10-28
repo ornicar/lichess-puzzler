@@ -26,7 +26,7 @@ logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 # logging.basicConfig(level=logging.DEBUG)
 
 version = 8
-get_move_limit = chess.engine.Limit(depth = 40, time = 15, nodes = 20_000_000)
+get_move_limit = chess.engine.Limit(depth = 50, time = 20, nodes = 30_000_000)
 mate_soon = Mate(20)
 
 Kind = Literal["mate", "material"]  # Literal["mate", "other"]
