@@ -23,7 +23,7 @@ export default class Ctrl {
     this.data = data;
     this.moves = [];
     this.chess = this.initialChess();
-    this.solution = makeSanVariation(this.chess, this.data.puzzle.moves.map(uci => parseUci(uci)!)).replace(/\d\.+ /g, '').split(' ');
+    this.solution = makeSanVariation(this.chess, this.data.puzzle.moves.map(uci => parseUci(uci)!)).replace(/\d+\.+ /g, '').split(' ');
   }
 
   review = async (score: number, comment: string, rating: number) => {
