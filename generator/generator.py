@@ -171,6 +171,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog='generator.py',
         description='takes a pgn file and produces chess puzzles')
+    parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
     parser.add_argument("--file", "-f", help="input PGN file", required=True, metavar="FILE.pgn")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
     parser.add_argument("--url", "-u", help="where to post puzzles", default="http://localhost:8000/puzzle")
@@ -180,7 +181,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def make_engine(args: argparse.Namespace) -> SimpleEngine:
-    engine = SimpleEngine.popen_uci("stockfish")
+    engine = SimpleEngine.popen_uci(args.engine)
     engine.configure({'Threads': args.threads})
     return engine
 
