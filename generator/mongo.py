@@ -9,7 +9,7 @@ def is_seen(id: str) -> bool:
 
 def set_seen(game: Game) -> None:
     try:
-        db.seen.insert({"_id": id_of(game)})
+        db.seen.insert_one({"_id": id_of(game)})
     except pymongo.errors.DuplicateKeyError:
         pass
 

@@ -24,7 +24,7 @@ logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 # Uncomment this for very verbose python-chess logging
 # logging.basicConfig(level=logging.DEBUG)
 
-version = "0.0.3-lax"
+version = "0.0.4"
 get_move_limit = chess.engine.Limit(depth = 40, time = 10, nodes = 12_000_000)
 mate_soon = Mate(20)
 
@@ -38,6 +38,7 @@ class Puzzle:
 
 def get_next_move(engine: SimpleEngine, board: Board, winner: Color) -> Optional[EngineMove]:
     next = get_next_move_pair(engine, board, winner, get_move_limit)
+    # logger.debug("{} {} {}".format("attack" if board.turn == winner else "defense", next.best, next.second))
     if board.turn == winner and not next.is_valid_attack():
         # logger.debug("No valid attack {}".format(next))
         return None
@@ -84,6 +85,7 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
     next = get_next_move(engine, node.board(), winner)
 
     if not next:
+        logger.debug("No next move")
         return []
 
     if next.score.is_mate():
@@ -136,8 +138,8 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
     logger.debug("{} {} to {}".format(node.ply(), node.move.uci() if node.move else None, score))
 
     # # was the opponent winning until their last move
-    if prev_score > Cp(0):
-        logger.debug("{} no losing position to start with {} -> {}".format(node.ply(), prev_score, score))
+    if prev_score > Cp(200):
+        logger.debug("{} Too much of a winning position to start with {} -> {}".format(node.ply(), prev_score, score))
         return score
     if is_up_in_material(board, winner):
         logger.debug("{} already up in material {} {} {}".format(node.ply(), winner, material_count(board, winner), material_count(board, not winner)))
@@ -146,19 +148,20 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
         logger.debug("{} mate in one".format(node.ply()))
         return score
     elif score > mate_soon:
-        logger.info("Mate {}#{}. Probing...".format(game_url, node.ply()))
+        logger.info("Mate {}#{} Probing...".format(game_url, node.ply()))
         solution = cook_mate(engine, copy.deepcopy(node), winner)
         mongo.set_seen(node.game())
         return Puzzle(node, solution, "mate") if solution is not None else score
     elif score >= Cp(0) and win_chances(score) > win_chances(prev_score) + 0.5:
-        if score < Cp(400) and material_count(board, winner) > material_count(board, not winner) - 5:
+        if score < Cp(400) and material_diff(board, winner) > -1:
             logger.info("Not clearly winning and not from being down in material, aborting")
             return score
-        logger.info("Advantage {}#{}. {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
+        logger.info("Advantage {}#{} {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
         puzzle_node = copy.deepcopy(node)
         solution = cook_advantage(engine, puzzle_node, winner)
+        *_, last = puzzle_node.mainline()
         valid = (solution is not None and len(solution) > 2 and
-                material_diff(puzzle_node.board(), winner) > material_diff(board, winner))
+                material_diff(last.board(), winner) > material_diff(board, winner))
         mongo.set_seen(node.game())
         return Puzzle(node, solution, "material") if valid and solution is not None else score
     else:
