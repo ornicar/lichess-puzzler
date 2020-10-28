@@ -16,7 +16,7 @@ export interface Puzzle {
   moves: Uci[];
   kind: Kind;
   review?: Review;
-  generator: string;
+  generator: number;
 }
 
 export interface Review {
