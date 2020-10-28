@@ -7,6 +7,7 @@ import chess
 import chess.pgn
 import chess.engine
 import copy
+import sys
 from io import StringIO
 from chess import Move, Color, Board
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
@@ -190,6 +191,7 @@ def make_engine(args: argparse.Namespace) -> SimpleEngine:
 
 
 def main() -> None:
+    sys.setrecursionlimit(10000) # else node.deepcopy() sometimes fails?
     args = parse_args()
     setup_logging(args)
     engine = make_engine(args)
