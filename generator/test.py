@@ -8,20 +8,9 @@ from typing import List, Optional, Tuple, Literal, Union
 
 import generator
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog='test.py')
-    # parser.add_argument("method", help="test method")
-    parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
-    parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="8")
-    parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
-    return parser.parse_args()
-
-
 class TestGenerator(unittest.TestCase):
 
-    args = parse_args()
-    generator.setup_logging(args)
-    engine = generator.make_engine(args)
+    engine = generator.make_engine("stockfish", 8)
 
     def test_puzzle_1(self) -> None:
         # https://lichess.org/analysis/standard/3q1k2/p7/1p2Q2p/5P1K/1P4P1/P7/8/8_w_-_-_5_57#112

@@ -193,9 +193,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def make_engine(args: argparse.Namespace) -> SimpleEngine:
-    engine = SimpleEngine.popen_uci(args.engine)
-    engine.configure({'Threads': args.threads})
+def make_engine(executable: str, threads: int) -> SimpleEngine:
+    engine = SimpleEngine.popen_uci(executable)
+    engine.configure({'Threads': threads})
     return engine
 
 
@@ -203,7 +203,7 @@ def main() -> None:
     sys.setrecursionlimit(10000) # else node.deepcopy() sometimes fails?
     args = parse_args()
     setup_logging(args)
-    engine = make_engine(args)
+    engine = make_engine(args.engine, args.threads)
 
     with open(args.file) as pgn:
         skip_next = False
