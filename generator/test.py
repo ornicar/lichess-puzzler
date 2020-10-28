@@ -10,7 +10,7 @@ import generator
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog='test.py')
-    parser.add_argument("method", help="test method")
+    # parser.add_argument("method", help="test method")
     parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="8")
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
@@ -52,6 +52,12 @@ class TestGenerator(unittest.TestCase):
     def test_puzzle_6(self) -> None:
         self.get_puzzle("4nr1k/2r1qNpp/p3pn2/1b2N2Q/1p6/7P/BP1R1PP1/4R1K1 b - - 0 1",
                 Cp(130), "f8f7", Cp(550), "e5g6 h8g8 g6e7")
+
+    # https://lichess.org/YCjcYuK6#81
+    def test_puzzle_7(self) -> None:
+        self.get_puzzle("7r/1k6/pPp1qp2/2Q3p1/P4p2/5P2/5KP1/1RR4r b - - 5 41",
+                Cp(-1500), "e6a2", Cp(530), "c1c2 a2e6 b1h1 h8h1 c2e2 e6d7 e2e7 d7e7 c5e7")
+
 
     def test_not_puzzle_1(self) -> None:
         # https://lichess.org/LywqL7uc#32
