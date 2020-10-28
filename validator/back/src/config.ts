@@ -39,7 +39,7 @@ const schema = convict({
     app: {
       id: { format: String, default: '' },
       secret: { format: String, default: '' }
-    }
+    },
   }
 });
 
@@ -83,7 +83,7 @@ export const config: Config = {
       id: schema.get('oauth.app.id'),
       secret: schema.get('oauth.app.secret'),
       redirectUri: `http://localhost:${schema.get('http.port')}/oauth-callback`,
-      scopes: ['preference:read']
+      scopes: []
     },
     server: {
       tokenHost: 'https://oauth.lichess.org',
