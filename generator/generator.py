@@ -91,7 +91,7 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
 
     if next.score.is_mate():
         logger.info("Expected advantage, got mate?!")
-        return []
+        return None
 
     next_moves = cook_advantage(engine, node.add_main_variation(next.move), winner)
 
