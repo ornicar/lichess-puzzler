@@ -15,7 +15,7 @@ Env.make().then((env: Env) => {
 
   app.use(cookieSession({
     name: 'session',
-    keys: [ config.cookie.secret ],
+    keys: [ config.http.cookieSecret ],
     // Cookie Options
     maxAge: 30 * 24 * 60 * 60 * 1000
   }))
@@ -23,6 +23,6 @@ Env.make().then((env: Env) => {
   router(app, env);
 
   app.listen(config.http.port, () => {
-    console.log(`⚡️[server]: Server is running at ${config.http.url}`);
+    console.log(`⚡️[${config.env}]: Server is running at ${config.http.url}`);
   });
 });

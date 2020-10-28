@@ -4,8 +4,8 @@ import fetch from 'node-fetch';
 
 const client = new AuthorizationCode({
   client: {
-    id: config.oauth.client.id,
-    secret: config.oauth.client.secret
+    id: config.oauth.app.id,
+    secret: config.oauth.app.secret
   },
   auth: {
     tokenHost: config.oauth.server.tokenHost,
@@ -18,18 +18,18 @@ const client = new AuthorizationCode({
 });
 
 export const authorizationUri = client.authorizeURL({
-  redirect_uri: config.oauth.client.redirectUri,
-  scope: config.oauth.client.scopes,
+  redirect_uri: config.oauth.app.redirectUri,
+  scope: config.oauth.app.scopes,
   state: Math.random().toString(36).substring(2)
 });
 
 export const getToken = (code: string): Promise<AccessToken> => 
   client.getToken({
     code,
-    redirect_uri: config.oauth.client.redirectUri
+    redirect_uri: config.oauth.app.redirectUri
   });
 
 export const getUserInfo = (token: AccessToken): Promise<any> =>
-  fetch(config.oauth.server.url.userInfo, {
+  fetch('https://lichess.org/api/account', {
     headers: { 'Authorization': `Bearer ${token.token.access_token}` }
   }).then(res => res.json());
