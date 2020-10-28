@@ -8,6 +8,7 @@ import chess.pgn
 import chess.engine
 import copy
 import sys
+import mongo
 from io import StringIO
 from chess import Move, Color, Board
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
@@ -34,7 +35,6 @@ class Puzzle:
     node: GameNode
     moves: List[Move]
     kind: Kind
-
 
 def get_next_move(engine: SimpleEngine, board: Board, winner: Color) -> Optional[EngineMove]:
     next = get_next_move_pair(engine, board, winner, get_move_limit)
@@ -148,6 +148,7 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
     elif score > mate_soon:
         logger.info("Mate {}#{}. Probing...".format(game_url, node.ply()))
         solution = cook_mate(engine, copy.deepcopy(node), winner)
+        mongo.set_seen(node.game())
         return Puzzle(node, solution, "mate") if solution is not None else score
     elif score >= Cp(0) and win_chances(score) > win_chances(prev_score) + 0.5:
         if score < Cp(400) and material_count(board, winner) > material_count(board, not winner) - 5:
@@ -158,6 +159,7 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
         solution = cook_advantage(engine, puzzle_node, winner)
         valid = (solution is not None and len(solution) > 2 and
                 material_diff(puzzle_node.board(), winner) > material_diff(board, winner))
+        mongo.set_seen(node.game())
         return Puzzle(node, solution, "material") if valid and solution is not None else score
     else:
         return score
@@ -202,6 +204,9 @@ def main() -> None:
                 site = line
             elif "%eval" in line:
                 game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
+                if mongo.is_seen(site[27:35]):
+                    logger.info("Game was already seen before")
+                    continue
 
                 puzzle = analyze_game(engine, game)
 
