@@ -51,7 +51,7 @@ class TestGenerator(unittest.TestCase):
 
     def test_puzzle_6(self) -> None:
         self.get_puzzle("4nr1k/2r1qNpp/p3pn2/1b2N2Q/1p6/7P/BP1R1PP1/4R1K1 b - - 0 1",
-                Cp(130), "f8f7", Cp(550), "e5g6 h8g8 g6e7 f7e7")
+                Cp(130), "f8f7", Cp(550), "e5g6 h8g8 g6e7")
 
     def test_not_puzzle_1(self) -> None:
         # https://lichess.org/LywqL7uc#32

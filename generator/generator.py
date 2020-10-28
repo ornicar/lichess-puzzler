@@ -25,7 +25,7 @@ logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 # Uncomment this for very verbose python-chess logging
 # logging.basicConfig(level=logging.DEBUG)
 
-version = "0.0.4"
+version = "v5"
 get_move_limit = chess.engine.Limit(depth = 40, time = 10, nodes = 12_000_000)
 mate_soon = Mate(20)
 
@@ -160,11 +160,14 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
         logger.info("Advantage {}#{} {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
         puzzle_node = copy.deepcopy(node)
         solution = cook_advantage(engine, puzzle_node, winner)
-        *_, last = puzzle_node.mainline()
-        valid = (solution is not None and len(solution) > 2 and
-                material_diff(last.board(), winner) > material_diff(board, winner))
         mongo.set_seen(node.game())
-        return Puzzle(node, solution, "material") if valid and solution is not None else score
+        if solution is None or len(solution) < 3:
+            return score
+        if len(solution) % 2 == 0:
+            solution = solution[:-1]
+        last = list(puzzle_node.mainline())[len(solution)]
+        gain = material_diff(last.board(), winner) > material_diff(board, winner)
+        return Puzzle(node, solution, "material") if gain else score
     else:
         return score
 
