@@ -66,7 +66,7 @@ def exclude_time_control(line: str) -> bool:
         t = int(seconds) + int(increment) * 40
         return t < 480
     except:
-        print("Can't parse time control: {}".format(line))
+        # correspondence probably
         return True
 
 def exclude_rating(line: str) -> bool:
