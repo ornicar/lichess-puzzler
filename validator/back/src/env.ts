@@ -19,5 +19,5 @@ async function connectDb(conf: any): Promise<Db> {
     useUnifiedTopology: true,
     useNewUrlParser: true
   });
-  return client.connect().then(() => client.db(conf.dbName));
+  return client.connect().then(() => client.db(conf.name));
 }
