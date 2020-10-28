@@ -65,6 +65,12 @@ button {
   padding: .3em .7em;
   cursor: pointer;
 }
+button.variation {
+  border-color: red;
+}
+button.complete {
+  border-color: #0DFF92;
+}
 
 .puzzle__ui button.submit {
   margin-top: 1em;

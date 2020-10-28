@@ -29,4 +29,5 @@ export function start(data: ServerData) {
   redraw();
 
   Mousetrap.bind('left', ctrl.back);
+  Mousetrap.bind('right', ctrl.forward);
 };

@@ -39,14 +39,19 @@ export default class Ctrl {
     this.chessground = cg;
   }
 
-  onMove = (uci: Uci) => {
+  onMove = (uci: Uci, autoReply: boolean = true) => {
     this.moves.push(uci);
     this.chess.play(parseUci(uci)!);
     this.chessground.set(this.cgConfig(uci));
     const reply = this.findReply();
-    if (reply) setTimeout(() => this.onMove(reply), 200);
+    if (reply && autoReply) setTimeout(() => this.onMove(reply), 200);
     this.redraw();
   }
+
+  isComplete = () =>
+    this.moves.join(' ') == this.data.puzzle.moves.join(' ');
+
+  isInVariation = () => !this.isComplete() && !this.canForward();
 
   back = () => {
     if (!this.moves.length) return;
@@ -54,6 +59,17 @@ export default class Ctrl {
     this.chess = this.initialChess();
     this.moves.forEach(move => this.chess.play(parseUci(move)!));
     this.chessground.set(this.cgConfig(this.moves[this.moves.length - 1]));
+    this.redraw();
+  }
+
+  canForward = () =>
+    this.moves.length < this.data.puzzle.moves.length &&
+    this.moves.join(' ') == this.data.puzzle.moves.slice(0, this.moves.length).join(' ');
+
+  forward = () => {
+    if (!this.canForward()) return;
+    const move = this.data.puzzle.moves[this.moves.length];
+    if (move) this.onMove(move, false);
     this.redraw();
   }
 

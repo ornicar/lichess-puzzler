@@ -63,7 +63,10 @@ export default function(ctrl: Ctrl): VNode {
                 /* const rating = parseInt(((ev.target as HTMLElement).parentNode!.querySelector('input[name="rating"]:checked') as HTMLInputElement)?.value); */
                 const rating = 0;
                 if (score) ctrl.review(score, comment, rating);
-              })
+              }),
+              class: {
+                complete: ctrl.isComplete()
+              }
             }, 'Review & next')
           ])
         ])
@@ -74,8 +77,17 @@ export default function(ctrl: Ctrl): VNode {
         attrs: {
           disabled: !ctrl.moves.length
         },
+        class: {
+          variation: ctrl.isInVariation()
+        },
         hook: onClick(ctrl.back)
-      }, '< Rewind')
+      }, '< Rewind'),
+      h('button', {
+        attrs: {
+          disabled: !ctrl.canForward()
+        },
+        hook: onClick(ctrl.forward)
+      }, 'Forward >')
     ])
   ]);
 }
