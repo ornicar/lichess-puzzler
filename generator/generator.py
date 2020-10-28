@@ -216,16 +216,21 @@ def main() -> None:
                 skip_next = False
             elif "%eval" in line:
                 game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
-                if mongo.is_seen(site[27:35]):
+                game_id = game.headers.get("Site", "?")[20:]
+                if mongo.is_seen(game_id):
                     logger.info("Game was already seen before")
                     continue
 
-                puzzle = analyze_game(engine, game)
+                try:
+                    puzzle = analyze_game(engine, game)
+                except Exception as e:
+                    print("Exception on {}".format(game_id))
+                    raise e
 
                 if puzzle is not None:
                     # Compose and print the puzzle
                     json = {
-                        'game_id': game.headers.get("Site", "?")[20:],
+                        'game_id': game_id,
                         'fen': puzzle.node.board().fen(),
                         'ply': puzzle.node.ply(),
                         'moves': list(map(lambda m : m.uci(), puzzle.moves)),
