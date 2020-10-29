@@ -39,9 +39,7 @@ export default function(app: Express.Express, env: Env) {
     await env.mongo.puzzle.review(puzzle, {
       by: username,
       at: new Date(),
-      score: parseInt(req.query.score as string),
-      comment: req.query.comment as string,
-      rating: parseInt(req.query.rating as string),
+      approved: !!req.query.approved
     });
     const next = await env.mongo.puzzle.next();
     if (!next) return res.status(404).end();

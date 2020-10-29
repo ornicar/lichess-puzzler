@@ -2,6 +2,9 @@ body {
   background: #161512 linear-gradient(to bottom, #2e2a24, #161512 116px) no-repeat;
   color: #bababa;
   font: 16px 'Noto Sans', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, Sans-Serif;
+
+  --c-bad: #b21e35;
+  --c-good: #4f772d;
 }
 
 main {
@@ -38,16 +41,20 @@ h1 a {
   padding: 1em 2em;
   background: hsla(0, 0%, 90%, 0.1);
   overflow: hidden;
+
+  display: flex;
+  flex-flow: column;
+  justify-content: space-between;
 }
 
-.puzzle__ui san {
+.puzzle__info san {
   margin: 0 .3ch;
   opacity: .3;
   font-weight: bold;
   display: inline-block;
 }
 
-.puzzle__ui san.done {
+.puzzle__info san.done {
   color: hsl(88, 62%, 37%);
   opacity: 1;
 }
@@ -59,76 +66,68 @@ h1 a {
 
 button {
   border-radius: 5px;
+  cursor: pointer;
+}
+
+.replay button {
   background: hsla(0, 0%, 90%, 0.1);
   color: #bababa;
   font-size: 1em;
   padding: .3em .7em;
-  cursor: pointer;
+  margin-right: 1em;
 }
-button.variation {
-  border-color: red;
+.replay button:disabled {
+  opacity: .5;
 }
-button.complete {
-  border-color: #0DFF92;
+.replay button.variation {
+  border-color: var(--c-bad);
 }
 
-.puzzle__ui button.submit {
-  margin-top: 1em;
+.puzzle__review {
+  display: flex;
+  flex-flow: row nowrap;
+}
+.puzzle__review button {
+  background: none;
+  border: none;
+  flex: 1 1 50%;
   padding: 1em;
-  width: 100%;
-  color: #eaeaea;
+  outline: none!important;
 }
-
-.radios {
-  margin-top: 1.5em;
-}
-
-.radios strong {
-  text-transform: uppercase;
-  font-weight: normal;
-  letter-spacing: 3px;
-  opacity: .6;
-}
-
-.radios .choices {
-  display: flex;
-  flex-flow: row wrap;
-  align-content: stretch;
-  margin-top: .3em;
-  user-select: none;
-}
-
-.radios .choices div {
-  flex: 1 1 auto;
-  display: flex;
-  align-content: stretch;
-}
-
-.radios input {
-  position: absolute;
-  left: -999999px;
-}
-
-.radios label {
-  flex: 1 1 auto;
-  text-align: center;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: .6em;
-}
-
-.radios label:hover {
+.puzzle__review button:hover {
   background: hsla(0, 0%, 90%, 0.1);
 }
-.radios label:active {
-  background: #0DFF92;
+.puzzle__review button strong {
+  font-size: 6em;
+  display: block;
+  line-height: .9em;
+}
+.puzzle__review .reject {
+  color: var(--c-bad);
+}
+.puzzle__review .approve {
+  color: var(--c-good);
+}
+.puzzle__review button:active,
+.puzzle__review button.active {
   color: #fff;
 }
+.puzzle__review .reject:active,
+.puzzle__review .reject.active {
+  background: var(--c-bad);
+}
+.puzzle__review .approve:active,
+.puzzle__review .approve.active {
+  background: var(--c-good);
+}
+.puzzle__review button em {
+  color: #888;
+  font-size: .8em;
+}
 
-.radios input:checked~label {
-  color: #0DFF92;
-  background: hsla(0, 0%, 90%, 0.1);
-  font-weight: bold;
+.puzzle__help {
+  font-size: .8em;
+  opacity: .8;
 }
 
 /* chessground */

@@ -30,4 +30,7 @@ export function start(data: ServerData) {
 
   Mousetrap.bind('left', ctrl.back);
   Mousetrap.bind('right', ctrl.forward);
+  Mousetrap.bind('backspace', () => ctrl.review(false));
+  Mousetrap.bind('enter', () => ctrl.review(true));
+  Mousetrap.bind('a', () => (document.querySelector('a.analyse') as HTMLAnchorElement).click());
 };

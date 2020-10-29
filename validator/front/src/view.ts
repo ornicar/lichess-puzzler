@@ -6,7 +6,6 @@ import { parseFen } from 'chessops/fen';
 import { Chess } from 'chessops/chess';
 import { chessgroundDests } from 'chessops/compat';
 import { Color, Key } from 'chessground/types';
-import { Review } from '../../back/src/puzzle';
 
 export default function(ctrl: Ctrl): VNode {
   const puzzle = ctrl.data.puzzle,
@@ -43,7 +42,7 @@ export default function(ctrl: Ctrl): VNode {
           ]),
           h('p', [
             'From game ',
-            h('a', {
+            h('a.analyse', {
               attrs: {
                 href: gameUrl,
                 target: '_blank'
@@ -57,28 +56,33 @@ export default function(ctrl: Ctrl): VNode {
                 class: { done: i < nbMovesIn }
               }, san)
             )
-          ]),
-          h('div', [
-            radios('score', 'Quality (required)', [1, 2, 3, 4, 5].map(s => [s, s]), puzzle.review),
-            radios('comment', 'Comment', comments, puzzle.review),
-            /* radios('rating', 'Rating', [800, 1200, 1600, 2000, 2400, 2800].map(s => [s, s]), puzzle.review), */
-            h('button.submit', {
-              hook: onClick(ev => {
-                const score = parseInt(((ev.target as HTMLElement).parentNode!.querySelector('input[name="score"]:checked') as HTMLInputElement)?.value);
-                const comment = ((ev.target as HTMLElement).parentNode!.querySelector('input[name="comment"]:checked') as HTMLInputElement)?.value;
-                /* const rating = parseInt(((ev.target as HTMLElement).parentNode!.querySelector('input[name="rating"]:checked') as HTMLInputElement)?.value); */
-                const rating = 0;
-                if (score) ctrl.review(score, comment, rating);
-              }),
-              class: {
-                complete: ctrl.isComplete()
-              }
-            }, 'Review & next')
           ])
+        ]), ,
+        h('div.puzzle__review', [
+          h('button.reject', {
+            hook: onClick(() => ctrl.review(false)),
+            class: { active: puzzle.review?.approved === false }
+          }, [
+            h('em', 'Reject'),
+            h('strong', '✗'),
+            h('em', '[backspace]')
+          ]),
+          h('button.approve', {
+            hook: onClick(() => ctrl.review(true)),
+            class: { active: puzzle.review?.approved === true }
+          }, [
+            h('em', 'Approve'),
+            h('strong', '✓'),
+            h('em', '[enter]')
+          ])
+        ]),
+        h('div.puzzle__help', [
+          h('p', 'Does the puzzle feel a bit off, computer-like, or frustrating? Just reject it.'),
+          h('p', 'Use arrow keys to replay, backspace/enter to review, a to analyse.')
         ])
       ])
     ]),
-    h('p', [
+    h('p.replay', [
       h('button', {
         attrs: {
           disabled: !ctrl.moves.length
@@ -97,15 +101,6 @@ export default function(ctrl: Ctrl): VNode {
     ])
   ]);
 }
-
-const comments: Array<[string, string]> = [
-  ['', 'N/A'],
-  ['boring', 'Boring'],
-  ['weird', 'Weird'],
-  ['wrong', 'Wrong'],
-  ['long', 'Too long'],
-  ['short', 'Too short']
-];
 
 const cgConfig = (ctrl: Ctrl) => {
   const p = ctrl.data.puzzle,
@@ -142,28 +137,3 @@ const onClick = (f: (event: MouseEvent) => any) => ({
     (vnode.elm as HTMLElement).addEventListener('click', f)
   }
 });
-
-const radios = (name: string, title: string, values: Array<[any, any]>, review?: Review) =>
-  h(`div.radios.${name}`, [
-    h('strong', title),
-    h('div.choices',
-      values.map(([key, display]) =>
-        h('div', [
-          h('input', {
-            attrs: {
-              type: 'radio',
-              name: name,
-              id: `${name}-${key}`,
-              value: key,
-              checked: review ? (review as any)[name] == key : key == ''
-            }
-          }),
-          h('label', {
-            attrs: {
-              for: `${name}-${key}`
-            }
-          }, display)
-        ])
-      )
-    )
-  ])

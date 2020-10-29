@@ -26,8 +26,14 @@ export default class Ctrl {
     this.solution = makeSanVariation(this.chess, this.data.puzzle.moves.map(uci => parseUci(uci)!)).replace(/\d+\.+ /g, '').split(' ');
   }
 
-  review = async (score: number, comment: string, rating: number) => {
-    const data = await fetch(`/review/${this.data.puzzle._id}?score=${score}&comment=${comment}&rating=${rating}`, {
+  review = async (approved: boolean) => {
+    this.data.puzzle.review = { 
+      approved,
+      by: this.data.username,
+      at: new Date()
+    };
+    this.redraw();
+    const data = await fetch(`/review/${this.data.puzzle._id}?approved=${approved ? 1 : 0}`, {
       method: 'post'
     }).then(res => res.json());
     this.init(data);
