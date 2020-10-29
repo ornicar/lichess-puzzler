@@ -37,7 +37,7 @@ h1 a {
 }
 
 .puzzle__ui {
-  margin-left: 2em;
+  margin-left: 1.5em;
   padding: 1em 2em;
   background: hsla(0, 0%, 90%, 0.1);
   overflow: hidden;
@@ -71,6 +71,9 @@ button {
   cursor: pointer;
 }
 
+.replay {
+  margin: 1.5em 0 0 0;
+}
 .replay button {
   font-size: 1em;
   padding: .3em .7em;
@@ -145,24 +148,24 @@ button {
   display: block;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1000px) {
   .cg-wrap {
-    width: 420px;
-    height: 420px;
+    width: 512px;
+    height: 512px;
   }
 }
 
-@media (max-width: 950px) {
+@media (max-width: 850px) {
   .cg-wrap {
-    width: 300px;
-    height: 300px;
+    width: 384px;
+    height: 384px;
   }
 }
 
 @media (max-width: 700px) {
   .cg-wrap {
-    width: 240px;
-    height: 240px;
+    width: 256px;
+    height: 256px;
   }
 }
 
