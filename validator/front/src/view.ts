@@ -81,6 +81,7 @@ export default function(ctrl: Ctrl): VNode {
         ]),
         h('div.puzzle__help', [
           h('p', 'Does the puzzle feel a bit off, computer-like, or frustrating? Just reject it.'),
+          h('p', 'Too difficult and you\'re not sure if interesting? Skip it.'),
           h('p', 'Use arrow keys to replay, backspace/enter to review, a to analyse.')
         ])
       ])
