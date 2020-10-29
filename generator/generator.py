@@ -22,8 +22,6 @@ from util import EngineMove, get_next_move_pair, material_count, material_diff, 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M')
-# Uncomment this for very verbose python-chess logging
-# logging.basicConfig(level=logging.DEBUG)
 
 version = 9
 get_move_limit = chess.engine.Limit(depth = 50, time = 20, nodes = 30_000_000)
@@ -138,7 +136,6 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
 
     logger.debug("{} {} to {}".format(node.ply(), node.move.uci() if node.move else None, score))
 
-    # # was the opponent winning until their last move
     if prev_score > Cp(200):
         logger.debug("{} Too much of a winning position to start with {} -> {}".format(node.ply(), prev_score, score))
         return score

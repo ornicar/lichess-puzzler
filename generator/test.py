@@ -1,5 +1,6 @@
 import unittest
-from generator import Puzzle
+import logging
+from generator import Puzzle, logger
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess import Move, Color, Board, WHITE, BLACK
 from chess.pgn import Game, GameNode
@@ -10,6 +11,7 @@ import generator
 class TestGenerator(unittest.TestCase):
 
     engine = generator.make_engine("stockfish", 8)
+    # logger.setLevel(logging.DEBUG)
 
     def test_puzzle_1(self) -> None:
         # https://lichess.org/analysis/standard/3q1k2/p7/1p2Q2p/5P1K/1P4P1/P7/8/8_w_-_-_5_57#112
@@ -46,6 +48,10 @@ class TestGenerator(unittest.TestCase):
         self.get_puzzle("7r/1k6/pPp1qp2/2Q3p1/P4p2/5P2/5KP1/1RR4r b - - 5 41",
                 Cp(-1500), "e6a2", Cp(530), "c1c2 a2e6 b1h1 h8h1 c2e2 e6d7 e2e7 d7e7 c5e7")
 
+    # r1bq3r/pppp1kpp/2n5/2b1P1N1/3p2n1/2P5/P4PPP/RNBQ1RK1 b - - 1 10
+    def test_puzzle_8(self) -> None:
+        self.get_puzzle("r1bq3r/pppp1kpp/2n5/2b1P1N1/3p2n1/2P5/P4PPP/RNBQ1RK1 b - - 1 10",
+                Cp(0), "f7g8", Mate(4), "d1b3 d7d5 e5d6 c8e6 b3e6 g8f8 e6f7")
 
     def test_not_puzzle_1(self) -> None:
         # https://lichess.org/LywqL7uc#32

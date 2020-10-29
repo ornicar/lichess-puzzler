@@ -21,6 +21,8 @@ class NextMovePair:
             return True
         if self.best.score == Mate(1) and self.second.score < Mate(2):
             return True
+        if self.best.score == Mate(2) and self.second.score < Cp(500):
+            return True
         return win_chances(self.best.score) > win_chances(self.second.score) + 0.4
 
     def is_valid_defense(self) -> bool:
