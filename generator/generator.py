@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M')
 
-version = 9
+version = 10
 get_move_limit = chess.engine.Limit(depth = 50, time = 20, nodes = 30_000_000)
 mate_soon = Mate(20)
 
