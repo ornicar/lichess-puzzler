@@ -28,9 +28,11 @@ export function start(data: ServerData) {
 
   redraw();
 
+  const noRepeat = (f: () => void) => (e: KeyboardEvent) => { if (!e.repeat) f() };
+
   Mousetrap.bind('left', ctrl.back);
   Mousetrap.bind('right', ctrl.forward);
-  Mousetrap.bind('backspace', () => ctrl.review(false));
-  Mousetrap.bind('enter', () => ctrl.review(true));
+  Mousetrap.bind('backspace', noRepeat(() => ctrl.review(false)));
+  Mousetrap.bind('enter', noRepeat(() => ctrl.review(true)));
   Mousetrap.bind('a', () => (document.querySelector('a.analyse') as HTMLAnchorElement).click());
 };
