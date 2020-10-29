@@ -29,7 +29,7 @@ export class PuzzleMongo {
     this.coll.findOne({ _id: id });
 
   next = async (): Promise<Puzzle | null> => {
-    let p = await this.nextSkip(Math.round(Math.random() * 50));
+    let p = await this.nextSkip(Math.round(Math.random() * 100));
     if (!p) p = await this.nextSkip(0);
     return p;
   }

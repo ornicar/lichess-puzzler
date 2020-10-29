@@ -65,13 +65,13 @@ h1 a {
 }
 
 button {
+  background: hsla(0, 0%, 90%, 0.1);
+  color: #bababa;
   border-radius: 5px;
   cursor: pointer;
 }
 
 .replay button {
-  background: hsla(0, 0%, 90%, 0.1);
-  color: #bababa;
   font-size: 1em;
   padding: .3em .7em;
   margin-right: 1em;
@@ -123,6 +123,12 @@ button {
 .puzzle__review button em {
   color: #888;
   font-size: .8em;
+}
+.puzzle__skip {
+  text-align: center;
+}
+.puzzle__skip button {
+  padding: .3em 1em;
 }
 
 .puzzle__help {

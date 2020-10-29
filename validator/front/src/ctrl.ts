@@ -16,14 +16,16 @@ export default class Ctrl {
   moves: Uci[] = [];
 
   constructor(data: ServerData, readonly redraw: () => void) {
-    this.init(data);
+    this.init(data, true);
   }
 
-  private init = (data: ServerData) => {
+  private init = (data: ServerData, first: boolean = false) => {
     this.data = data;
     this.moves = [];
     this.chess = this.initialChess();
     this.solution = makeSanVariation(this.chess, this.data.puzzle.moves.map(uci => parseUci(uci)!)).replace(/\d+\.+ /g, '').split(' ');
+    if (!first) this.redraw();
+    history.replaceState({}, '', `/puzzle/${data.puzzle._id}`);
   }
 
   review = async (approved: boolean) => {
@@ -37,9 +39,9 @@ export default class Ctrl {
       method: 'post'
     }).then(res => res.json());
     this.init(data);
-    this.redraw();
-    history.replaceState({}, '', `/puzzle/${data.puzzle._id}`);
   }
+
+  skip = () => fetch('/skip').then(res => res.json()).then(this.init);
 
   setChessground(cg: Chessground) {
     this.chessground = cg;

@@ -76,6 +76,9 @@ export default function(ctrl: Ctrl): VNode {
             h('em', '[enter]')
           ])
         ]),
+        h('div.puzzle__skip', [
+          h('button', { hook: onClick(ctrl.skip) }, 'Skip')
+        ]),
         h('div.puzzle__help', [
           h('p', 'Does the puzzle feel a bit off, computer-like, or frustrating? Just reject it.'),
           h('p', 'Use arrow keys to replay, backspace/enter to review, a to analyse.')

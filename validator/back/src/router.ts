@@ -3,7 +3,7 @@ import Env from './env';
 import * as oauth from './oauth';
 import { Puzzle } from './puzzle';
 import { Response as ExResponse } from 'express';
-import {config} from './config';
+import { config } from './config';
 
 type HttpResponse = ExResponse<string>
 
@@ -41,6 +41,14 @@ export default function(app: Express.Express, env: Env) {
       at: new Date(),
       approved: !!req.query.approved
     });
+    const next = await env.mongo.puzzle.next();
+    if (!next) return res.status(404).end();
+    res.send(JSON.stringify({ username, puzzle: next }));
+  });
+
+  app.get('/skip', async (req, res) => {
+    const username = await env.mongo.auth.username(req.session?.authId || '');
+    if (!username) return res.status(403).end();
     const next = await env.mongo.puzzle.next();
     if (!next) return res.status(404).end();
     res.send(JSON.stringify({ username, puzzle: next }));
