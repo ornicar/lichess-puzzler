@@ -28,8 +28,14 @@ export class PuzzleMongo {
   get = (id: number): Promise<Puzzle | null> =>
     this.coll.findOne({ _id: id });
 
-  next = (): Promise<Puzzle | null> =>
-    this.coll.findOne(this.selectReviewed(false));
+  next = async (): Promise<Puzzle | null> => {
+    let p = await this.nextSkip(Math.round(Math.random() * 50));
+    if (!p) p = await this.nextSkip(0);
+    return p;
+  }
+
+  nextSkip = (skip: number): Promise<Puzzle | null> =>
+    this.coll.find(this.selectReviewed(false)).skip(skip).limit(1).next();
 
   review = (puzzle: Puzzle, review: Review): Promise<UpdateWriteOpResult> =>
     this.coll.updateOne({ _id: puzzle._id }, { $set: { review: review } });
