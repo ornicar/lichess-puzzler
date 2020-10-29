@@ -51,9 +51,9 @@ export default class Ctrl {
     this.moves.push(uci);
     this.chess.play(parseUci(uci)!);
     this.chessground.set(this.cgConfig(uci));
-    const reply = this.findReply();
-    if (reply && autoReply) setTimeout(() => this.onMove(reply), 200);
-    this.redraw();
+    const reply = autoReply && this.findReply();
+    if (reply) this.onMove(reply, false);
+    else this.redraw();
   }
 
   orientation = () => this.data.puzzle.ply % 2 == 0 ? 'white' : 'black';
