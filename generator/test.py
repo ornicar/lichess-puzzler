@@ -53,6 +53,10 @@ class TestGenerator(unittest.TestCase):
         self.get_puzzle("r1bq3r/pppp1kpp/2n5/2b1P1N1/3p2n1/2P5/P4PPP/RNBQ1RK1 b - - 1 10",
                 Cp(0), "f7g8", Mate(4), "d1b3 d7d5 e5d6 c8e6 b3e6 g8f8 e6f7")
 
+    def test_puzzle_9(self) -> None:
+        self.get_puzzle("7k/p3r1bP/1p1rp2q/8/2PBB3/4P3/P3KQ2/6R1 b - - 0 38",
+                Cp(-110), "e6e5", Mate(2), "f2f8 g7f8 g1g8")
+
     def test_not_puzzle_1(self) -> None:
         # https://lichess.org/LywqL7uc#32
         self.not_puzzle("r2q1rk1/1pp2pp1/p4n1p/b1pP4/4PB2/P3RQ2/1P3PPP/RN4K1 w - - 1 17",
