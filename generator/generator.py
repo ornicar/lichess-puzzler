@@ -35,14 +35,15 @@ class Puzzle:
     moves: List[Move]
     kind: Kind
 
-def get_next_move(engine: SimpleEngine, board: Board, winner: Color) -> Optional[EngineMove]:
-    next = get_next_move_pair(engine, board, winner, get_move_limit)
-    # logger.debug("{} {} {}".format("attack" if board.turn == winner else "defense", next.best, next.second))
+def get_next_move(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[EngineMove]:
+    board = node.board()
+    next = get_next_move_pair(engine, node, winner, get_move_limit)
+    logger.debug("{} {} {}".format("attack" if board.turn == winner else "defense", next.best, next.second))
     if board.turn == winner and not next.is_valid_attack():
-        # logger.debug("No valid attack {}".format(next))
+        logger.debug("No valid attack {}".format(next))
         return None
     if board.turn != winner and not next.is_valid_defense():
-        # logger.debug("No valid defense {}".format(next))
+        logger.debug("No valid defense {}".format(next))
         return None
     return next.best
 
@@ -51,7 +52,7 @@ def cook_mate(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[L
     if node.board().is_game_over():
         return []
 
-    next = get_next_move(engine, node.board(), winner)
+    next = get_next_move(engine, node, winner)
 
     if not next:
         return None
@@ -81,7 +82,7 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
     #     logger.info("Not a capture and we're up in material, end of the line")
     #     return []
 
-    next = get_next_move(engine, node.board(), winner)
+    next = get_next_move(engine, node, winner)
 
     if not next:
         logger.debug("No next move")
@@ -110,7 +111,7 @@ def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
         current_eval = node.eval()
 
         if not current_eval:
-            logger.debug("Skipping game without eval on ply {}".format(node.ply()))
+            logger.info("Skipping game without eval on ply {}".format(node.ply()))
             return None
 
         result = analyze_position(engine, node, prev_score, current_eval)
@@ -119,6 +120,8 @@ def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
             return result
 
         prev_score = -result
+
+    logger.debug("Found nothing from {}".format(game.headers.get("Site")))
 
     return None
 
@@ -210,6 +213,7 @@ def main() -> None:
             elif util.exclude_time_control(line) or util.exclude_rating(line):
                 skip_next = True
             elif line.startswith("1. ") and skip_next:
+                logger.debug("Skip {}".format(site))
                 skip_next = False
             elif "%eval" in line:
                 game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
@@ -221,7 +225,7 @@ def main() -> None:
                 try:
                     puzzle = analyze_game(engine, game)
                 except Exception as e:
-                    print("Exception on {}".format(game_id))
+                    logger.error("Exception on {}".format(game_id))
                     raise e
 
                 if puzzle is not None:

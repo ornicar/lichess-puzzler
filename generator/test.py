@@ -67,6 +67,9 @@ class TestGenerator(unittest.TestCase):
         self.get_puzzle("b4nk1/5p1p/2n1pPpB/q2p2N1/2pP2Q1/1pP5/1P3PPP/3B2K1 b - - 0 27",
                 Cp(380), "f8d7", Mate(4), "g4e6 f7e6 f6f7 g8h8 g5e6 g6g5 h6g7")
 
+    def test_puzzle_12(self) -> None:
+        self.get_puzzle("2kr3r/ppp2pp1/1b6/1P2p3/4P3/P2B2P1/2P2PP1/R4RK1 w - - 0 18",
+                Cp(20), "f1d1", Mate(4), "h8h1 g1h1 b6f2 d3e2 d8h8 e2h5 h8h5")
 
 
     def test_not_puzzle_1(self) -> None:

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import math
 import chess
 from chess import Move, Color, Board
+from chess.pgn import GameNode
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from typing import List, Optional, Tuple, Literal, Union
 
@@ -13,9 +14,11 @@ class EngineMove:
 
 @dataclass
 class NextMovePair:
+    node: GameNode
     best: EngineMove
     second: Optional[EngineMove]
 
+    # is self.best the only continuation?
     def is_valid_attack(self) -> bool:
         if self.second is None:
             return True
@@ -23,7 +26,16 @@ class NextMovePair:
             return True
         if self.best.score == Mate(2) and self.second.score < Cp(500):
             return True
-        return win_chances(self.best.score) > win_chances(self.second.score) + 0.4
+        if self.best.score > Mate(4) and self.second.score < Cp(300):
+            return True
+        if win_chances(self.best.score) > win_chances(self.second.score) + 0.4:
+            return True
+        # if best move is mate, and second move still good but doesn't win material,
+        # then best move is valid attack
+        if self.best.score.is_mate() and self.second.score < Cp(400):
+            next_node = self.node.add_variation(self.second.move)
+            return not "x" in next_node.san()
+        return False
 
     def is_valid_defense(self) -> bool:
         return True
@@ -43,12 +55,12 @@ def is_up_in_material(board: Board, side: Color) -> bool:
     return material_diff(board, side) > 0
 
 
-def get_next_move_pair(engine: SimpleEngine, board: Board, winner: Color, limit: chess.engine.Limit) -> NextMovePair:
-    info = engine.analyse(board, multipv = 2, limit = limit)
+def get_next_move_pair(engine: SimpleEngine, node: GameNode, winner: Color, limit: chess.engine.Limit) -> NextMovePair:
+    info = engine.analyse(node.board(), multipv = 2, limit = limit)
     # print(info)
     best = EngineMove(info[0]["pv"][0], info[0]["score"].pov(winner))
     second = EngineMove(info[1]["pv"][0], info[1]["score"].pov(winner)) if len(info) > 1 else None
-    return NextMovePair(best, second)
+    return NextMovePair(node, best, second)
 
 def win_chances(score: Score) -> float:
     """
