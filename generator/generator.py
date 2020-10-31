@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M')
 
-version = 11
+version = 12
 get_move_limit = chess.engine.Limit(depth = 50, time = 20, nodes = 30_000_000)
 mate_soon = Mate(20)
 
@@ -225,12 +225,13 @@ def main() -> None:
                     raise e
 
                 if puzzle is not None:
+                    parent : GameNode = puzzle.node.parent
                     # Compose and print the puzzle
                     json = {
                         'game_id': game_id,
-                        'fen': puzzle.node.board().fen(),
-                        'ply': puzzle.node.ply(),
-                        'moves': list(map(lambda m : m.uci(), puzzle.moves)),
+                        'fen': parent.board().fen(),
+                        'ply': parent.ply(),
+                        'moves': [puzzle.node.uci()] + list(map(lambda m : m.uci(), puzzle.moves)),
                         'kind': puzzle.kind,
                         'generator_version': version,
                     }

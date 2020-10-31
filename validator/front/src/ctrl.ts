@@ -23,7 +23,7 @@ export default class Ctrl {
     this.data = data;
     this.moves = [];
     this.chess = this.initialChess();
-    this.solution = makeSanVariation(this.chess, this.data.puzzle.moves.map(uci => parseUci(uci)!)).replace(/\d+\.+ /g, '').split(' ');
+    this.solution = makeSanVariation(this.chess, this.data.puzzle.moves.slice(1).map(uci => parseUci(uci)!)).replace(/\d+\.+ /g, '').split(' ');
     if (!first) this.redraw();
     history.replaceState({}, '', `/puzzle/${data.puzzle._id}`);
   }
@@ -56,10 +56,10 @@ export default class Ctrl {
     else this.redraw();
   }
 
-  orientation = () => this.data.puzzle.ply % 2 == 0 ? 'white' : 'black';
+  orientation = () => this.data.puzzle.ply % 2 == 1 ? 'white' : 'black';
 
   isComplete = () =>
-    this.moves.join(' ') == this.data.puzzle.moves.join(' ');
+    this.moves.join(' ') == this.data.puzzle.moves.slice(1).join(' ');
 
   isInVariation = () => !this.isComplete() && !this.canForward();
 
@@ -68,25 +68,26 @@ export default class Ctrl {
     this.moves = this.moves.slice(0, -1);
     this.chess = this.initialChess();
     this.moves.forEach(move => this.chess.play(parseUci(move)!));
-    this.chessground.set(this.cgConfig(this.moves[this.moves.length - 1]));
+    const lastMove = this.moves[this.moves.length - 1] || this.data.puzzle.moves[0];
+    this.chessground.set(this.cgConfig(lastMove));
     this.redraw();
   }
 
   canForward = () =>
-    this.moves.length < this.data.puzzle.moves.length &&
-    this.moves.join(' ') == this.data.puzzle.moves.slice(0, this.moves.length).join(' ');
+    this.moves.length < this.data.puzzle.moves.slice(1).length &&
+    this.moves.join(' ') == this.data.puzzle.moves.slice(1, this.moves.length + 1).join(' ');
 
   forward = () => {
     if (!this.canForward()) return;
-    const move = this.data.puzzle.moves[this.moves.length];
+    const move = this.data.puzzle.moves[this.moves.length + 1];
     if (move) this.onMove(move, false);
     this.redraw();
   }
 
   private findReply = (): Uci | undefined => {
-    if (this.moves.length % 2 == 0 || this.moves.length >= this.data.puzzle.moves.length) return;
-    if (this.moves.join(' ') != this.data.puzzle.moves.slice(0, this.moves.length).join(' ')) return;
-    return this.data.puzzle.moves[this.moves.length];
+    if (this.moves.length % 2 == 0 || this.moves.length > this.data.puzzle.moves.length) return;
+    if (this.moves.join(' ') != this.data.puzzle.moves.slice(1, this.moves.length + 1).join(' ')) return;
+    return this.data.puzzle.moves[this.moves.length + 1];
   }
 
   currentFen = () => makeFen(this.chess.toSetup());
@@ -94,13 +95,13 @@ export default class Ctrl {
   nbMovesIn = () => {
     let nb = 0;
     for (let move of this.moves) {
-      if (move == this.data.puzzle.moves[nb]) nb++;
+      if (move == this.data.puzzle.moves[nb + 1]) nb++;
       else break;
     }
     return nb;
   }
 
-  private cgConfig = (lastMove?: Uci) => ({
+  private cgConfig = (lastMove: Uci) => ({
     fen: this.currentFen(),
     turnColor: this.chess.turn,
     movable: {
@@ -108,8 +109,14 @@ export default class Ctrl {
       dests: chessgroundDests(this.chess)
     },
     check: this.chess.isCheck(),
-    lastMove: lastMove ? [lastMove.substr(0, 2) as Key, lastMove.substr(2, 2) as Key] : undefined
+    lastMove: this.cgLastMove(lastMove)
   });
 
-  private initialChess = () => Chess.fromSetup(parseFen(this.data.puzzle.fen).unwrap()).unwrap();
+  cgLastMove = (move: Uci) => ([move.substr(0, 2) as Key, move.substr(2, 2) as Key]);
+
+  initialChess = () => {
+    const c = Chess.fromSetup(parseFen(this.data.puzzle.fen).unwrap()).unwrap();
+    c.play(parseUci(this.data.puzzle.moves[0])!);
+    return c;
+  }
 }

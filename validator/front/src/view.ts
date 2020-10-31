@@ -2,10 +2,8 @@ import { Chessground } from 'chessground';
 import { h } from 'snabbdom'
 import { VNode } from 'snabbdom/vnode';
 import Ctrl from './ctrl';
-import { parseFen } from 'chessops/fen';
-import { Chess } from 'chessops/chess';
 import { chessgroundDests } from 'chessops/compat';
-import { Color, Key } from 'chessground/types';
+import { Key } from 'chessground/types';
 
 export default function(ctrl: Ctrl): VNode {
   const puzzle = ctrl.data.puzzle,
@@ -108,19 +106,18 @@ export default function(ctrl: Ctrl): VNode {
 
 const cgConfig = (ctrl: Ctrl) => {
   const p = ctrl.data.puzzle,
-    color: Color = ctrl.orientation(),
-    setup = parseFen(p.fen).unwrap(),
-    chess = Chess.fromSetup(setup).unwrap();
+    chess = ctrl.initialChess();
   return {
-    fen: p.fen,
-    orientation: color,
-    turnColor: color,
+    fen: ctrl.currentFen(),
+    orientation: chess.turn,
+    turnColor: chess.turn,
     check: chess.isCheck(),
     movable: {
       free: false,
-      color: color,
+      color: chess.turn,
       dests: chessgroundDests(chess)
     },
+    lastMove: ctrl.cgLastMove(p.moves[0]),
     events: {
       move(orig: Key, dest: Key) {
         ctrl.onMove(`${orig}${dest}`);
