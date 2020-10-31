@@ -87,6 +87,10 @@ class TestGenerator(unittest.TestCase):
         self.not_puzzle("7k/p6p/4p1p1/8/1q1p3P/2r1P1P1/P4Q2/5RK1 b - - 1 30",
                 Cp(0), "d4e3", Cp(580))
 
+    def test_not_puzzle_4(self) -> None:
+        self.not_puzzle("r2qk2r/p1p1bppp/1p1ppn2/8/2PP1B2/3Q1N2/PP3PPP/3RR1K1 b kq - 6 12",
+                Cp(-110), "h7h6", Cp(150))
+
     def get_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
         board = Board(fen)
         game = Game.from_board(board)

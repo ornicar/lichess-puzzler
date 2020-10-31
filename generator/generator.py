@@ -167,8 +167,8 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
         if len(solution) % 2 == 0:
             solution = solution[:-1]
         last = list(puzzle_node.mainline())[len(solution)]
-        gain = material_diff(last.board(), winner) > material_diff(board, winner)
-        return Puzzle(node, solution, "material") if gain else score
+        gain = material_diff(last.board(), winner) - material_diff(board, winner)
+        return Puzzle(node, solution, "material") if gain > 1 else score
     else:
         return score
 
