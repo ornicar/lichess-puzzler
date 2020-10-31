@@ -57,6 +57,18 @@ class TestGenerator(unittest.TestCase):
         self.get_puzzle("7k/p3r1bP/1p1rp2q/8/2PBB3/4P3/P3KQ2/6R1 b - - 0 38",
                 Cp(-110), "e6e5", Mate(2), "f2f8 g7f8 g1g8")
 
+    # https://lichess.org/ejvEklSH/black#50
+    def test_puzzle_10(self) -> None:
+        self.get_puzzle("5rk1/pp3p2/1q1R3p/6p1/5pBb/2P4P/PPQ2PP1/3Rr1K1 w - - 6 26",
+                Cp(-450), "g1h2", Mate(2), "h4g3 f2g3 b6g1")
+
+    # https://lichess.org/f5s6c57d/white#53
+    def test_puzzle_11(self) -> None:
+        self.get_puzzle("b4nk1/5p1p/2n1pPpB/q2p2N1/2pP2Q1/1pP5/1P3PPP/3B2K1 b - - 0 27",
+                Cp(380), "f8d7", Mate(4), "g4e6 f7e6 f6f7 g8h8 g5e6 g6g5 h6g7")
+
+
+
     def test_not_puzzle_1(self) -> None:
         # https://lichess.org/LywqL7uc#32
         self.not_puzzle("r2q1rk1/1pp2pp1/p4n1p/b1pP4/4PB2/P3RQ2/1P3PPP/RN4K1 w - - 1 17",

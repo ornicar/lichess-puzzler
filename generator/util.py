@@ -19,7 +19,7 @@ class NextMovePair:
     def is_valid_attack(self) -> bool:
         if self.second is None:
             return True
-        if self.best.score == Mate(1) and self.second.score < Mate(2):
+        if self.best.score == Mate(1):
             return True
         if self.best.score == Mate(2) and self.second.score < Cp(500):
             return True
@@ -45,6 +45,7 @@ def is_up_in_material(board: Board, side: Color) -> bool:
 
 def get_next_move_pair(engine: SimpleEngine, board: Board, winner: Color, limit: chess.engine.Limit) -> NextMovePair:
     info = engine.analyse(board, multipv = 2, limit = limit)
+    # print(info)
     best = EngineMove(info[0]["pv"][0], info[0]["score"].pov(winner))
     second = EngineMove(info[1]["pv"][0], info[1]["score"].pov(winner)) if len(info) > 1 else None
     return NextMovePair(best, second)

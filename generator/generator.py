@@ -136,7 +136,7 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
 
     logger.debug("{} {} to {}".format(node.ply(), node.move.uci() if node.move else None, score))
 
-    if prev_score > Cp(200):
+    if prev_score > Cp(400):
         logger.debug("{} Too much of a winning position to start with {} -> {}".format(node.ply(), prev_score, score))
         return score
     if is_up_in_material(board, winner):
