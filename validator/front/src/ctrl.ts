@@ -51,6 +51,8 @@ export default class Ctrl {
     this.moves.push(uci);
     this.chess.play(parseUci(uci)!);
     this.chessground.set(this.cgConfig(uci));
+    if (this.chess.isCheckmate() && this.moves.length < this.data.puzzle.moves.length)
+      this.data.puzzle.moves = this.data.puzzle.moves.slice(0, 1).concat(this.moves);
     const reply = autoReply && this.findReply();
     if (reply) this.onMove(reply, false);
     else this.redraw();
