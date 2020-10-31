@@ -10,6 +10,7 @@ import copy
 import sys
 import mongo
 import util
+import bz2
 from io import StringIO
 from chess import Move, Color, Board
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
@@ -199,13 +200,18 @@ def make_engine(executable: str, threads: int) -> SimpleEngine:
     return engine
 
 
+def open_file(file: str):
+    if file.endswith(".bz2"):
+        return bz2.open(file, "rt")
+    return open(file)
+
 def main() -> None:
     sys.setrecursionlimit(10000) # else node.deepcopy() sometimes fails?
     args = parse_args()
     setup_logging(args)
     engine = make_engine(args.engine, args.threads)
 
-    with open(args.file) as pgn:
+    with open_file(args.file) as pgn:
         skip_next = False
         for line in pgn:
             if line.startswith("[Site "):
