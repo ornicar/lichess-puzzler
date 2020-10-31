@@ -8,16 +8,16 @@ import chess.pgn
 import chess.engine
 import copy
 import sys
-import mongo
 import util
 import bz2
+from model import Puzzle, Kind
 from io import StringIO
 from chess import Move, Color, Board
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess.pgn import Game, GameNode
-from dataclasses import dataclass
 from typing import List, Optional, Tuple, Literal, Union
 from util import EngineMove, get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
+from server import Server
 
 # Initialize Logging Module
 logger = logging.getLogger(__name__)
@@ -27,14 +27,6 @@ logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 version = 12
 get_move_limit = chess.engine.Limit(depth = 50, time = 20, nodes = 30_000_000)
 mate_soon = Mate(20)
-
-Kind = Literal["mate", "material"]  # Literal["mate", "other"]
-
-@dataclass
-class Puzzle:
-    node: GameNode
-    moves: List[Move]
-    kind: Kind
 
 def get_next_move(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[EngineMove]:
     board = node.board()
@@ -101,7 +93,7 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
     return [next.move] + next_moves
 
 
-def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
+def analyze_game(server: Server, engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
 
     logger.debug("Analyzing game {}...".format(game.headers.get("Site")))
 
@@ -112,10 +104,10 @@ def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
         current_eval = node.eval()
 
         if not current_eval:
-            logger.info("Skipping game without eval on ply {}".format(node.ply()))
+            logger.debug("Skipping game without eval on ply {}".format(node.ply()))
             return None
 
-        result = analyze_position(engine, node, prev_score, current_eval)
+        result = analyze_position(server, engine, node, prev_score, current_eval)
 
         if isinstance(result, Puzzle):
             return result
@@ -127,7 +119,7 @@ def analyze_game(engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
     return None
 
 
-def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, current_eval: PovScore) -> Union[Puzzle, Score]:
+def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_score: Score, current_eval: PovScore) -> Union[Puzzle, Score]:
 
     board = node.board()
     winner = board.turn
@@ -152,7 +144,7 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
     elif score > mate_soon:
         logger.info("Mate {}#{} Probing...".format(game_url, node.ply()))
         solution = cook_mate(engine, copy.deepcopy(node), winner)
-        mongo.set_seen(node.game())
+        server.set_seen(node.game())
         return Puzzle(node, solution, "mate") if solution is not None else score
     elif score >= Cp(0) and win_chances(score) > win_chances(prev_score) + 0.5:
         if score < Cp(400) and material_diff(board, winner) > -1:
@@ -161,7 +153,7 @@ def analyze_position(engine: SimpleEngine, node: GameNode, prev_score: Score, cu
         logger.info("Advantage {}#{} {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
         puzzle_node = copy.deepcopy(node)
         solution = cook_advantage(engine, puzzle_node, winner)
-        mongo.set_seen(node.game())
+        server.set_seen(node.game())
         if solution is None or len(solution) < 3:
             return score
         if len(solution) % 2 == 0:
@@ -188,7 +180,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--file", "-f", help="input PGN file", required=True, metavar="FILE.pgn")
     parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
-    parser.add_argument("--url", "-u", help="where to post puzzles", default="http://localhost:8000/puzzle?token=changeme")
+    parser.add_argument("--url", "-u", help="URL where to post puzzles", default="http://localhost:8000")
+    parser.add_argument("--token", help="Server secret token", default="changeme")
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
 
     return parser.parse_args()
@@ -210,6 +203,7 @@ def main() -> None:
     args = parse_args()
     setup_logging(args)
     engine = make_engine(args.engine, args.threads)
+    server = Server(logger, args.url, args.token, version)
 
     with open_file(args.file) as pgn:
         skip_next = False
@@ -224,32 +218,18 @@ def main() -> None:
             elif "%eval" in line:
                 game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
                 game_id = game.headers.get("Site", "?")[20:]
-                if mongo.is_seen(game_id):
+                if server.is_seen(game_id):
                     logger.info("Game was already seen before")
                     continue
 
                 try:
-                    puzzle = analyze_game(engine, game)
+                    puzzle = analyze_game(server, engine, game)
                 except Exception as e:
                     logger.error("Exception on {}".format(game_id))
                     raise e
 
                 if puzzle is not None:
-                    parent : GameNode = puzzle.node.parent
-                    # Compose and print the puzzle
-                    json = {
-                        'game_id': game_id,
-                        'fen': parent.board().fen(),
-                        'ply': parent.ply(),
-                        'moves': [puzzle.node.uci()] + list(map(lambda m : m.uci(), puzzle.moves)),
-                        'kind': puzzle.kind,
-                        'generator_version': version,
-                    }
-                    try:
-                        r = requests.post(args.url, json=json)
-                        logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
-                    except Exception as e:
-                        logger.error("Couldn't post puzzle: {}".format(e))
+                    server.post(game_id, puzzle)
 
 
     engine.close()

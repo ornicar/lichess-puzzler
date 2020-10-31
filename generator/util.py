@@ -24,10 +24,10 @@ class NextMovePair:
             return True
         if self.best.score == Mate(1):
             return True
-        if self.best.score == Mate(2) and self.second.score < Cp(500):
-            return True
-        if self.best.score > Mate(4) and self.second.score < Cp(300):
-            return True
+        if self.best.score == Mate(2):
+            return self.second.score < Cp(500)
+        if self.best.score == Mate(3):
+            return self.second.score < Cp(300)
         if win_chances(self.best.score) > win_chances(self.second.score) + 0.4:
             return True
         # if best move is mate, and second move still good but doesn't win material,

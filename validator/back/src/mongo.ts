@@ -12,10 +12,12 @@ export default class Mongo {
 
   puzzle: PuzzleMongo;
   auth: AuthMongo;
+  seen: SeenMongo;
 
   constructor(readonly db: Db) {
     this.puzzle = new PuzzleMongo(this.db.collection('puzzle'));
     this.auth = new AuthMongo(this.db.collection('authentication'));
+    this.seen = new SeenMongo(this.db.collection('seen'));
   }
 }
 
@@ -83,4 +85,13 @@ export class AuthMongo {
     });
     return id;
   }
+}
+
+export class SeenMongo {
+
+  constructor(readonly coll: Collection) { }
+
+  exists = (id: string): Promise<boolean> => this.coll.countDocuments({ _id: id }).then(n => n > 0);
+
+  set = (id: string) => this.coll.insertOne({_id: id}).catch(() => {});
 }

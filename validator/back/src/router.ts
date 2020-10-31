@@ -55,8 +55,7 @@ export default function(app: Express.Express, env: Env) {
   });
 
   app.post('/puzzle', async (req, res) => {
-    const token = req.query.token as string;
-    if (token != config.generatorToken)
+    if (req.query.token as string != config.generatorToken)
       return res.status(400).send('Wrong token');
     const nextId = await env.mongo.puzzle.nextId(); // race condition :D
     const puzzle: Puzzle = {
@@ -76,6 +75,19 @@ export default function(app: Express.Express, env: Env) {
       const msg = e.code == 11000 ? `Game ${puzzle.gameId} already in the puzzle DB!` : e;
       return res.status(400).send(msg);
     }
+  });
+
+  app.get('/seen', async (req, res) => {
+    if (req.query.token as string != config.generatorToken)
+      return res.status(400).send('Wrong token');
+    const exists = await env.mongo.seen.exists(req.query.id as string);
+    return exists ? res.status(200).send() : res.status(404).send();
+  });
+  app.post('/seen', async (req, res) => {
+    if (req.query.token as string != config.generatorToken)
+      return res.status(400).send('Wrong token');
+    env.mongo.seen.set(req.query.id as string);
+    return res.status(201).send();
   });
 
   app.get('/logout', (req, res) => {
