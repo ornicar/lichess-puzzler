@@ -1,6 +1,8 @@
 import unittest
 import logging
-from generator import Puzzle, logger
+from model import Puzzle
+from generator import logger
+from server import Server
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess import Move, Color, Board, WHITE, BLACK
 from chess.pgn import Game, GameNode
@@ -11,6 +13,7 @@ import generator
 class TestGenerator(unittest.TestCase):
 
     engine = generator.make_engine("stockfish", 8)
+    server = Server(logger, "", "", 0)
     # logger.setLevel(logging.DEBUG)
 
     def test_puzzle_1(self) -> None:
@@ -96,7 +99,7 @@ class TestGenerator(unittest.TestCase):
         game = Game.from_board(board)
         node = game.add_main_variation(Move.from_uci(move))
         current_eval = PovScore(current_score, not board.turn)
-        result = generator.analyze_position(self.engine, node, prev_score, current_eval)
+        result = generator.analyze_position(self.server, self.engine, node, prev_score, current_eval)
         self.assert_is_puzzle_with_moves(result, [Move.from_uci(x) for x in moves.split()])
 
 
@@ -105,7 +108,7 @@ class TestGenerator(unittest.TestCase):
         game = Game.from_board(board)
         node = game.add_main_variation(Move.from_uci(move))
         current_eval = PovScore(current_score, not board.turn)
-        result = generator.analyze_position(self.engine, node, prev_score, current_eval)
+        result = generator.analyze_position(self.server, self.engine, node, prev_score, current_eval)
         self.assertIsInstance(result, Score)
 
 

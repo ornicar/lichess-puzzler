@@ -12,11 +12,14 @@ class Server:
         self.version = version
 
     def is_seen(self, id: str) -> bool:
+        if not self.url:
+            return False
         status = requests.get(self._seen_url(id)).status_code
         return status == 200
 
     def set_seen(self, game: Game) -> None:
-        requests.post(self._seen_url(game.headers.get("Site", "?")[20:]))
+        if self.url:
+            requests.post(self._seen_url(game.headers.get("Site", "?")[20:]))
 
     def _seen_url(self, id: str) -> str:
         return "{}/seen?token={}&id={}".format(self.url, self.token, id)
