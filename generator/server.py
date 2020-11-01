@@ -14,12 +14,19 @@ class Server:
     def is_seen(self, id: str) -> bool:
         if not self.url:
             return False
-        status = requests.get(self._seen_url(id)).status_code
-        return status == 200
+        try:
+            status = requests.get(self._seen_url(id)).status_code
+            return status == 200
+        except Exception as e:
+            self.logger.error(e)
+            return False
 
     def set_seen(self, game: Game) -> None:
-        if self.url:
-            requests.post(self._seen_url(game.headers.get("Site", "?")[20:]))
+        try:
+            if self.url:
+                requests.post(self._seen_url(game.headers.get("Site", "?")[20:]))
+        except Exception as e:
+            self.logger.error(e)
 
     def _seen_url(self, id: str) -> str:
         return "{}/seen?token={}&id={}".format(self.url, self.token, id)
