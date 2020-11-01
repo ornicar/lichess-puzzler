@@ -38,7 +38,7 @@ def is_valid_attack(pair: NextMovePair) -> bool:
         return pair.second.score < Cp(500)
     if pair.best.score == Mate(3):
         return pair.second.score < Cp(300)
-    if win_chances(pair.best.score) > win_chances(pair.second.score) + 0.4:
+    if win_chances(pair.best.score) > win_chances(pair.second.score) + 0.42:
         return True
     # if best move is mate, and second move still good but doesn't win material,
     # then best move is valid attack
