@@ -24,9 +24,9 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M')
 
-version = 12
-get_move_limit = chess.engine.Limit(depth = 50, time = 20, nodes = 30_000_000)
-mate_soon = Mate(20)
+version = 13
+get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
+mate_soon = Mate(15)
 
 def get_next_move(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[EngineMove]:
     board = node.board()
