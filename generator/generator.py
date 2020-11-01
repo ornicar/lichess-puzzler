@@ -10,7 +10,7 @@ import copy
 import sys
 import util
 import bz2
-from model import Puzzle, Kind
+from model import Puzzle, Kind, EngineMove, NextMovePair
 from io import StringIO
 from chess import Move, Color, Board
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
@@ -24,45 +24,72 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M')
 
-version = 13
+version = 14
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
 mate_soon = Mate(15)
 
-def get_next_move(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[EngineMove]:
+# is pair.best the only continuation?
+def is_valid_attack(pair: NextMovePair) -> bool:
+    if pair.second is None:
+        return True
+    if pair.best.score == Mate(1):
+        return True
+    if pair.best.score == Mate(2):
+        return pair.second.score < Cp(500)
+    if pair.best.score == Mate(3):
+        return pair.second.score < Cp(300)
+    if win_chances(pair.best.score) > win_chances(pair.second.score) + 0.4:
+        return True
+    # if best move is mate, and second move still good but doesn't win material,
+    # then best move is valid attack
+    if pair.best.score.is_mate() and pair.second.score < Cp(400):
+        next_node = pair.node.add_variation(pair.second.move)
+        return not "x" in next_node.san()
+    return False
+
+def is_valid_defense(pair: NextMovePair) -> bool:
+    return True
+    if pair.second is None or pair.second.score == Mate(1):
+        return True
+    return win_chances(pair.second.score) > win_chances(pair.best.score) + 0.25
+
+def get_next_move(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[NextMovePair]:
     board = node.board()
-    next = get_next_move_pair(engine, node, winner, get_move_limit)
-    logger.debug("{} {} {}".format("attack" if board.turn == winner else "defense", next.best, next.second))
-    if board.turn == winner and not next.is_valid_attack():
-        logger.debug("No valid attack {}".format(next))
+    pair = get_next_move_pair(engine, node, winner, get_move_limit)
+    logger.debug("{} {} {}".format("attack" if board.turn == winner else "defense", pair.best, pair.second))
+    if board.turn == winner and not is_valid_attack(pair):
+        logger.debug("No valid attack {}".format(pair))
         return None
-    if board.turn != winner and not next.is_valid_defense():
-        logger.debug("No valid defense {}".format(next))
+    if board.turn != winner and not is_valid_defense(pair):
+        logger.debug("No valid defense {}".format(pair))
         return None
-    return next.best
+    return pair
 
 def cook_mate(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[List[Move]]:
 
     if node.board().is_game_over():
         return []
 
-    next = get_next_move(engine, node, winner)
+    pair = get_next_move(engine, node, winner)
 
-    if not next:
+    if not pair:
         return None
+
+    next = pair.best
 
     if next.score < mate_soon:
         logger.info("Best move is not a mate, we're probably not searching deep enough")
         return None
 
-    next_moves = cook_mate(engine, node.add_main_variation(next.move), winner)
+    follow_up = cook_mate(engine, node.add_main_variation(next.move), winner)
 
-    if next_moves is None:
+    if follow_up is None:
         return None
 
-    return [next.move] + next_moves
+    return [next.move] + follow_up
 
 
-def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[List[Move]]:
+def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[List[NextMovePair]]:
 
     is_capture = "x" in node.san() # monkaS
     up_in_material = is_up_in_material(node.board(), winner)
@@ -81,16 +108,16 @@ def cook_advantage(engine: SimpleEngine, node: GameNode, winner: Color) -> Optio
         logger.debug("No next move")
         return []
 
-    if next.score.is_mate():
+    if next.best.score.is_mate():
         logger.info("Expected advantage, got mate?!")
         return None
 
-    next_moves = cook_advantage(engine, node.add_main_variation(next.move), winner)
+    follow_up = cook_advantage(engine, node.add_main_variation(next.best.move), winner)
 
-    if next_moves is None:
+    if follow_up is None:
         return None
 
-    return [next.move] + next_moves
+    return [next] + follow_up
 
 
 def analyze_game(server: Server, engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
@@ -143,24 +170,24 @@ def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_
         return score
     elif score > mate_soon:
         logger.info("Mate {}#{} Probing...".format(game_url, node.ply()))
-        solution = cook_mate(engine, copy.deepcopy(node), winner)
+        mate_solution = cook_mate(engine, copy.deepcopy(node), winner)
         server.set_seen(node.game())
-        return Puzzle(node, solution, "mate") if solution is not None else score
+        return Puzzle(node, mate_solution, "mate") if mate_solution is not None else score
     elif score >= Cp(0) and win_chances(score) > win_chances(prev_score) + 0.5:
         if score < Cp(400) and material_diff(board, winner) > -1:
             logger.info("Not clearly winning and not from being down in material, aborting")
             return score
         logger.info("Advantage {}#{} {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
         puzzle_node = copy.deepcopy(node)
-        solution = cook_advantage(engine, puzzle_node, winner)
+        solution : Optional[List[NextMovePair]] = cook_advantage(engine, puzzle_node, winner)
         server.set_seen(node.game())
         if solution is None or len(solution) < 3:
             return score
-        if len(solution) % 2 == 0:
+        while len(solution) % 2 == 0 or solution[-1].second is None:
             solution = solution[:-1]
         last = list(puzzle_node.mainline())[len(solution)]
         gain = material_diff(last.board(), winner) - material_diff(board, winner)
-        return Puzzle(node, solution, "material") if gain > 1 else score
+        return Puzzle(node, [p.best.move for p in solution], "material") if gain > 1 else score
     else:
         return score
 

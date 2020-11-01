@@ -1,47 +1,11 @@
 from dataclasses import dataclass
 import math
 import chess
+from model import EngineMove, NextMovePair
 from chess import Move, Color, Board
 from chess.pgn import GameNode
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from typing import List, Optional, Tuple, Literal, Union
-
-
-@dataclass
-class EngineMove:
-    move: Move
-    score: Score
-
-@dataclass
-class NextMovePair:
-    node: GameNode
-    best: EngineMove
-    second: Optional[EngineMove]
-
-    # is self.best the only continuation?
-    def is_valid_attack(self) -> bool:
-        if self.second is None:
-            return True
-        if self.best.score == Mate(1):
-            return True
-        if self.best.score == Mate(2):
-            return self.second.score < Cp(500)
-        if self.best.score == Mate(3):
-            return self.second.score < Cp(300)
-        if win_chances(self.best.score) > win_chances(self.second.score) + 0.4:
-            return True
-        # if best move is mate, and second move still good but doesn't win material,
-        # then best move is valid attack
-        if self.best.score.is_mate() and self.second.score < Cp(400):
-            next_node = self.node.add_variation(self.second.move)
-            return not "x" in next_node.san()
-        return False
-
-    def is_valid_defense(self) -> bool:
-        return True
-        if self.second is None or self.second.score == Mate(1):
-            return True
-        return win_chances(self.second.score) > win_chances(self.best.score) + 0.25
 
 
 def material_count(board: Board, side: Color) -> int:
