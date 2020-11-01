@@ -39,7 +39,7 @@ export default function(app: Express.Express, env: Env) {
     await env.mongo.puzzle.review(puzzle, {
       by: username,
       at: new Date(),
-      approved: !!req.query.approved
+      approved: req.query.approved == '1'
     });
     const next = await env.mongo.puzzle.next();
     if (!next) return res.status(404).end();
