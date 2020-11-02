@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M')
 
-version = 14
+version = 15
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
 mate_soon = Mate(15)
 
@@ -185,6 +185,8 @@ def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_
             return score
         while len(solution) % 2 == 0 or solution[-1].second is None:
             solution = solution[:-1]
+        if len(solution) < 3:
+            return score
         last = list(puzzle_node.mainline())[len(solution)]
         gain = material_diff(last.board(), winner) - material_diff(board, winner)
         return Puzzle(node, [p.best.move for p in solution], "material") if gain > 1 else score
