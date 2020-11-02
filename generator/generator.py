@@ -211,6 +211,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
     parser.add_argument("--url", "-u", help="URL where to post puzzles", default="http://localhost:8000")
     parser.add_argument("--token", help="Server secret token", default="changeme")
+    parser.add_argument("--skip", help="How many games to skip from the source", default="0")
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
 
     return parser.parse_args()
@@ -234,6 +235,8 @@ def main() -> None:
     engine = make_engine(args.engine, args.threads)
     server = Server(logger, args.url, args.token, version)
     games = 0
+    skip = int(args.skip)
+    logger.info("Skipping first {} games".format(skip))
 
     with open_file(args.file) as pgn:
         skip_next = False
@@ -241,6 +244,8 @@ def main() -> None:
             if line.startswith("[Site "):
                 site = line
                 games = games + 1
+            elif games < skip:
+                continue
             elif util.exclude_time_control(line) or util.exclude_rating(line):
                 skip_next = True
             elif line.startswith("1. ") and skip_next:
