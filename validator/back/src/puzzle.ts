@@ -14,6 +14,7 @@ export interface Puzzle {
   kind: Kind;
   review?: Review;
   generator: number;
+  ip?: string;
 }
 
 export interface Review {

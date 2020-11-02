@@ -66,7 +66,8 @@ export default function(app: Express.Express, env: Env) {
       moves: req.body.moves,
       kind: req.body.kind,
       generator: req.body.generator_version,
-      createdAt: new Date()
+      createdAt: new Date(),
+      ip: req.ip
     };
     try {
       await env.mongo.puzzle.insert(puzzle);
