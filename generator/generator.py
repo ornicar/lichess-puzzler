@@ -231,12 +231,14 @@ def main() -> None:
     setup_logging(args)
     engine = make_engine(args.engine, args.threads)
     server = Server(logger, args.url, args.token, version)
+    games = 0
 
     with open_file(args.file) as pgn:
         skip_next = False
         for line in pgn:
             if line.startswith("[Site "):
                 site = line
+                games = games + 1
             elif util.exclude_time_control(line) or util.exclude_rating(line):
                 skip_next = True
             elif line.startswith("1. ") and skip_next:
@@ -252,6 +254,7 @@ def main() -> None:
                 try:
                     puzzle = analyze_game(server, engine, game)
                     if puzzle is not None:
+                        print("Game {}".format(games))
                         server.post(game_id, puzzle)
                 except Exception as e:
                     logger.error("Exception on {}".format(game_id))
