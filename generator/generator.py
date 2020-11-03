@@ -19,10 +19,8 @@ from typing import List, Optional, Tuple, Literal, Union
 from util import EngineMove, get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-# Initialize Logging Module
 logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-                    datefmt='%m-%d %H:%M')
+logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
 version = 15
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
@@ -194,14 +192,6 @@ def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_
         return score
 
 
-def setup_logging(args: argparse.Namespace) -> None:
-    if args.verbose:
-        if args.verbose == 2:
-            logger.setLevel(logging.DEBUG)
-        elif args.verbose == 1:
-            logger.setLevel(logging.INFO)
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog='generator.py',
@@ -231,7 +221,10 @@ def open_file(file: str):
 def main() -> None:
     sys.setrecursionlimit(10000) # else node.deepcopy() sometimes fails?
     args = parse_args()
-    setup_logging(args)
+    if args.verbose == 2:
+        logger.setLevel(logging.DEBUG)
+    elif args.verbose == 1:
+        logger.setLevel(logging.INFO)
     engine = make_engine(args.engine, args.threads)
     server = Server(logger, args.url, args.token, version)
     games = 0
