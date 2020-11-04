@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import chess
 from chess.pgn import Game
 from chess import Move
 from typing import List, Optional, Tuple, Literal, Union
@@ -39,3 +40,6 @@ TagKind = Literal[
 class Puzzle:
     id: str
     game: Game
+
+    def pov(self) -> chess.Color:
+        return self.game.turn()
