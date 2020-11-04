@@ -80,6 +80,10 @@ class TestGenerator(unittest.TestCase):
                 Cp(-950), "e3e2", Mate(4), "g4h6 g7h6 c3h8 g8h8 e7f7 b8f8 f7f8 f3f2 h4f6")
                 # Cp(-950), "e3e2", Mate(4), "g4h6 g8h8 h6f7 h8g8 c3g7 g8g7 h4f6 g7g8 f7h6")
 
+    def test_puzzle_14(self):
+        self.get_puzzle("5r1k/1Q3p2/5q1p/8/2P4p/1P4P1/P4P2/R4RK1 w - - 0 29",
+                Cp(-1010), "g3h4", Cp(0), "f8g8 b7g2 g8g2")
+
 
     def test_not_puzzle_1(self) -> None:
         # https://lichess.org/LywqL7uc#32
