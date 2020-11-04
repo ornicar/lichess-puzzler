@@ -23,6 +23,7 @@ def read(doc) -> Puzzle:
 def main() -> None:
     sys.setrecursionlimit(10000) # else node.deepcopy() sometimes fails?
     parser = argparse.ArgumentParser(prog='tagger.py', description='automatically tags lichess puzzles')
+    parser.add_argument("--dry", "-d", help="dry run")
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
     args = parser.parse_args()
     if args.verbose == 1:
@@ -31,13 +32,18 @@ def main() -> None:
     db = mongo['puzzler']
     puzzle_coll = db['puzzle2']
     tag_coll = db['tag']
+    nb = 0
 
     for doc in puzzle_coll.find():
     # for doc in puzzle_coll.find({"_id":"yUM8F"}):
         puzzle = read(doc)
         tags = cook.cook(puzzle)
-        for tag in tags:
-            tag_coll.update_one({"_id":puzzle.id},{"$addToSet":{tag: "lichess"}}, upsert = True)
+        if not args.dry:
+            for tag in tags:
+                tag_coll.update_one({"_id":puzzle.id},{"$addToSet":{tag: "lichess"}}, upsert = True)
+        nb = nb + 1
+        if nb % 1000 == 0:
+            logger.info(nb)
 
 if __name__ == "__main__":
     main()

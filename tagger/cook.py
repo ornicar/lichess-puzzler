@@ -27,8 +27,10 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
         tags.append("advancedPawn")
 
     if double_check(puzzle):
-        log(puzzle)
         tags.append("doubleCheck")
+
+    if quiet_move(puzzle):
+        tags.append("quietMove")
 
     if len(puzzle.mainline) == 4:
         tags.append("short")
@@ -51,6 +53,22 @@ def double_check(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline:
         if node.turn() != puzzle.pov and len(node.board().checkers()) > 1:
             return True
+    return False
+
+def quiet_move(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline:
+        # on player move
+        if node.turn() != puzzle.pov:
+            board = node.board()
+            # no check given or escaped
+            if not board.checkers() and not node.parent.board().checkers():
+                # no capture made or threatened
+                if not util.is_capture(node):
+                    for attacked_square in board.attacks(node.move.to_square):
+                        attacked_piece = board.piece_at(attacked_square)
+                        if attacked_piece and attacked_piece.color != puzzle.pov:
+                            return False
+                    return True
     return False
 
 def attraction(puzzle: Puzzle) -> bool:
@@ -84,8 +102,6 @@ def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
         return None
     moves_to_mate = int(len(puzzle.mainline) / 2)
     if moves_to_mate == 2:
-        return "mateIn2"
-    elif moves_to_mate == 2:
         return "mateIn2"
     elif moves_to_mate == 3:
         return "mateIn3"
