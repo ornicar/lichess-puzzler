@@ -2,6 +2,19 @@ import logging
 from chess.pgn import Game, GameNode
 from model import Puzzle
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+
+retry_strategy = Retry(
+    total=12,
+    backoff_factor=2,
+    status_forcelist=[429, 500, 502, 503, 504],
+    method_whitelist=["GET", "POST"]
+)
+adapter = HTTPAdapter(max_retries=retry_strategy)
+http = requests.Session()
+http.mount("https://", adapter)
+http.mount("http://", adapter)
 
 class Server:
 
@@ -15,7 +28,7 @@ class Server:
         if not self.url:
             return False
         try:
-            status = requests.get(self._seen_url(id)).status_code
+            status = http.get(self._seen_url(id)).status_code
             return status == 200
         except Exception as e:
             self.logger.error(e)
@@ -24,7 +37,7 @@ class Server:
     def set_seen(self, game: Game) -> None:
         try:
             if self.url:
-                requests.post(self._seen_url(game.headers.get("Site", "?")[20:]))
+                http.post(self._seen_url(game.headers.get("Site", "?")[20:]))
         except Exception as e:
             self.logger.error(e)
 
@@ -42,7 +55,7 @@ class Server:
             'generator_version': self.version,
         }
         try:
-            r = requests.post("{}/puzzle?token={}".format(self.url, self.token), json=json)
+            r = http.post("{}/puzzle?token={}".format(self.url, self.token), json=json)
             self.logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
         except Exception as e:
             self.logger.error("Couldn't post puzzle: {}".format(e))

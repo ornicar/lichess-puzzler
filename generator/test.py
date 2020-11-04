@@ -14,7 +14,7 @@ class TestGenerator(unittest.TestCase):
 
     engine = generator.make_engine("stockfish", 6)
     server = Server(logger, "", "", 0)
-    # logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.DEBUG)
 
     def test_puzzle_1(self) -> None:
         # https://lichess.org/analysis/standard/3q1k2/p7/1p2Q2p/5P1K/1P4P1/P7/8/8_w_-_-_5_57#112
@@ -123,6 +123,13 @@ class TestGenerator(unittest.TestCase):
         self.not_puzzle("rnb1k1nr/ppp2p1p/3p1qp1/2b1p3/2B1P3/2NP1Q2/PPP2PPP/R1B1K1NR b KQkq - 1 6",
                 Cp(-50), "c8g4", Cp(420))
 
+    def test_not_puzzle_8(self):
+        self.not_puzzle("r1bq1rk1/pp1nbppp/4p3/3pP3/8/1P1B4/PBP2PPP/RN1Q1RK1 w - - 1 11", 
+                Cp(-40), "d3h7", Cp(380))
+
+    def test_not_puzzle_9(self):
+        self.not_puzzle("5k2/5ppp/2r1p3/1p6/1b1R4/p1n1P1P1/B4PKP/1N6 w - - 2 34", 
+                Cp(0), "b1c3", Cp(520))
 
     def get_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
         board = Board(fen)
