@@ -1,7 +1,7 @@
 import Express from 'express';
 import Env from './env';
 import * as oauth from './oauth';
-import { Puzzle } from './puzzle';
+import { Puzzle, randomId } from './puzzle';
 import { Response as ExResponse } from 'express';
 import { config } from './config';
 
@@ -15,7 +15,7 @@ export default function(app: Express.Express, env: Env) {
   });
 
   app.get('/puzzle/:id', async (req, res) => {
-    const puzzle = await env.mongo.puzzle.get(parseInt(req.params.id));
+    const puzzle = await env.mongo.puzzle.get(req.params.id);
     renderPuzzle(req.session, res, puzzle);
   });
 
@@ -32,7 +32,7 @@ export default function(app: Express.Express, env: Env) {
   }
 
   app.post('/review/:id', async (req, res) => {
-    const puzzle = await env.mongo.puzzle.get(parseInt(req.params.id));
+    const puzzle = await env.mongo.puzzle.get(req.params.id);
     if (!puzzle) return res.status(404).end();
     const username = await env.mongo.auth.username(req.session?.authId || '');
     if (!username) return res.status(403).end();
@@ -57,9 +57,8 @@ export default function(app: Express.Express, env: Env) {
   app.post('/puzzle', async (req, res) => {
     if (req.query.token as string != config.generatorToken)
       return res.status(400).send('Wrong token');
-    const nextId = await env.mongo.puzzle.nextId(); // race condition :D
     const puzzle: Puzzle = {
-      _id: nextId,
+      _id: randomId(),
       gameId: req.body.game_id,
       fen: req.body.fen,
       ply: req.body.ply,

@@ -15,7 +15,7 @@ export default class Mongo {
   seen: SeenMongo;
 
   constructor(readonly db: Db) {
-    this.puzzle = new PuzzleMongo(this.db.collection('puzzle'));
+    this.puzzle = new PuzzleMongo(this.db.collection('puzzle2'));
     this.auth = new AuthMongo(this.db.collection('authentication'));
     this.seen = new SeenMongo(this.db.collection('seen'));
   }
@@ -27,7 +27,7 @@ export class PuzzleMongo {
     this.coll.createIndex({ gameId: 1 }, { unique: true });
   }
 
-  get = (id: number): Promise<Puzzle | null> =>
+  get = (id: string): Promise<Puzzle | null> =>
     this.coll.findOne({ _id: id });
 
   next = async (): Promise<Puzzle | null> => {
