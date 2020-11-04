@@ -1,13 +1,13 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import chess
-from chess.pgn import Game
-from chess import Move
+from chess.pgn import Game, Mainline
+from chess import Move, Color
 from typing import List, Optional, Tuple, Literal, Union
 
 PuzzleKind = Literal["mate", "material"]  # Literal["mate", "other"]
 
 TagKind = Literal[
-    "advancedPawn", 
+    "advancedPawn",
     "attraction",
     "blocking",
     "capturingDefender",
@@ -21,6 +21,7 @@ TagKind = Literal[
     "fork",
     "hangingPiece",
     "interference",
+    "long",
     "mateIn6+",
     "mateIn5",
     "mateIn4",
@@ -30,6 +31,7 @@ TagKind = Literal[
     "pin",
     "quietMove",
     "sacrifice",
+    "short",
     "simplification",
     "skewer",
     "trappedPiece",
@@ -40,6 +42,9 @@ TagKind = Literal[
 class Puzzle:
     id: str
     game: Game
+    pov : Color = field(init=False)
+    mainline : Mainline = field(init=False)
 
-    def pov(self) -> chess.Color:
-        return not self.game.turn()
+    def __post_init__(self):
+        self.pov = not self.game.turn()
+        self.mainline = list(self.game.mainline())

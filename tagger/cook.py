@@ -14,24 +14,31 @@ def log(puzzle: Puzzle) -> None:
     logger.info("http://godot.lichess.ovh:9371/puzzle/{}".format(puzzle.id))
 
 def cook(puzzle: Puzzle) -> List[TagKind]:
-    game = puzzle.game
     tags : List[TagKind] = []
 
-    mate_tag = mate_in(game)
+    mate_tag = mate_in(puzzle)
     if mate_tag:
         tags.append(mate_tag)
 
     if attraction(puzzle):
-        log(puzzle)
         tags.append("attraction")
 
-    if advanced_pawn(game):
+    if advanced_pawn(puzzle):
         tags.append("advancedPawn")
+
+    if double_check(puzzle):
+        log(puzzle)
+        tags.append("doubleCheck")
+
+    if len(puzzle.mainline) == 4:
+        tags.append("short")
+    elif len(puzzle.mainline) >= 8:
+        tags.append("long")
 
     return tags
 
-def advanced_pawn(game: Game) -> bool:
-    for node in game.mainline():
+def advanced_pawn(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline:
         if util.is_pawn_move(node):
             rank = square_rank(node.move.to_square)
             if rank > 5 and node.turn() == BLACK:
@@ -40,9 +47,15 @@ def advanced_pawn(game: Game) -> bool:
                 return True
     return False
 
+def double_check(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline:
+        if node.turn() != puzzle.pov and len(node.board().checkers()) > 1:
+            return True
+    return False
+
 def attraction(puzzle: Puzzle) -> bool:
-    for node in list(puzzle.game.mainline())[1:]:
-        if node.turn() == puzzle.pov():
+    for node in puzzle.mainline[1:]:
+        if node.turn() == puzzle.pov:
             continue
         # 1. player moves to a square
         first_move_to = node.move.to_square
@@ -54,7 +67,7 @@ def attraction(puzzle: Puzzle) -> bool:
                 attracted_to_square = opponent_reply.move.to_square
                 next_node = util.next_node(opponent_reply)
                 if next_node:
-                    attackers = next_node.board().attackers(puzzle.pov(), attracted_to_square)
+                    attackers = next_node.board().attackers(puzzle.pov, attracted_to_square)
                     # 3. player attacks that square
                     if next_node.move.to_square in attackers:
                         # 4. player checks on that square
@@ -66,10 +79,10 @@ def attraction(puzzle: Puzzle) -> bool:
                             return True
     return False
 
-def mate_in(game: Game) -> Optional[TagKind]:
-    if not game.end().board().is_checkmate():
+def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
+    if not puzzle.game.end().board().is_checkmate():
         return None
-    moves_to_mate = int(len(list(game.mainline_moves())) / 2)
+    moves_to_mate = int(len(puzzle.mainline) / 2)
     if moves_to_mate == 2:
         return "mateIn2"
     elif moves_to_mate == 2:
