@@ -1,8 +1,8 @@
 import logging
+from typing import List, Optional, Tuple, Literal, Union
 import chess
 from chess import square_rank, Move, WHITE, BLACK
 from chess.pgn import Game, GameNode
-from typing import List, Optional, Tuple, Literal, Union
 from model import Puzzle, TagKind
 import util
 
@@ -22,6 +22,7 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
         tags.append(mate_tag)
 
     if attraction(puzzle):
+        log(puzzle)
         tags.append("attraction")
 
     if advanced_pawn(game):
@@ -40,18 +41,28 @@ def advanced_pawn(game: Game) -> bool:
     return False
 
 def attraction(puzzle: Puzzle) -> bool:
-    pov = not puzzle.pov()
-    for node in list(puzzle.game.mainline())[2:]:
-        if node.turn() != pov:
+    for node in list(puzzle.game.mainline())[1:]:
+        if node.turn() == puzzle.pov():
             continue
-        if util.is_capture(node):
-            if util.moved_piece_type(node) in [chess.KING, chess.QUEEN, chess.ROOK]:
-                attracted_to_square = node.move.to_square
-                next_node = next(iter(node.mainline()), None)
+        # 1. player moves to a square
+        first_move_to = node.move.to_square
+        opponent_reply = util.next_node(node)
+        # 2. opponent captures on that square
+        if opponent_reply and opponent_reply.move.to_square == first_move_to:
+            attracted_piece = util.moved_piece_type(opponent_reply)
+            if attracted_piece in [chess.KING, chess.QUEEN, chess.ROOK]:
+                attracted_to_square = opponent_reply.move.to_square
+                next_node = util.next_node(opponent_reply)
                 if next_node:
-                    attackers = next_node.board().attackers(pov, attracted_to_square)
+                    attackers = next_node.board().attackers(puzzle.pov(), attracted_to_square)
+                    # 3. player attacks that square
                     if next_node.move.to_square in attackers:
-                        if not next_node.is_end():
+                        # 4. player checks on that square
+                        if attracted_piece == chess.KING:
+                            return True
+                        n3 = util.next_next_node(next_node)
+                        # 4. or player later captures on that square
+                        if n3 and n3.move.to_square == attracted_to_square:
                             return True
     return False
 

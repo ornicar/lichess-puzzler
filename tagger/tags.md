@@ -1,4 +1,4 @@
-- Advanced Pawn
++ Advanced Pawn
 - Attraction (pulls a piece in) (a side sacrifices a piece to drive an opponent's piece (usually but not always the king) to some particular square, where there will be a winning sequence.)
 - Blocking
 - Capturing Defender
@@ -12,11 +12,11 @@
 - Fork
 - Hanging Piece
 - Interference (cut defense ray with own or opponent piece)
-- Mate in 5
-- Mate in 4
-- Mate in 3
-- Mate in 2
-- Overloading
++ Mate in 5
++ Mate in 4
++ Mate in 3
++ Mate in 2
++ Overloading
 - Pin
 - Quiet Move
 - Sacrifice

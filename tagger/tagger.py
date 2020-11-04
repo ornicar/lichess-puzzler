@@ -12,6 +12,14 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 logger.setLevel(logging.INFO)
 
+def read(doc) -> Puzzle:
+    board = Board(doc["fen"])
+    node = Game.from_board(board)
+    for uci in doc["moves"]:
+        move = Move.from_uci(uci)
+        node = node.add_main_variation(move)
+    return Puzzle(doc["_id"], node.game())
+
 def main() -> None:
     sys.setrecursionlimit(10000) # else node.deepcopy() sometimes fails?
     parser = argparse.ArgumentParser(prog='tagger.py', description='automatically tags lichess puzzles')
@@ -24,14 +32,9 @@ def main() -> None:
     puzzle_coll = db['puzzle2']
     tag_coll = db['tag']
 
-    for puzzle in puzzle_coll.find():
-        # prev = tag_coll.find_one({"_id":puzzle._id})
-        board = Board(puzzle["fen"])
-        node = Game.from_board(board)
-        for uci in puzzle["moves"]:
-            move = Move.from_uci(uci)
-            node = node.add_main_variation(move)
-        puzzle = Puzzle(puzzle["_id"], node.game())
+    for doc in puzzle_coll.find():
+    # for doc in puzzle_coll.find({"_id":"yUM8F"}):
+        puzzle = read(doc)
         tags = cook.cook(puzzle)
         for tag in tags:
             tag_coll.update_one({"_id":puzzle.id},{"$addToSet":{tag: "lichess"}}, upsert = True)

@@ -1,3 +1,4 @@
+from typing import List, Optional, Tuple, Literal, Union
 import chess
 from chess import square_rank, Move, WHITE, BLACK
 from chess.pgn import Game, GameNode
@@ -13,3 +14,10 @@ def is_king_move(node: GameNode) -> bool:
 
 def is_capture(node: GameNode) -> bool:
     return "x" in node.san()
+
+def next_node(node: GameNode) -> Optional[GameNode]:
+    return next(iter(node.mainline()), None)
+
+def next_next_node(node: GameNode) -> Optional[GameNode]:
+    nn = next_node(node)
+    return next_node(nn) if nn else None

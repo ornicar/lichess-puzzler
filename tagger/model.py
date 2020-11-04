@@ -42,4 +42,4 @@ class Puzzle:
     game: Game
 
     def pov(self) -> chess.Color:
-        return self.game.turn()
+        return not self.game.turn()
