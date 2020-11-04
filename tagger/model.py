@@ -37,5 +37,5 @@ TagKind = Literal[
 
 @dataclass
 class Puzzle:
-    _id: str
+    id: str
     game: Game

@@ -25,7 +25,6 @@ def main() -> None:
     tag_coll = db['tag']
 
     for puzzle in puzzle_coll.find():
-        logger.info("http://godot.lichess.ovh:9371/puzzle/{}".format(puzzle["_id"]))
         # prev = tag_coll.find_one({"_id":puzzle._id})
         board = Board(puzzle["fen"])
         node = Game.from_board(board)
@@ -33,8 +32,9 @@ def main() -> None:
             move = Move.from_uci(uci)
             node = node.add_main_variation(move)
         puzzle = Puzzle(puzzle["_id"], node.game())
-        for tag in cook.cook(puzzle):
-            tag_coll.update_one({"_id":puzzle._id},{"$addToSet":{tag: "lichess"}}, upsert = True)
+        tags = cook.cook(puzzle)
+        for tag in tags:
+            tag_coll.update_one({"_id":puzzle.id},{"$addToSet":{tag: "lichess"}}, upsert = True)
 
 if __name__ == "__main__":
     main()
