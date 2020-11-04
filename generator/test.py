@@ -84,6 +84,11 @@ class TestGenerator(unittest.TestCase):
         self.get_puzzle("5r1k/1Q3p2/5q1p/8/2P4p/1P4P1/P4P2/R4RK1 w - - 0 29",
                 Cp(-1010), "g3h4", Cp(0), "f8g8 b7g2 g8g2")
 
+    # https://lichess.org/3GvkmJcw#43
+    def test_puzzle_15(self):
+        self.get_puzzle("7k/pp1q2pp/1n1p2r1/4p3/P3P3/1Q3N1P/1P3PP1/5RK1 w - - 3 22",
+                Cp(-80), "a4a5", Cp(856), "d7h3 g2g3 g6h6 f3h4 h6h4 g3h4 h3b3")
+
 
     def test_not_puzzle_1(self) -> None:
         # https://lichess.org/LywqL7uc#32
