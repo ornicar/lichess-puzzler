@@ -1,0 +1,2 @@
+python-chess==1.2.0
+pymongo==3.11.0
