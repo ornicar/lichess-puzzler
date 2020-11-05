@@ -72,6 +72,8 @@ export default function(app: Express.Express, env: Env) {
       await env.mongo.puzzle.insert(puzzle);
       return res.send(`Created ${config.http.url}/puzzle/${puzzle._id}`);
     } catch (e) {
+      console.warn('Mongo insert error', e.message);
+      console.warn(puzzle);
       const msg = e.code == 11000 ? `Game ${puzzle.gameId} already in the puzzle DB!` : e;
       return res.status(400).send(msg);
     }
