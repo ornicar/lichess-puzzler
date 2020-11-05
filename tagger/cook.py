@@ -88,6 +88,9 @@ def quiet_move(puzzle: Puzzle) -> bool:
 
 def defensive_move(puzzle: Puzzle) -> bool:
     # like quiet_move, but on last move
+    # at least 3 legal moves
+    if puzzle.mainline[-2].board().legal_moves.count() < 3:
+        return False
     node = puzzle.mainline[-1]
     board = node.board()
     # no check given, no piece taken
@@ -98,7 +101,8 @@ def defensive_move(puzzle: Puzzle) -> bool:
         attacked_piece = board.piece_at(attacked_square)
         if attacked_piece and attacked_piece.color != puzzle.pov:
             return False
-    return True
+    # no advanced pawn push
+    return not util.is_advanced_pawn_move(node)
 
 def attraction(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1:]:

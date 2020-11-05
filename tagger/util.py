@@ -9,6 +9,14 @@ def moved_piece_type(node: GameNode) -> chess.PieceType:
 def is_pawn_move(node: GameNode) -> bool:
     return moved_piece_type(node) == chess.PAWN
 
+def is_advanced_pawn_move(node: GameNode) -> bool:
+    if node.move.promotion:
+        return True
+    if not is_pawn_move(node):
+        return False
+    to_rank = square_rank(node.move.to_square)
+    return to_rank < 5 if node.turn() else to_rank > 4
+
 def is_king_move(node: GameNode) -> bool:
     return moved_piece_type(node) == chess.KING
 
