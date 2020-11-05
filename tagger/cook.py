@@ -5,6 +5,7 @@ from chess import square_rank, Move, WHITE, BLACK
 from chess.pgn import Game, GameNode
 from model import Puzzle, TagKind
 import util
+from util import material_diff
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -32,6 +33,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if quiet_move(puzzle):
         tags.append("quietMove")
 
+    if sacrifice(puzzle):
+        tags.append("quietMove")
+
     if len(puzzle.mainline) == 4:
         tags.append("short")
     elif len(puzzle.mainline) >= 8:
@@ -52,6 +56,15 @@ def advanced_pawn(puzzle: Puzzle) -> bool:
 def double_check(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline:
         if node.turn() != puzzle.pov and len(node.board().checkers()) > 1:
+            return True
+    return False
+
+def sacrifice(puzzle: Puzzle) -> bool:
+    # down in material compared to initial position, after moving
+    diffs = [material_diff(n.board(), puzzle.pov) for n in puzzle.mainline]
+    initial = diffs[0]
+    for d in diffs[1::2][1:]:
+        if d - initial <= -2:
             return True
     return False
 
