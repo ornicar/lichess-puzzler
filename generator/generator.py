@@ -179,13 +179,13 @@ def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_
         puzzle_node = copy.deepcopy(node)
         solution : Optional[List[NextMovePair]] = cook_advantage(engine, puzzle_node, winner)
         server.set_seen(node.game())
-        if solution is None or len(solution) < 3:
+        if not solution:
             return score
         while len(solution) % 2 == 0 or not solution[-1].second:
             if not solution[-1].second:
                 logger.info("Remove final only-move")
             solution = solution[:-1]
-        if len(solution) < 3:
+        if not solution:
             logger.info("Solution too short")
             return score
         last = list(puzzle_node.mainline())[len(solution)]
