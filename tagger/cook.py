@@ -34,7 +34,7 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
         tags.append("quietMove")
 
     if sacrifice(puzzle):
-        tags.append("quietMove")
+        tags.append("sacrifice")
 
     if len(puzzle.mainline) == 4:
         tags.append("short")
