@@ -32,6 +32,8 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if quiet_move(puzzle):
         tags.append("quietMove")
+    elif defensive_move(puzzle):
+        tags.append("defensiveMove")
 
     if sacrifice(puzzle):
         tags.append("sacrifice")
@@ -83,6 +85,20 @@ def quiet_move(puzzle: Puzzle) -> bool:
                             return False
                     return True
     return False
+
+def defensive_move(puzzle: Puzzle) -> bool:
+    # like quiet_move, but on last move
+    node = puzzle.mainline[-1]
+    board = node.board()
+    # no check given, no piece taken
+    if board.checkers() or util.is_capture(node):
+        return False
+    # no piece attacked
+    for attacked_square in board.attacks(node.move.to_square):
+        attacked_piece = board.piece_at(attacked_square)
+        if attacked_piece and attacked_piece.color != puzzle.pov:
+            return False
+    return True
 
 def attraction(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1:]:
