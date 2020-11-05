@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple, Literal, Union
 import chess
-from chess import square_rank, Move, Color, Board
+from chess import square_rank, Move, Color, Board, Square, Piece
 from chess.pgn import Game, GameNode
 
 def moved_piece_type(node: GameNode) -> chess.PieceType:
@@ -40,3 +40,17 @@ def material_count(board: Board, side: Color) -> int:
 
 def material_diff(board: Board, side: Color) -> int:
     return material_count(board, side) - material_count(board, not side)
+
+def attacked_opponent_pieces(board: Board, from_square: Square, pov: Color) -> List[Piece]:
+    return [piece for (piece, square) in attacked_opponent_squares(board, from_square, pov)]
+
+def attacked_opponent_squares(board: Board, from_square: Square, pov: Color) -> List[Tuple[Piece, Square]]:
+    pieces = []
+    for attacked_square in board.attacks(from_square):
+        attacked_piece = board.piece_at(attacked_square)
+        if attacked_piece and attacked_piece.color != pov:
+            pieces.append((attacked_piece, attacked_square))
+    return pieces
+
+def is_hanging(board: Board, piece: Piece, square: Square) -> bool:
+   return not board.attackers(piece.color, square)
