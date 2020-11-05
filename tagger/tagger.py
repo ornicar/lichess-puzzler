@@ -6,7 +6,7 @@ import cook
 from chess import Move, Color, Board, WHITE, BLACK
 from chess.pgn import Game, GameNode
 from typing import List, Optional, Tuple, Literal, Union
-from model import Puzzle
+from model import Puzzle, TagKind, static_kinds
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -38,9 +38,14 @@ def main() -> None:
         puzzle = read(doc)
         tags = cook.cook(puzzle)
         if not args.dry:
+            ups = {}
             for tag in tags:
-                tag_plus = "{}.+".format(tag)
-                tag_coll.update_one({"_id":puzzle.id},{"$addToSet":{tag_plus: "lichess"}}, upsert = True)
+                if not tag in static_kinds:
+                    ups["{}+".format(tag)] = "lichess"
+            if ups:
+                tag_coll.update_one({"_id":puzzle.id},{"$addToSet":ups}, upsert = True)
+            if tags:
+                puzzle_coll.update_one({"_id":puzzle.id},{"$addToSet":{"tags":{"$each":tags}}})
         nb = nb + 1
         if nb % 1000 == 0:
             logger.info(nb)

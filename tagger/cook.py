@@ -103,6 +103,8 @@ def hanging_piece(puzzle: Puzzle) -> bool:
     captured = puzzle.mainline[0].board().piece_at(to)
     if captured and captured.piece_type != PAWN:
         if util.is_hanging(puzzle.mainline[0].board(), captured, to):
+            if len(puzzle.mainline) < 3:
+                return True
             if not util.is_capture(puzzle.mainline[2]) and not puzzle.mainline[2].board().is_check():
                 return True
     return False
@@ -171,6 +173,4 @@ def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
         return "mateIn3"
     elif moves_to_mate == 4:
         return "mateIn4"
-    elif moves_to_mate == 5:
-        return "mateIn5"
-    return "mateIn6+"
+    return "mateIn5+"

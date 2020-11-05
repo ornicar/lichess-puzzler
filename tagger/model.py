@@ -22,8 +22,7 @@ TagKind = Literal[
     "hangingPiece",
     "interference",
     "long",
-    "mateIn6+",
-    "mateIn5",
+    "mateIn5+",
     "mateIn4",
     "mateIn3",
     "mateIn2",
@@ -38,6 +37,17 @@ TagKind = Literal[
     "skewer",
     "trappedPiece",
     "zugzwang"
+]
+
+static_kinds = [
+    "mateIn5+",
+    "mateIn4",
+    "mateIn3",
+    "mateIn2",
+    "mateIn1",
+    "oneMove",
+    "short",
+    "long"
 ]
 
 @dataclass
