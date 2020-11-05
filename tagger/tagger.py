@@ -35,7 +35,6 @@ def main() -> None:
     nb = 0
 
     for doc in puzzle_coll.find():
-    # for doc in puzzle_coll.find({"_id":"yUM8F"}):
         puzzle = read(doc)
         tags = cook.cook(puzzle)
         if not args.dry:

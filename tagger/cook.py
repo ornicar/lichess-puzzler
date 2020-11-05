@@ -73,10 +73,11 @@ def sacrifice(puzzle: Puzzle) -> bool:
     return False
 
 def fork(puzzle: Puzzle) -> bool:
-    for node in puzzle.mainline[1::2]:
+    for node in puzzle.mainline[1::2][:-1]:
         if util.moved_piece_type(node) is not KING:
             board = node.board()
-            board.turn = puzzle.pov
+            if board.is_checkmate():
+                return False
             nb = 0
             for (piece, square) in util.attacked_opponent_squares(board, node.move.to_square, puzzle.pov):
                 if piece.piece_type == PAWN:
