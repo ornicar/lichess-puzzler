@@ -46,6 +46,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if hanging_piece(puzzle):
         tags.append("hangingPiece")
 
+    if len(puzzle.mainline) == 2:
+        tags.append("oneMove")
+
     if len(puzzle.mainline) == 4:
         tags.append("short")
 
@@ -160,7 +163,9 @@ def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
     if not puzzle.game.end().board().is_checkmate():
         return None
     moves_to_mate = int(len(puzzle.mainline) / 2)
-    if moves_to_mate == 2:
+    if moves_to_mate == 1:
+        return "mateIn1"
+    elif moves_to_mate == 2:
         return "mateIn2"
     elif moves_to_mate == 3:
         return "mateIn3"

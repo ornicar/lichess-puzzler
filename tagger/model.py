@@ -27,6 +27,8 @@ TagKind = Literal[
     "mateIn4",
     "mateIn3",
     "mateIn2",
+    "mateIn1",
+    "oneMove",
     "overloading",
     "pin",
     "quietMove",
