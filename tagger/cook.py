@@ -57,8 +57,8 @@ def double_check(puzzle: Puzzle) -> bool:
 
 def quiet_move(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline:
-        # on player move
-        if node.turn() != puzzle.pov:
+        # on player move, not the last move of the puzzle
+        if node.turn() != puzzle.pov and not node.is_end():
             board = node.board()
             # no check given or escaped
             if not board.checkers() and not node.parent.board().checkers():
