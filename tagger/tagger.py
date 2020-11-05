@@ -40,7 +40,8 @@ def main() -> None:
         tags = cook.cook(puzzle)
         if not args.dry:
             for tag in tags:
-                tag_coll.update_one({"_id":puzzle.id},{"$addToSet":{tag: "lichess"}}, upsert = True)
+                tag_plus = "{}.+".format(tag)
+                tag_coll.update_one({"_id":puzzle.id},{"$addToSet":{tag_plus: "lichess"}}, upsert = True)
         nb = nb + 1
         if nb % 1000 == 0:
             logger.info(nb)
