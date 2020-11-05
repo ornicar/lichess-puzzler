@@ -22,7 +22,7 @@ from server import Server
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
-version = 16
+version = 17
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
 mate_soon = Mate(15)
 
@@ -162,9 +162,6 @@ def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_
         return score
     if is_up_in_material(board, winner):
         logger.debug("{} already up in material {} {} {}".format(node.ply(), winner, material_count(board, winner), material_count(board, not winner)))
-        return score
-    elif score >= Mate(1):
-        logger.debug("{} mate in one".format(node.ply()))
         return score
     elif score > mate_soon:
         logger.info("Mate {}#{} Probing...".format(game_url, node.ply()))
