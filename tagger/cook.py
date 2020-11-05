@@ -43,6 +43,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if fork(puzzle):
         tags.append("fork")
 
+    if hanging_piece(puzzle):
+        tags.append("hangingPiece")
+
     if len(puzzle.mainline) == 4:
         tags.append("short")
 
@@ -86,7 +89,19 @@ def fork(puzzle: Puzzle) -> bool:
                     util.values[piece.piece_type] > util.values[util.moved_piece_type(node)] or
                     util.is_hanging(board, piece, square)):
                     nb += 1
-            return nb > 1
+            if nb > 1:
+                return True
+    return False
+
+def hanging_piece(puzzle: Puzzle) -> bool:
+    if util.is_capture(puzzle.mainline[0]):
+        return False
+    to = puzzle.mainline[1].move.to_square
+    captured = puzzle.mainline[0].board().piece_at(to)
+    if captured and captured.piece_type != PAWN:
+        if util.is_hanging(puzzle.mainline[0].board(), captured, to):
+            if not util.is_capture(puzzle.mainline[2]) and not puzzle.mainline[2].board().is_check():
+                return True
     return False
 
 def quiet_move(puzzle: Puzzle) -> bool:
