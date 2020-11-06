@@ -1,6 +1,7 @@
 from typing import List, Optional, Tuple, Literal, Union
 import chess
 from chess import square_rank, Move, Color, Board, Square, Piece
+from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess.pgn import Game, GameNode
 
 def moved_piece_type(node: GameNode) -> chess.PieceType:
@@ -30,7 +31,7 @@ def next_next_node(node: GameNode) -> Optional[GameNode]:
     nn = next_node(node)
     return next_node(nn) if nn else None
 
-values = { chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9 }
+values = { PAWN: 1, KNIGHT: 3, BISHOP: 3, ROOK: 5, QUEEN: 9 }
 
 def piece_value(piece_type: chess.PieceType) -> int:
     return values[piece_type]
@@ -75,10 +76,15 @@ def is_trapped(board: Board, square: Square) -> bool:
     if board.is_check() or board.is_pinned(board.turn, square):
         return False
     piece = board.piece_at(square)
+    if piece.piece_type in [PAWN, KING]:
+        return False
     if not is_in_bad_spot(board, square):
         return False
     for escape in board.legal_moves:
         if escape.from_square == square:
+            capturing = board.piece_at(escape.to_square)
+            if capturing and values[capturing.piece_type] >= values[piece.piece_type]:
+                return False
             board.push(escape)
             if not is_in_bad_spot(board, escape.to_square):
                 return False

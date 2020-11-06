@@ -124,6 +124,17 @@ def trapped_piece(puzzle: Puzzle) -> bool:
                 return True
     return False
 
+def discovered_attack(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2][1:]:
+        square = node.move.to_square
+        capturing_from = node.move.from_square
+        capturing_piece = node.board().piece_at(capturing_from)
+        if capturing_piece in [QUEEN, ROOK, BISHOP]:
+            prev = node.parent.parent
+            if prev.move.from_square in prev.board().attacks(capturing_from):
+                return True
+    return False
+
 def quiet_move(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline:
         # on player move, not the last move of the puzzle
