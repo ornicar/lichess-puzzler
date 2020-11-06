@@ -46,6 +46,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if hanging_piece(puzzle):
         tags.append("hangingPiece")
 
+    if trapped_piece(puzzle):
+        tags.append("trappedPiece")
+
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
 
@@ -106,6 +109,18 @@ def hanging_piece(puzzle: Puzzle) -> bool:
             if len(puzzle.mainline) < 3:
                 return True
             if not util.is_capture(puzzle.mainline[2]) and not puzzle.mainline[2].board().is_check():
+                return True
+    return False
+
+def trapped_piece(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2][1:]:
+        square = node.move.to_square
+        captured = node.parent.board().piece_at(square)
+        if captured and captured.piece_type != PAWN:
+            prev = node.parent
+            if prev.move.to_square == square:
+                square = prev.move.from_square
+            if util.is_trapped(prev.parent.board(), square):
                 return True
     return False
 

@@ -1,10 +1,12 @@
 import unittest
 import logging
 import cook
+import util
+import chess
 from model import Puzzle
 from tagger import logger, read
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
-from chess import Move, Color, Board, WHITE, BLACK
+from chess import Move, Color, Board, Square, parse_square
 from chess.pgn import Game, GameNode
 from typing import List, Optional, Tuple, Literal, Union
 
@@ -54,6 +56,39 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.fork(make("0O5RW", "rnb1k2r/p1B2ppp/4p3/1Bb5/8/4P3/PP1K1PPP/nN4NR b kq - 0 12", "b8d7 b5c6 c8a6 c6a8 c5b4 b1c3")))
         self.assertTrue(cook.fork(make("1NxIN", "r3k2r/p2q1ppp/4pn2/1Qp5/8/4P3/PP1N1PPP/R3K2R w KQkq - 2 16", "b5c5 d7d2 e1d2 f6e4 d2e2 e4c5")))
         self.assertFalse(cook.fork(make("6ppA2", "8/p7/1p6/2p5/P6P/2P2Nk1/1r4P1/4R1K1 w - - 1 39", "f3d2 b2d2 h4h5 d2g2")))
+
+class TestUtil(unittest.TestCase):
+
+    def test_trapped(self):
+        self.assertFalse(util.is_trapped(
+            chess.Board("q3k3/7p/8/4N2q/3PP3/4B3/8/4K2R b - - 0 1"), parse_square("h5")
+        ))
+        self.assertTrue(util.is_trapped(
+            chess.Board("q3k3/7p/8/4N2q/3PP3/4B3/7R/4K2R b - - 0 1"), parse_square("h5")
+        ))
+        self.assertFalse(util.is_trapped(
+            chess.Board("q3k3/7p/8/4N2b/3PP3/4B3/7R/4K2R b - - 0 1"), parse_square("h5")
+        ))
+        self.assertFalse(util.is_trapped(
+            chess.Board("4k3/7p/8/4N2q/3PP2p/4B3/8/4K3 b - - 0 1"), parse_square("h5")
+        ))
+        self.assertTrue(util.is_trapped(
+            chess.Board("8/3P4/8/4N2b/7p/6N1/8/4K3 b - - 0 1"), parse_square("h5")
+        ))
+
+    # def test_takers(self):
+    #     # https://lichess.org/editor/1r1bk2b/1R4n1/4N3/8/3Q1P1q/8/8/1K6_w_-_-_0_1
+    #     board = chess.Board("1r1bk2b/1R4n1/4N3/8/3Q1P1q/8/8/1K6 w - - 0 1")
+    #     def check(dest: Square, origs: List[Square]):
+    #         square = parse_square(dest)
+    #         takers = [(board.piece_at(s), s) for s in [parse_square(s) for s in origs]]
+    #         self.assertCountEqual(util.takers(board, square), takers)
+    #     check("c2", ["b1"])
+    #     check("b8", ["b7"])
+    #     check("d8", ["d4", "e6"])
+    #     check("g7", ["d4", "e6"])
+    #     check("h8", [])
+    #     check("h4", [])
 
 if __name__ == '__main__':
     unittest.main()

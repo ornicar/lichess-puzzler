@@ -52,5 +52,43 @@ def attacked_opponent_squares(board: Board, from_square: Square, pov: Color) -> 
             pieces.append((attacked_piece, attacked_square))
     return pieces
 
+def is_defended(board: Board, piece: Piece, square: Square) -> bool:
+    return board.attackers(piece.color, square)
+
 def is_hanging(board: Board, piece: Piece, square: Square) -> bool:
-   return not board.attackers(piece.color, square)
+    return not is_defended(board, piece, square)
+
+def can_be_taken_by_lower_piece(board: Board, piece: Piece, square: Square) -> bool:
+    for attacker_square in board.attackers(not piece.color, square):
+        attacker = board.piece_at(attacker_square)
+        if attacker.piece_type != chess.KING and values[attacker.piece_type] < values[piece.piece_type]:
+            return True
+    return False
+
+def is_in_bad_spot(board: Board, square: Square) -> bool:
+    # hanging or takeable by lower piece
+    piece = board.piece_at(square)
+    return (board.attackers(not piece.color, square) and
+            (is_hanging(board, piece, square) or can_be_taken_by_lower_piece(board, piece, square)))
+
+def is_trapped(board: Board, square: Square) -> bool:
+    if board.is_check() or board.is_pinned(board.turn, square):
+        return False
+    piece = board.piece_at(square)
+    if not is_in_bad_spot(board, square):
+        return False
+    for escape in board.legal_moves:
+        if escape.from_square == square:
+            board.push(escape)
+            if not is_in_bad_spot(board, escape.to_square):
+                return False
+            board.pop()
+    return True
+
+# def takers(board: Board, square: Square) -> List[Tuple[Piece, Square]]:
+#     # pieces that can legally take on a square
+#     t = []
+#     for attack in board.legal_moves:
+#         if attack.to_square == square:
+#             t.append((board.piece_at(attack.from_square), attack.from_square))
+#     return t
