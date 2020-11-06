@@ -7,13 +7,10 @@ from chess.pgn import Game, GameNode
 def moved_piece_type(node: GameNode) -> chess.PieceType:
     return node.board().piece_type_at(node.move.to_square)
 
-def is_pawn_move(node: GameNode) -> bool:
-    return moved_piece_type(node) == chess.PAWN
-
 def is_advanced_pawn_move(node: GameNode) -> bool:
     if node.move.promotion:
         return True
-    if not is_pawn_move(node):
+    if moved_piece_type(node) != chess.PAWN:
         return False
     to_rank = square_rank(node.move.to_square)
     return to_rank < 5 if node.turn() else to_rank > 4
@@ -22,7 +19,7 @@ def is_king_move(node: GameNode) -> bool:
     return moved_piece_type(node) == chess.KING
 
 def is_capture(node: GameNode) -> bool:
-    return "x" in node.san()
+    return node.parent.board().is_capture(node.move)
 
 def next_node(node: GameNode) -> Optional[GameNode]:
     return node.variations[0] if node.variations else None

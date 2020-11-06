@@ -140,17 +140,16 @@ def discovered_attack(puzzle: Puzzle) -> bool:
             if node.parent.move.to_square == node.move.to_square:
                 return False
             prev = node.parent.parent
-            if between and prev.move.from_square in between:
-                if node.move.to_square != prev.move.to_square:
-                    return True
+            if prev.move.from_square in between and node.move.to_square != prev.move.to_square:
+                return True
     return False
 
 def discovered_check(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
         board = node.board()
-        if board.is_check():
-            if not node.move.to_square in board.checkers():
-                return True
+        checkers = board.checkers()
+        if checkers and not node.move.to_square in checkers:
+            return True
     return False
 
 def quiet_move(puzzle: Puzzle) -> bool:
@@ -216,12 +215,14 @@ def deflection(puzzle: Puzzle) -> bool:
             prev_op_move = node.parent.move
             prev_player_move = node.parent.parent.move
             prev_player_capture = node.parent.parent.parent.board().piece_at(prev_player_move.to_square)
-            if not prev_player_capture or util.values[prev_player_capture.piece_type] < util.moved_piece_type(node.parent.parent):
-                if square != prev_op_move.to_square and square != prev_player_move.to_square:
-                    if prev_op_move.to_square == prev_player_move.to_square:
-                        if square in node.parent.parent.board().attacks(prev_op_move.from_square):
-                            if not square in node.parent.board().attacks(prev_op_move.to_square):
-                                return True
+            if (
+                (not prev_player_capture or util.values[prev_player_capture.piece_type] < util.moved_piece_type(node.parent.parent)) and
+                (square != prev_op_move.to_square and square != prev_player_move.to_square) and
+                (prev_op_move.to_square == prev_player_move.to_square) and
+                (square in node.parent.parent.board().attacks(prev_op_move.from_square)) and
+                (not square in node.parent.board().attacks(prev_op_move.to_square))
+            ):
+                return True
     return False
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
