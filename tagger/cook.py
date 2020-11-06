@@ -2,7 +2,8 @@ import logging
 from copy import deepcopy
 from typing import List, Optional, Tuple, Literal, Union
 import chess
-from chess import square_rank, Move, KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
+from chess import square_rank, Move, SquareSet
+from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess.pgn import Game, GameNode
 from model import Puzzle, TagKind
 import util
@@ -48,6 +49,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if trapped_piece(puzzle):
         tags.append("trappedPiece")
+
+    if discovered_attack(puzzle):
+        tags.append("discoveredAttack")
 
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
@@ -125,13 +129,24 @@ def trapped_piece(puzzle: Puzzle) -> bool:
     return False
 
 def discovered_attack(puzzle: Puzzle) -> bool:
+    if discovered_check(puzzle):
+        return True
     for node in puzzle.mainline[1::2][1:]:
-        square = node.move.to_square
-        capturing_from = node.move.from_square
-        capturing_piece = node.board().piece_at(capturing_from)
-        if capturing_piece in [QUEEN, ROOK, BISHOP]:
+        if util.is_capture(node):
+            between = SquareSet.between(node.move.from_square, node.move.to_square)
+            if node.parent.move.to_square == node.move.to_square:
+                return False
             prev = node.parent.parent
-            if prev.move.from_square in prev.board().attacks(capturing_from):
+            if between and prev.move.from_square in between:
+                if node.move.to_square != prev.move.to_square:
+                    return True
+    return False
+
+def discovered_check(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2]:
+        board = node.board()
+        if board.is_check():
+            if not node.move.to_square in board.checkers():
                 return True
     return False
 

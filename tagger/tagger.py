@@ -21,7 +21,7 @@ def read(doc) -> Puzzle:
     return Puzzle(doc["_id"], node.game())
 
 def main() -> None:
-    sys.setrecursionlimit(10000) # else node.deepcopy() sometimes fails?
+    # sys.setrecursionlimit(10000) # else node.deepcopy() sometimes fails?
     parser = argparse.ArgumentParser(prog='tagger.py', description='automatically tags lichess puzzles')
     parser.add_argument("--dry", "-d", help="dry run")
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
