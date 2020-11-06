@@ -26,6 +26,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if attraction(puzzle):
         tags.append("attraction")
 
+    if deflection(puzzle):
+        tags.append("deflection")
+
     if advanced_pawn(puzzle):
         tags.append("advancedPawn")
 
@@ -200,6 +203,25 @@ def attraction(puzzle: Puzzle) -> bool:
                         # 4. or player later captures on that square
                         if n3 and n3.move.to_square == attracted_to_square:
                             return True
+    return False
+
+def deflection(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2][1:]:
+        capture = node.parent.board().piece_at(node.move.to_square)
+        if capture or node.move.promotion:
+            piece = util.moved_piece_type(node)
+            if capture and piece != KING and util.values[capture.piece_type] > util.values[piece]:
+                continue
+            square = node.move.to_square
+            prev_op_move = node.parent.move
+            prev_player_move = node.parent.parent.move
+            prev_player_capture = node.parent.parent.parent.board().piece_at(prev_player_move.to_square)
+            if not prev_player_capture or util.values[prev_player_capture.piece_type] < util.moved_piece_type(node.parent.parent):
+                if square != prev_op_move.to_square and square != prev_player_move.to_square:
+                    if prev_op_move.to_square == prev_player_move.to_square:
+                        if square in node.parent.parent.board().attacks(prev_op_move.from_square):
+                            if not square in node.parent.board().attacks(prev_op_move.to_square):
+                                return True
     return False
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
