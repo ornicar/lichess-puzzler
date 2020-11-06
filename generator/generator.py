@@ -235,33 +235,37 @@ def main() -> None:
     skip = int(args.skip)
     logger.info("Skipping first {} games".format(skip))
 
-    with open_file(args.file) as pgn:
-        skip_next = False
-        for line in pgn:
-            if line.startswith("[Site "):
-                site = line
-                games = games + 1
-            elif games < skip:
-                continue
-            elif util.exclude_time_control(line) or util.exclude_rating(line):
-                skip_next = True
-            elif line.startswith("1. ") and skip_next:
-                logger.debug("Skip {}".format(site))
-                skip_next = False
-            elif "%eval" in line:
-                game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
-                game_id = game.headers.get("Site", "?")[20:]
-                if server.is_seen(game_id):
-                    logger.info("Game was already seen before")
+    try:
+        with open_file(args.file) as pgn:
+            skip_next = False
+            for line in pgn:
+                if line.startswith("[Site "):
+                    site = line
+                    games = games + 1
+                elif games < skip:
                     continue
+                elif util.exclude_time_control(line) or util.exclude_rating(line):
+                    skip_next = True
+                elif line.startswith("1. ") and skip_next:
+                    logger.debug("Skip {}".format(site))
+                    skip_next = False
+                elif "%eval" in line:
+                    game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
+                    game_id = game.headers.get("Site", "?")[20:]
+                    if server.is_seen(game_id):
+                        logger.info("Game was already seen before")
+                        continue
 
-                try:
-                    puzzle = analyze_game(server, engine, game)
-                    if puzzle is not None:
-                        print("Game {}".format(games))
-                        server.post(game_id, puzzle)
-                except Exception as e:
-                    logger.error("Exception on {}".format(game_id))
+                    try:
+                        puzzle = analyze_game(server, engine, game)
+                        if puzzle is not None:
+                            print("Game {}".format(games))
+                            server.post(game_id, puzzle)
+                    except Exception as e:
+                        logger.error("Exception on {}".format(game_id))
+    except KeyboardInterrupt:
+        print("\nLast game: {}".format(games))
+        sys.exit(1) 
 
     engine.close()
 
