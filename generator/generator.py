@@ -187,7 +187,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_
                 logger.info("Remove final only-move")
             solution = solution[:-1]
         if not solution or (len(solution) == 1 and not allow_one_mover):
-            logger.info("Solution too short")
+            logger.info("Discard one-mover")
             return score
         last = list(puzzle_node.mainline())[len(solution)]
         gain = material_diff(last.board(), winner) - material_diff(board, winner)
