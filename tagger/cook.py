@@ -63,8 +63,11 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
         tags.append("skewer")
 
     if self_interference(puzzle) or interference(puzzle):
-        log(puzzle)
         tags.append("interference")
+
+    if pin(puzzle):
+        log(puzzle)
+        tags.append("pin")
 
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
@@ -305,6 +308,23 @@ def interference(puzzle: Puzzle) -> bool:
                 if interfering.move.to_square in SquareSet.between(square, defender):
                     return True
     return False
+
+def pin(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2][:-1]:
+        board = node.board()
+        if board.is_check():
+            continue
+        for square, piece in board.piece_map().items():
+            if piece.color != puzzle.pov:
+                pin_dir = board.pin(piece.color, square)
+                if pin_dir != chess.BB_ALL:
+                    for attack in board.attacks(square):
+                        attacked = board.piece_at(attack)
+                        if attacked and attacked.color == puzzle.pov and not attack in pin_dir and (
+                                util.values[attacked.piece_type] > util.values[piece.piece_type] or
+                                util.is_hanging(board, attacked, attack)
+                            ):
+                            return True
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
     if not puzzle.game.end().board().is_checkmate():
