@@ -32,6 +32,7 @@ TagKind = Literal[
     "oneMove",
     "overloading",
     "pin",
+    "promotion",
     "quietMove",
     "sacrifice",
     "short",
@@ -49,6 +50,7 @@ static_kinds = [
     "mateIn2",
     "mateIn1",
     "oneMove",
+    "promotion",
     "short",
     "long"
 ]

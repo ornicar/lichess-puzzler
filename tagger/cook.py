@@ -77,6 +77,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if en_passant(puzzle):
         tags.append("enPassant")
 
+    if promotion(puzzle):
+        tags.append("promotion")
+
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
 
@@ -364,6 +367,11 @@ def en_passant(puzzle: Puzzle) -> bool:
             square_file(node.move.from_square) != square_file(node.move.to_square) and
             not node.parent.board().piece_at(node.move.to_square)
         ):
+            return True
+
+def promotion(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2]:
+        if node.move.promotion:
             return True
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
