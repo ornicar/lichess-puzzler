@@ -54,6 +54,7 @@ export default function(app: Express.Express, env: Env) {
     res.send(JSON.stringify({ username, puzzle: next }));
   });
 
+  let duplicates = 0;
   app.post('/puzzle', async (req, res) => {
     if (req.query.token as string != config.generatorToken)
       return res.status(400).send('Wrong token');
@@ -72,10 +73,13 @@ export default function(app: Express.Express, env: Env) {
       await env.mongo.puzzle.insert(puzzle);
       return res.send(`Created ${config.http.url}/puzzle/${puzzle._id}`);
     } catch (e) {
-      console.warn('Mongo insert error', e.message);
-      console.warn(puzzle);
-      const msg = e.code == 11000 ? `Game ${puzzle.gameId} already in the puzzle DB!` : e;
-      return res.status(400).send(msg);
+      const msg = e.code == 11000 ? `Game ${puzzle.gameId} already in the puzzle DB!` : e.message;
+      if (e.code == 11000) {
+        duplicates++;
+        console.info(`${duplicates} duplicates detected.`);
+      } else 
+        console.warn(`Mongo insert error: ${msg}`);
+      return res.status(200).send(msg);
     }
   });
 
