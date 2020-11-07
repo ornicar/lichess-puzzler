@@ -2,7 +2,7 @@ import logging
 from copy import deepcopy
 from typing import List, Optional, Tuple, Literal, Union
 import chess
-from chess import square_rank, Move, SquareSet, Piece
+from chess import square_rank, Move, SquareSet, Piece, PieceType
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess.pgn import Game, GameNode
 from model import Puzzle, TagKind
@@ -58,6 +58,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if exposed_king(puzzle):
         tags.append("exposedKing")
+
+    if skewer(puzzle):
+        tags.append("skewer")
 
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
@@ -251,6 +254,21 @@ def exposed_king(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][1:-1]:
         if node.board().is_check():
             return True
+    return False
+
+def skewer(puzzle: Puzzle) -> bool:
+    def value(pt: PieceType):
+        return 10 if pt == KING else util.values[pt]
+    for node in puzzle.mainline[1::2][1:]:
+        prev = node.parent
+        capture = prev.board().piece_at(node.move.to_square)
+        if capture and util.moved_piece_type(node) in [QUEEN, BISHOP, ROOK] and not node.board().is_checkmate():
+            between = SquareSet.between(node.move.from_square, node.move.to_square)
+            op_move = prev.move
+            if (op_move.to_square == node.move.to_square or not op_move.from_square in between):
+                continue
+            if value(util.moved_piece_type(prev)) > value(capture.piece_type):
+                return True
     return False
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
