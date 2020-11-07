@@ -37,7 +37,7 @@ def is_valid_attack(pair: NextMovePair) -> bool:
         return pair.second.score < Cp(500)
     if pair.best.score == Mate(3):
         return pair.second.score < Cp(300)
-    if win_chances(pair.best.score) > win_chances(pair.second.score) + 0.42:
+    if win_chances(pair.best.score) > win_chances(pair.second.score) + 0.45:
         return True
     # if best move is mate, and second move still good but doesn't win material,
     # then best move is valid attack
@@ -191,7 +191,11 @@ def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_
             return score
         last = list(puzzle_node.mainline())[len(solution)]
         gain = material_diff(last.board(), winner) - material_diff(board, winner)
-        return Puzzle(node, [p.best.move for p in solution], "material") if gain > 1 else score
+        if gain > 1 or (
+            len(solution) == 1 and 
+            win_chances(solution[0].best.score) > win_chances(solution[0].second.score) + 0.5):
+            return Puzzle(node, [p.best.move for p in solution], "material")
+        return score
     else:
         return score
 
