@@ -71,6 +71,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if attacking_f2_f7(puzzle):
         tags.append("attackingF2F7")
 
+    if clearance(puzzle):
+        tags.append("clearance")
+
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
 
@@ -203,7 +206,7 @@ def attraction(puzzle: Puzzle) -> bool:
         # 2. opponent captures on that square
         if opponent_reply and opponent_reply.move.to_square == first_move_to:
             attracted_piece = util.moved_piece_type(opponent_reply)
-            if attracted_piece in [KING, QUEEN, ROOK]:
+            if attracted_piece in util.ray_piece_types:
                 attracted_to_square = opponent_reply.move.to_square
                 next_node = util.next_node(opponent_reply)
                 if next_node:
@@ -271,7 +274,7 @@ def skewer(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][1:]:
         prev = node.parent
         capture = prev.board().piece_at(node.move.to_square)
-        if capture and util.moved_piece_type(node) in [QUEEN, BISHOP, ROOK] and not node.board().is_checkmate():
+        if capture and util.moved_piece_type(node) in util.ray_piece_types and not node.board().is_checkmate():
             between = SquareSet.between(node.move.from_square, node.move.to_square)
             op_move = prev.move
             if (op_move.to_square == node.move.to_square or not op_move.from_square in between):
@@ -290,7 +293,7 @@ def self_interference(puzzle: Puzzle) -> bool:
             init_board = node.parent.parent.board()
             defenders = init_board.attackers(capture.color, square)
             defender = defenders.pop() if defenders else None
-            if defender and init_board.piece_at(defender).piece_type in [QUEEN, BISHOP, ROOK]:
+            if defender and init_board.piece_at(defender).piece_type in util.ray_piece_types:
                 if node.parent.move.to_square in SquareSet.between(square, defender):
                     return True
     return False
@@ -305,7 +308,7 @@ def interference(puzzle: Puzzle) -> bool:
             init_board = node.parent.parent.parent.board()
             defenders = init_board.attackers(capture.color, square)
             defender = defenders.pop() if defenders else None
-            if defender and init_board.piece_at(defender).piece_type in [QUEEN, BISHOP, ROOK]:
+            if defender and init_board.piece_at(defender).piece_type in util.ray_piece_types:
                 interfering = node.parent.parent
                 if interfering.move.to_square in SquareSet.between(square, defender):
                     return True
@@ -334,6 +337,25 @@ def attacking_f2_f7(puzzle: Puzzle) -> bool:
         if node.parent.board().piece_at(node.move.to_square) and square in [chess.F2, chess.F7]:
             king = node.board().piece_at(chess.E8 if square == chess.F7 else chess.E1)
             return king and king.piece_type == KING and king.color != puzzle.pov
+
+def clearance(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2][1:]:
+        board = node.board()
+        if not node.parent.board().piece_at(node.move.to_square):
+            if board.piece_at(node.move.to_square).piece_type in util.ray_piece_types:
+                prev = node.parent.parent
+                prev_move = prev.move
+                if (not prev_move.promotion and
+                    prev_move.to_square != node.move.from_square and
+                    prev_move.to_square != node.move.to_square and
+                    not node.parent.board().is_check() and
+                    (not board.is_check() or util.moved_piece_type(node.parent) != KING)):
+                    if (prev_move.from_square == node.move.to_square or 
+                        prev_move.from_square in SquareSet.between(node.move.from_square, node.move.to_square)):
+                        if not prev.parent.board().piece_at(prev_move.to_square) or util.is_in_bad_spot(prev.board(), prev_move.to_square):
+                            log(puzzle)
+                            return True
+
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
     if not puzzle.game.end().board().is_checkmate():
