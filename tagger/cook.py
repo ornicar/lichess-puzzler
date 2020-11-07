@@ -248,7 +248,7 @@ def exposed_king(puzzle: Puzzle) -> bool:
     for square in squares:
         if board.piece_at(square) == Piece(PAWN, not pov):
             return False
-    for node in puzzle.mainline[1::2][1:]:
+    for node in puzzle.mainline[1::2][1:-1]:
         if node.board().is_check():
             return True
     return False
