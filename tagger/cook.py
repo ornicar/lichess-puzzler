@@ -2,7 +2,7 @@ import logging
 from copy import deepcopy
 from typing import List, Optional, Tuple, Literal, Union
 import chess
-from chess import square_rank, Move, SquareSet
+from chess import square_rank, Move, SquareSet, Piece
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess.pgn import Game, GameNode
 from model import Puzzle, TagKind
@@ -55,6 +55,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if discovered_attack(puzzle):
         tags.append("discoveredAttack")
+
+    if exposed_king(puzzle):
+        tags.append("exposedKing")
 
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
@@ -223,6 +226,31 @@ def deflection(puzzle: Puzzle) -> bool:
                 (not square in node.parent.board().attacks(prev_op_move.to_square))
             ):
                 return True
+    return False
+
+def exposed_king(puzzle: Puzzle) -> bool:
+    if puzzle.pov:
+        pov = puzzle.pov
+        board = puzzle.mainline[0].board()
+    else:
+        pov = not puzzle.pov
+        board = puzzle.mainline[0].board().mirror()
+    king = board.king(not pov)
+    if chess.square_rank(king) < 5:
+        return False
+    squares = SquareSet.from_square(king - 8)
+    if chess.square_file(king) > 0:
+        squares.add(king - 1)
+        squares.add(king - 9)
+    if chess.square_file(king) < 7:
+        squares.add(king + 1)
+        squares.add(king - 7)
+    for square in squares:
+        if board.piece_at(square) == Piece(PAWN, not pov):
+            return False
+    for node in puzzle.mainline[1::2][1:]:
+        if node.board().is_check():
+            return True
     return False
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
