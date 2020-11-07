@@ -80,6 +80,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if promotion(puzzle):
         tags.append("promotion")
 
+    if capturing_defender(puzzle):
+        tags.append("capturingDefender")
+
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
 
@@ -373,6 +376,25 @@ def promotion(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
         if node.move.promotion:
             return True
+
+def capturing_defender(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2][1:]:
+        board = node.board()
+        capture = node.parent.board().piece_at(node.move.to_square)
+        if board.is_checkmate() or (
+            capture and 
+            util.moved_piece_type(node) != KING and
+            util.values[capture.piece_type] <= util.values[util.moved_piece_type(node)] and
+            util.is_hanging(node.parent.board(), capture, node.move.to_square)):
+            prev = node.parent.parent
+            if not prev.board().is_check() and prev.move.to_square != node.move.from_square:
+                init_board = node.parent.parent.parent.board()
+                defender_square = prev.move.to_square
+                defender = init_board.piece_at(defender_square)
+                if (defender and 
+                    defender_square in init_board.attackers(defender.color, node.move.to_square) and
+                    not init_board.is_check()):
+                    return True
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
     if not puzzle.game.end().board().is_checkmate():
