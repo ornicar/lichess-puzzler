@@ -9,7 +9,7 @@ import reactivemongo.api.bson.collection.BSONCollection
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-import chess.format.{FEN, Forsyth}
+import chess.format.{FEN, Forsyth, Uci}
 
 object Main extends App {
 
@@ -26,44 +26,50 @@ object Main extends App {
   def db: Future[DB] = futureConnection.flatMap(_.database("puzzler"))
   def puzzleColl = db.map(_.collection("puzzle2"))
 
-  case class Puzzle(id: String, fen: FEN, moves: List[String])
+  case class Puzzle(id: String, fen: FEN, move: String)
 
   def read(doc: BSONDocument): Puzzle = {
     for {
       id <- doc.string("_id")
       fen <- doc.string("fen").map(FEN.apply)
-      moves <- doc.getAsOpt[List[String]]("moves")
-    } yield Puzzle(id, fen, moves)
+      move <- doc.getAsOpt[List[String]]("moves").flatMap(_.headOption)
+    } yield Puzzle(id, fen, move)
   } getOrElse sys.error(s"Can't read BSONDocument ${doc.string("_id")}")
 
   def phaseOf(puzzle: Puzzle): String = {
-    val board =
-      Forsyth.makeBoard(chess.variant.Standard, puzzle.fen).getOrElse {
-        sys.error(s"Can't make board for $puzzle")
-      }
-    Divider(board)
-  }
+    for {
+      situation <- Forsyth.<<(puzzle.fen)
+      uci <- Uci(puzzle.move).collect { case m: Uci.Move => m }
+      next <- situation.move(uci).toOption
+      board = next.finalizeAfter
+    } yield Divider(board)
+  } getOrElse sys.error(s"Can't make board for $puzzle")
 
   def update(coll: BSONCollection, puzzle: Puzzle, phase: String) = {
+    // coll.update.one(
+    //   BSONDocument("_id" -> puzzle.id),
+    //   BSONDocument(
+    //     "$pull" -> BSONDocument(
+    //       "tags" -> BSONDocument("$elemMatch" -> BSONDocument("$ne" -> phase))
+    //     )
+    //   )
+    // ) flatMap { _ =>
     coll.update.one(
       BSONDocument("_id" -> puzzle.id),
-      BSONDocument(
-        "$pull" -> BSONDocument(
-          "tags" -> BSONDocument("$elemMatch" -> BSONDocument("$ne" -> phase))
-        )
-      )
-    ) flatMap { _ =>
-      coll.update.one(
-        BSONDocument("_id" -> puzzle.id),
-        BSONDocument("$addToSet" -> BSONDocument("tags" -> phase))
-      )
-    }
+      BSONDocument("$addToSet" -> BSONDocument("tags" -> phase))
+    )
   }
 
   puzzleColl
     .flatMap { coll =>
       coll
-        .find(BSONDocument())
+        .find(
+          BSONDocument(
+            "tags" -> BSONDocument(
+              "$nin" -> List("opening", "middlegame", "endgame")
+            )
+          )
+        )
         .cursor[BSONDocument]()
         .documentSource()
         .map(read)
