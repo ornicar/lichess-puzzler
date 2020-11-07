@@ -29,6 +29,7 @@ def next_next_node(node: GameNode) -> Optional[GameNode]:
     return next_node(nn) if nn else None
 
 values = { PAWN: 1, KNIGHT: 3, BISHOP: 3, ROOK: 5, QUEEN: 9 }
+ray_piece_types = [QUEEN, ROOK, BISHOP]
 
 def piece_value(piece_type: chess.PieceType) -> int:
     return values[piece_type]
@@ -51,7 +52,17 @@ def attacked_opponent_squares(board: Board, from_square: Square, pov: Color) -> 
     return pieces
 
 def is_defended(board: Board, piece: Piece, square: Square) -> bool:
-    return board.attackers(piece.color, square)
+    if board.attackers(piece.color, square):
+        return True
+    # ray defense https://lichess.org/editor/6k1/3q1pbp/2b1p1p1/1BPp4/rp1PnP2/4PRNP/4Q1P1/4B1K1_w_-_-_0_1
+    for attacker in board.attackers(not piece.color, square):
+        if board.piece_at(attacker).piece_type in ray_piece_types:
+            bc = board.copy(stack = False)
+            bc.remove_piece_at(attacker)
+            if bc.attackers(piece.color, square):
+                return True
+
+    return False
 
 def is_hanging(board: Board, piece: Piece, square: Square) -> bool:
     return not is_defended(board, piece, square)

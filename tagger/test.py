@@ -81,6 +81,13 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.deflection(make("3051j", "r2k2r1/1b2nQb1/1p2p2p/p3Pp2/2P4q/P6P/NP2R1PN/2R4K b - - 0 26", "h4d4 a2c3 g8f8 f7g7 f8g8 g7h6")))
         self.assertFalse(cook.deflection(make("0VlKP", "5r2/6k1/8/p1p1p1p1/Pp1p2P1/1P1PnN1P/2P1KR2/8 w - - 3 38", "f3e5 f8e8 e5c6 e3g4 e2f1 g4f2")))
 
+    def test_skewer(self):
+        self.assertTrue(cook.skewer(make("29HGS", "3r4/6p1/5r1p/7k/3N1P2/3K2P1/3R4/3R4 w - - 1 50", "d2e2 d8d4 d3d4 f6d6 d4e5 d6d1")))
+
+    def test_interference(self):
+        self.assertFalse(cook.interference(make("2t6Xz", "6k1/1b1q1pbp/4pnp1/2Pp4/rp1P1P2/3BPRNP/4Q1P1/4B1K1 b - - 1 26", "f6e4 d3b5 b7c6 b5a4")))
+        self.assertTrue(cook.interference(make("QssMO", "r5k1/ppp2r2/3p3p/3Pp3/1P2N1bb/R5N1/1P3P1K/6R1 b - - 5 25", "g4f3 g3f5 g8h7 a3f3")))
+
 class TestUtil(unittest.TestCase):
 
     def test_trapped(self):

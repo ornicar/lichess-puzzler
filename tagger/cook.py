@@ -2,7 +2,7 @@ import logging
 from copy import deepcopy
 from typing import List, Optional, Tuple, Literal, Union
 import chess
-from chess import square_rank, Move, SquareSet, Piece, PieceType
+from chess import square_rank, square_name, Move, SquareSet, Piece, PieceType
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess.pgn import Game, GameNode
 from model import Puzzle, TagKind
@@ -61,6 +61,10 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if skewer(puzzle):
         tags.append("skewer")
+
+    if self_interference(puzzle) or interference(puzzle):
+        log(puzzle)
+        tags.append("interference")
 
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
@@ -269,6 +273,37 @@ def skewer(puzzle: Puzzle) -> bool:
                 continue
             if value(util.moved_piece_type(prev)) > value(capture.piece_type):
                 return True
+    return False
+
+def self_interference(puzzle: Puzzle) -> bool:
+    # intereference by opponent piece
+    for node in puzzle.mainline[1::2][1:]:
+        prev_board = node.parent.board()
+        square = node.move.to_square
+        capture = prev_board.piece_at(square)
+        if capture and util.is_hanging(prev_board, capture, square):
+            init_board = node.parent.parent.board()
+            defenders = init_board.attackers(capture.color, square)
+            defender = defenders.pop() if defenders else None
+            if defender and init_board.piece_at(defender).piece_type in [QUEEN, BISHOP, ROOK]:
+                if node.parent.move.to_square in SquareSet.between(square, defender):
+                    return True
+    return False
+
+def interference(puzzle: Puzzle) -> bool:
+    # intereference by player piece
+    for node in puzzle.mainline[1::2][1:]:
+        prev_board = node.parent.board()
+        square = node.move.to_square
+        capture = prev_board.piece_at(square)
+        if capture and square != node.parent.move.to_square and util.is_hanging(prev_board, capture, square):
+            init_board = node.parent.parent.parent.board()
+            defenders = init_board.attackers(capture.color, square)
+            defender = defenders.pop() if defenders else None
+            if defender and init_board.piece_at(defender).piece_type in [QUEEN, BISHOP, ROOK]:
+                interfering = node.parent.parent
+                if interfering.move.to_square in SquareSet.between(square, defender):
+                    return True
     return False
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
