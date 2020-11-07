@@ -2,7 +2,7 @@ import logging
 from copy import deepcopy
 from typing import List, Optional, Tuple, Literal, Union
 import chess
-from chess import square_rank, square_name, Move, SquareSet, Piece, PieceType
+from chess import square_rank, square_file, square_name, Move, SquareSet, Piece, PieceType
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess.pgn import Game, GameNode
 from model import Puzzle, TagKind
@@ -73,6 +73,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if clearance(puzzle):
         tags.append("clearance")
+
+    if en_passant(puzzle):
+        tags.append("enPassant")
 
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
@@ -353,9 +356,15 @@ def clearance(puzzle: Puzzle) -> bool:
                     if (prev_move.from_square == node.move.to_square or 
                         prev_move.from_square in SquareSet.between(node.move.from_square, node.move.to_square)):
                         if not prev.parent.board().piece_at(prev_move.to_square) or util.is_in_bad_spot(prev.board(), prev_move.to_square):
-                            log(puzzle)
                             return True
 
+def en_passant(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2]:
+        if (util.moved_piece_type(node) == PAWN and 
+            square_file(node.move.from_square) != square_file(node.move.to_square) and
+            not node.parent.board().piece_at(node.move.to_square)
+        ):
+            return True
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
     if not puzzle.game.end().board().is_checkmate():

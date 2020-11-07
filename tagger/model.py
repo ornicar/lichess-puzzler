@@ -18,6 +18,7 @@ TagKind = Literal[
     "discoveredAttack",
     "deflection",
     "doubleCheck",
+    "enPassant",
     "exposedKing",
     "fork",
     "hangingPiece",
@@ -41,6 +42,7 @@ TagKind = Literal[
 ]
 
 static_kinds = [
+    "enPassant",
     "mateIn5+",
     "mateIn4",
     "mateIn3",
