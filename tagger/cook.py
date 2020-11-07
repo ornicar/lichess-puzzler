@@ -66,8 +66,10 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
         tags.append("interference")
 
     if pin(puzzle):
-        log(puzzle)
         tags.append("pin")
+
+    if attacking_f2_f7(puzzle):
+        tags.append("attackingF2F7")
 
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
@@ -87,8 +89,8 @@ def advanced_pawn(puzzle: Puzzle) -> bool:
     return False
 
 def double_check(puzzle: Puzzle) -> bool:
-    for node in puzzle.mainline:
-        if node.turn() != puzzle.pov and len(node.board().checkers()) > 1:
+    for node in puzzle.mainline[1::2]:
+        if len(node.board().checkers()) > 1:
             return True
     return False
 
@@ -325,6 +327,13 @@ def pin(puzzle: Puzzle) -> bool:
                                 util.is_hanging(board, attacked, attack)
                             ):
                             return True
+
+def attacking_f2_f7(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2]:
+        square = node.move.to_square
+        if node.parent.board().piece_at(node.move.to_square) and square in [chess.F2, chess.F7]:
+            king = node.board().piece_at(chess.E8 if square == chess.F7 else chess.E1)
+            return king and king.piece_type == KING and king.color != puzzle.pov
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
     if not puzzle.game.end().board().is_checkmate():

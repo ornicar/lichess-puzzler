@@ -8,6 +8,7 @@ PuzzleKind = Literal["mate", "material"]  # Literal["mate", "other"]
 
 TagKind = Literal[
     "advancedPawn",
+    "attackingF2F7",
     "attraction",
     "blocking",
     "capturingDefender",
