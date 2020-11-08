@@ -326,19 +326,19 @@ def interference(puzzle: Puzzle) -> bool:
 def pin(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][:-1]:
         board = node.board()
-        if board.is_check():
-            continue
         for square, piece in board.piece_map().items():
-            if piece.color != puzzle.pov:
-                pin_dir = board.pin(piece.color, square)
-                if pin_dir != chess.BB_ALL:
-                    for attack in board.attacks(square):
-                        attacked = board.piece_at(attack)
-                        if attacked and attacked.color == puzzle.pov and not attack in pin_dir and (
-                                util.values[attacked.piece_type] > util.values[piece.piece_type] or
-                                util.is_hanging(board, attacked, attack)
-                            ):
-                            return True
+            if piece.color == puzzle.pov:
+                continue
+            pin_dir = board.pin(piece.color, square)
+            if pin_dir == chess.BB_ALL:
+                continue
+            for attack in board.attacks(square):
+                attacked = board.piece_at(attack)
+                if attacked and attacked.color == puzzle.pov and not attack in pin_dir and (
+                        util.values[attacked.piece_type] > util.values[piece.piece_type] or
+                        util.is_hanging(board, attacked, attack)
+                    ):
+                    return True
 
 def attacking_f2_f7(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
