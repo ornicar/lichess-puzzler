@@ -51,7 +51,6 @@ class Server:
             'fen': parent.board().fen(),
             'ply': parent.ply(),
             'moves': [puzzle.node.uci()] + list(map(lambda m : m.uci(), puzzle.moves)),
-            'kind': puzzle.kind,
             'generator_version': self.version,
         }
         try:

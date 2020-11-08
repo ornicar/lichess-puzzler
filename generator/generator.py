@@ -10,7 +10,7 @@ import copy
 import sys
 import util
 import bz2
-from model import Puzzle, Kind, EngineMove, NextMovePair
+from model import Puzzle, EngineMove, NextMovePair
 from io import StringIO
 from chess import Move, Color, Board
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
@@ -171,7 +171,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_
         logger.info("Mate {}#{} Probing...".format(game_url, node.ply()))
         mate_solution = cook_mate(engine, copy.deepcopy(node), winner)
         server.set_seen(node.game())
-        return Puzzle(node, mate_solution, "mate") if mate_solution is not None else score
+        return Puzzle(node, mate_solution) if mate_solution is not None else score
     elif score >= Cp(0) and win_chances(score) > win_chances(prev_score) + 0.5:
         if score < Cp(400) and material_diff(board, winner) > -1:
             logger.info("Not clearly winning and not from being down in material, aborting")
@@ -194,7 +194,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_
         if gain > 1 or (
             len(solution) == 1 and 
             win_chances(solution[0].best.score) > win_chances(solution[0].second.score) + 0.5):
-            return Puzzle(node, [p.best.move for p in solution], "material")
+            return Puzzle(node, [p.best.move for p in solution])
         return score
     else:
         return score

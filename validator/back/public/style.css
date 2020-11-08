@@ -64,6 +64,10 @@ h1 a {
   opacity: .3;
 }
 
+.puzzle__info .tags {
+  opacity: .7;
+}
+
 button {
   background: hsla(0, 0%, 90%, 0.1);
   color: #bababa;

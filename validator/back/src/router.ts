@@ -64,7 +64,6 @@ export default function(app: Express.Express, env: Env) {
       fen: req.body.fen,
       ply: req.body.ply,
       moves: req.body.moves,
-      kind: req.body.kind,
       generator: req.body.generator_version,
       createdAt: new Date(),
       ip: req.ip

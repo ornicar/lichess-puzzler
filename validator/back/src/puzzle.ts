@@ -2,8 +2,6 @@ export type Uci = string;
 export type San = string;
 type UserId = string;
 
-type Kind = 'mate' | 'material';
-
 export interface Puzzle {
   _id: string;
   createdAt: Date;
@@ -11,10 +9,10 @@ export interface Puzzle {
   fen: string;
   ply: number;
   moves: Uci[];
-  kind: Kind;
   review?: Review;
   generator: number;
   ip?: string;
+  tags?: string[];
 }
 
 export interface Review {
