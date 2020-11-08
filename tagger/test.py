@@ -92,6 +92,9 @@ class TestTagger(unittest.TestCase):
         # pins the queen from attacking the g2 pawn
         self.assertTrue(cook.pin(make("P2D4h", "2k5/p7/bpq1p3/8/2PP2P1/1K2P1p1/4Q1P1/8 b - - 4 36", "a6c4 e2c4 c6c4 b3c4")))
 
+    def test_hanging_piece(self):
+        self.assertTrue(cook.hanging_piece(make("069il", "r2qr1k1/1p3ppp/p1p2nb1/8/4P3/1P5P/PBQN1PP1/R3R1K1 w - - 1 17", "c2c4 d8d2 b2f6 g7f6")))
+
 class TestUtil(unittest.TestCase):
 
     def test_trapped(self):

@@ -134,7 +134,7 @@ def fork(puzzle: Puzzle) -> bool:
     return False
 
 def hanging_piece(puzzle: Puzzle) -> bool:
-    if util.is_capture(puzzle.mainline[0]):
+    if util.is_capture(puzzle.mainline[0]) or puzzle.mainline[0].board().is_check():
         return False
     to = puzzle.mainline[1].move.to_square
     captured = puzzle.mainline[0].board().piece_at(to)
@@ -142,7 +142,8 @@ def hanging_piece(puzzle: Puzzle) -> bool:
         if util.is_hanging(puzzle.mainline[0].board(), captured, to):
             if len(puzzle.mainline) < 3:
                 return True
-            if not util.is_capture(puzzle.mainline[2]) and not puzzle.mainline[2].board().is_check():
+            if (not puzzle.mainline[2].board().is_check() and
+                material_diff(puzzle.mainline[3].board(), puzzle.pov) >= material_diff(puzzle.mainline[1].board(), puzzle.pov)):
                 return True
     return False
 
