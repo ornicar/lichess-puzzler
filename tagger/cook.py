@@ -142,8 +142,7 @@ def hanging_piece(puzzle: Puzzle) -> bool:
         if util.is_hanging(puzzle.mainline[0].board(), captured, to):
             if len(puzzle.mainline) < 3:
                 return True
-            if (not puzzle.mainline[2].board().is_check() and
-                material_diff(puzzle.mainline[3].board(), puzzle.pov) >= material_diff(puzzle.mainline[1].board(), puzzle.pov)):
+            if material_diff(puzzle.mainline[3].board(), puzzle.pov) >= material_diff(puzzle.mainline[1].board(), puzzle.pov):
                 return True
     return False
 
