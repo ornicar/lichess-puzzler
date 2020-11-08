@@ -87,7 +87,7 @@ export default function(app: Express.Express, env: Env) {
       return res.status(400).send('Wrong token');
     const id = req.query.id as string;
     let exists = false;
-    if (id.length == 5) exists = await env.mongo.seen.exists(id);
+    if (id.length == 8) exists = await env.mongo.seen.exists(id);
     else {
       const [fen, move] = id.split(':');
       exists = await env.mongo.seen.positionExists(fen, move);
