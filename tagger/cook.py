@@ -85,11 +85,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
-
-    if len(puzzle.mainline) == 4:
+    elif len(puzzle.mainline) == 4:
         tags.append("short")
-
-    if len(puzzle.mainline) >= 8:
+    elif len(puzzle.mainline) >= 8:
         tags.append("long")
 
     return tags
