@@ -266,7 +266,7 @@ def main() -> None:
                             print("Game {}".format(games))
                             server.post(game_id, puzzle)
                     except Exception as e:
-                        logger.error("Exception on {}".format(game_id))
+                        logger.error("Exception on {}: {}".format(game_id, e.message))
     except KeyboardInterrupt:
         print("\nLast game: {}".format(games))
         sys.exit(1) 
