@@ -85,7 +85,13 @@ export default function(app: Express.Express, env: Env) {
   app.get('/seen', async (req, res) => {
     if (req.query.token as string != config.generatorToken)
       return res.status(400).send('Wrong token');
-    const exists = await env.mongo.seen.exists(req.query.id as string);
+    const id = req.query.id as string;
+    let exists = false;
+    if (id.length == 5) exists = await env.mongo.seen.exists(id);
+    else {
+      const [fen, move] = id.split(':');
+      exists = await env.mongo.seen.positionExists(fen, move);
+    }
     return exists ? res.status(200).send() : res.status(404).send();
   });
   app.post('/seen', async (req, res) => {

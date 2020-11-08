@@ -2,6 +2,7 @@ import logging
 from chess.pgn import Game, GameNode
 from model import Puzzle
 import requests
+import urllib.parse
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
@@ -40,6 +41,17 @@ class Server:
                 http.post(self._seen_url(game.headers.get("Site", "?")[20:]))
         except Exception as e:
             self.logger.error(e)
+
+    def is_seen_pos(self, node: GameNode) -> bool:
+        if not self.url:
+            return False
+        id = urllib.parse.quote(f"{node.parent.board().fen()}:{node.uci()}")
+        try:
+            status = http.get(self._seen_url(id)).status_code
+            return status == 200
+        except Exception as e:
+            self.logger.error(e)
+            return False
 
     def _seen_url(self, id: str) -> str:
         return "{}/seen?token={}&id={}".format(self.url, self.token, id)

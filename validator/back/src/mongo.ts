@@ -17,7 +17,7 @@ export default class Mongo {
   constructor(readonly db: Db) {
     this.puzzle = new PuzzleMongo(this.db.collection('puzzle2'));
     this.auth = new AuthMongo(this.db.collection('authentication'));
-    this.seen = new SeenMongo(this.db.collection('seen'));
+    this.seen = new SeenMongo(this.db.collection('seen'), this.db.collection('puzzle2'));
   }
 }
 
@@ -89,9 +89,12 @@ export class AuthMongo {
 
 export class SeenMongo {
 
-  constructor(readonly coll: Collection) { }
+  constructor(readonly seenColl: Collection, readonly puzzleColl: Collection) { }
 
-  exists = (id: string): Promise<boolean> => this.coll.countDocuments({ _id: id }).then(n => n > 0);
+  exists = (id: string): Promise<boolean> => this.seenColl.countDocuments({ _id: id }).then(n => n > 0);
 
-  set = (id: string) => this.coll.insertOne({_id: id}).catch(() => {});
+  positionExists = (fen: string, move: string): Promise<boolean> => 
+    this.puzzleColl.countDocuments({ fen: fen, 'moves.0': move }).then(n => n > 0);
+
+  set = (id: string) => this.seenColl.insertOne({_id: id}).catch(() => {});
 }

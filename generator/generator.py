@@ -169,6 +169,9 @@ def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_
         return score
     elif score > mate_soon:
         logger.info("Mate {}#{} Probing...".format(game_url, node.ply()))
+        if server.is_seen_pos(node):
+            logger.info("Skip duplicate position")
+            return score
         mate_solution = cook_mate(engine, copy.deepcopy(node), winner)
         server.set_seen(node.game())
         return Puzzle(node, mate_solution) if mate_solution is not None else score
@@ -177,6 +180,9 @@ def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_
             logger.info("Not clearly winning and not from being down in material, aborting")
             return score
         logger.info("Advantage {}#{} {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
+        if server.is_seen_pos(node):
+            logger.info("Skip duplicate position")
+            return score
         puzzle_node = copy.deepcopy(node)
         solution : Optional[List[NextMovePair]] = cook_advantage(engine, puzzle_node, winner)
         server.set_seen(node.game())
@@ -266,7 +272,7 @@ def main() -> None:
                             print("Game {}".format(games))
                             server.post(game_id, puzzle)
                     except Exception as e:
-                        logger.error("Exception on {}: {}".format(game_id, e.message))
+                        logger.error("Exception on {}: {}".format(game_id, e))
     except KeyboardInterrupt:
         print("\nLast game: {}".format(games))
         sys.exit(1) 
