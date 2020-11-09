@@ -80,6 +80,7 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.deflection(make("3J2Nl", "r2q2k1/pp4bp/3pnppn/3N4/4Pp1B/7P/PPPQ2P1/R4RK1 w - - 0 19", "d5f4 e6f4 f1f4 g6g5 d2d5 g8h8 f4f2 g5h4")))
         self.assertFalse(cook.deflection(make("3051j", "r2k2r1/1b2nQb1/1p2p2p/p3Pp2/2P4q/P6P/NP2R1PN/2R4K b - - 0 26", "h4d4 a2c3 g8f8 f7g7 f8g8 g7h6")))
         self.assertFalse(cook.deflection(make("0VlKP", "5r2/6k1/8/p1p1p1p1/Pp1p2P1/1P1PnN1P/2P1KR2/8 w - - 3 38", "f3e5 f8e8 e5c6 e3g4 e2f1 g4f2")))
+        self.assertTrue(cook.deflection(make("7ycL5", "r1bqkb1r/4pp1p/p1pp1np1/4P3/P1B5/2N5/1PP2PPP/R1BQK2R b KQkq - 0 9", "d6e5 c4f7 e8f7 d1d8")))
 
     def test_skewer(self):
         self.assertTrue(cook.skewer(make("29HGS", "3r4/6p1/5r1p/7k/3N1P2/3K2P1/3R4/3R4 w - - 1 50", "d2e2 d8d4 d3d4 f6d6 d4e5 d6d1")))

@@ -213,7 +213,7 @@ def attraction(puzzle: Puzzle) -> bool:
         # 2. opponent captures on that square
         if opponent_reply and opponent_reply.move.to_square == first_move_to:
             attracted_piece = util.moved_piece_type(opponent_reply)
-            if attracted_piece in util.ray_piece_types:
+            if attracted_piece in [KING, QUEEN, ROOK]:
                 attracted_to_square = opponent_reply.move.to_square
                 next_node = util.next_node(opponent_reply)
                 if next_node:
