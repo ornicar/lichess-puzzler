@@ -39,7 +39,7 @@ object Main extends App {
   def phaseOf(puzzle: Puzzle): String = {
     for {
       situation <- Forsyth.<<(puzzle.fen)
-      uci <- Uci(puzzle.move).collect { case m: Uci.Move => m }
+      uci <- Uci.Move(puzzle.move)
       next <- situation.move(uci).toOption
       board = next.finalizeAfter
     } yield Divider(board)
