@@ -37,7 +37,7 @@ export class PuzzleMongo {
   }
 
   nextSkip = (skip: number): Promise<Puzzle | null> =>
-    this.coll.find(this.selectReviewed(false)).skip(skip).limit(1).next();
+    this.coll.find(this.selectReviewed(false)).sort({_id:1}).skip(skip).limit(1).next();
 
   review = (puzzle: Puzzle, review: Review): Promise<UpdateWriteOpResult> =>
     this.coll.updateOne({ _id: puzzle._id }, { $set: { review: review } });
