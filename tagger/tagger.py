@@ -44,7 +44,7 @@ if __name__ == "__main__":
             if not args.dry:
                 round_coll.insert_one({
                     "_id": f"lichess:{id}",
-                    "u": "lichess",
+                    # "u": "lichess",
                     "p": id,
                     "d": datetime.now(),
                     "w": 10,
