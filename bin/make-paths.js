@@ -1,6 +1,8 @@
 const pathColl = db.puzzle2_path;
 pathColl.remove({});
 
+const generation = Date.now()
+
 const ratingBuckets = db.puzzle2_puzzle.aggregate([{
     $match: {
       vote: {
@@ -70,11 +72,11 @@ ratingBuckets.forEach(bucket => {
   const puzzles = bucket.puzzles.slice(0, nbPaths * pathLength);
   const paths = explodeArray(puzzles, nbPaths);
   paths.forEach((ids, i) => {
-    const [min, max] = [Math.ceil(bucket._id.min), Math.floor(bucket._id.max)];
+    const [ratingMin, ratingMax] = [Math.ceil(bucket._id.min), Math.floor(bucket._id.max)];
     pathColl.insert({
-      _id: `${min}-${max}_${i}`,
-      min,
-      max,
+      _id: `${generation}_${ratingMin}-${ratingMax}_${i}`,
+      min: ratingMin,
+      max: ratingMax,
       ids
     });
   });
