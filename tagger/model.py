@@ -39,6 +39,7 @@ TagKind = Literal[
     "simplification",
     "skewer",
     "trappedPiece",
+    "veryLong",
     "zugzwang"
 ]
 
@@ -52,7 +53,8 @@ static_kinds = [
     "oneMove",
     "promotion",
     "short",
-    "long"
+    "long",
+    "veryLong"
 ]
 
 @dataclass

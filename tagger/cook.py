@@ -88,6 +88,8 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     elif len(puzzle.mainline) == 4:
         tags.append("short")
     elif len(puzzle.mainline) >= 8:
+        tags.append("veryLong")
+    else:
         tags.append("long")
 
     return tags
