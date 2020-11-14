@@ -32,7 +32,7 @@ if __name__ == "__main__":
     mongo = pymongo.MongoClient()
     db = mongo['puzzler']
     puzzle_coll = db['puzzle2']
-    round_coll = db['round']
+    round_coll = db['puzzle2_round']
     nb = 0
 
     def tags_of(doc) -> Tuple[Puzzle, List[TagKind]]:
