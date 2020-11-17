@@ -41,7 +41,7 @@ function makeTier(tierName, thresholdRatio) {
       buckets: nbRatingBuckets,
       output: {
         puzzles: {
-          $push: '$_id'
+          $addToSet: '$_id'
         }
       }
     }
@@ -59,8 +59,8 @@ function makeTier(tierName, thresholdRatio) {
   min: 1996.2274568220062, max: 2977.877271680098,  puzzles: 7484
   */
 
-  // explodeArray([a, b, c, d, e, g, h, i, j], 3)
-  // [[a, d, h], [b, e, i], [c, g, j]]
+  // explodeArray([1..12], 3)
+  // [[1, 4, 7, 10], [2, 5, 8, 11], [3, 5, 9, 12]]
   function explodeArray(arr, nb) {
     const res = [];
     for (i = 0; i < nb; i++) res[i] = [];
