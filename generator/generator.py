@@ -263,7 +263,8 @@ def main() -> None:
                     game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
                     game_id = game.headers.get("Site", "?")[20:]
                     if server.is_seen(game_id):
-                        logger.info("Game was already seen before")
+                        logger.info("Game was already seen before, skipping a bunch")
+                        skip = games + 1000
                         continue
 
                     try:
