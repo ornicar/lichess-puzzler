@@ -12,7 +12,7 @@ import generator
 
 class TestGenerator(unittest.TestCase):
 
-    engine = generator.make_engine("stockfish", 6)
+    engine = generator.make_engine("stockfish", 24)
     server = Server(logger, "", "", 0)
     logger.setLevel(logging.DEBUG)
 
@@ -89,6 +89,9 @@ class TestGenerator(unittest.TestCase):
         self.get_puzzle("7k/pp1q2pp/1n1p2r1/4p3/P3P3/1Q3N1P/1P3PP1/5RK1 w - - 3 22",
                 Cp(-80), "a4a5", Cp(856), "d7h3 g2g3 g6h6 f3h4 h6h4 g3h4 h3b3")
 
+    def test_puzzle_16(self):
+        self.get_puzzle("kr6/p5pp/Q4np1/3p4/6P1/2P1qP2/PK4P1/3R3R w - - 1 26",
+                Cp(-30), "b2a1", Mate(1), "e3c3")
 
     def test_not_puzzle_1(self) -> None:
         # https://lichess.org/LywqL7uc#32

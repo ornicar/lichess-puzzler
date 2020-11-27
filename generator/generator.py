@@ -22,10 +22,10 @@ from server import Server
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
-version = 19
+version = 20
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
 mate_soon = Mate(15)
-allow_one_mater = False
+allow_one_mater = True
 allow_one_mover = False
 
 # is pair.best the only continuation?
@@ -38,7 +38,7 @@ def is_valid_attack(pair: NextMovePair) -> bool:
         return pair.second.score < Cp(500)
     if pair.best.score == Mate(3):
         return pair.second.score < Cp(300)
-    if win_chances(pair.best.score) > win_chances(pair.second.score) + 0.5:
+    if win_chances(pair.best.score) > win_chances(pair.second.score) + 0.6:
         return True
     # if best move is mate, and second move still good but doesn't win material,
     # then best move is valid attack
