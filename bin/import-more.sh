@@ -15,6 +15,8 @@ sbt run
 cd ~/lichess-puzzler
 echo "Copy"
 mongo puzzler bin/copy-to-play.js
+echo "Ratings"
+mongo puzzler bin/random-ratings.js
 echo "Votes"
 mongo puzzler bin/random-votes.js
 echo "Paths"

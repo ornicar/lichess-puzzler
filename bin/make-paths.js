@@ -4,10 +4,6 @@ pathColl.remove({});
 
 const generation = Date.now()
 
-const nbRatingBuckets = 10;
-
-const pathLength = 100;
-
 const tiers = [
   ['top', 25 / 100],
   ['all', 100 / 100]
@@ -19,16 +15,29 @@ const acceptableVoteSelect = {
   }
 };
 
-const nbAcceptablePuzzles = puzzleColl.count(acceptableVoteSelect);
+const themes = db.puzzle2_puzzle.distinct('themes',{});
 
-function makeTier(tierName, thresholdRatio) {
+function makeTier(theme, tierName, thresholdRatio) {
+
+  const selector = {
+    ...acceptableVoteSelect,
+    ...(theme ? {themes: theme} : {})
+  };
+
+  const nbAcceptablePuzzles = puzzleColl.count(selector);
+
+  if (!nbAcceptablePuzzles) return;
 
   const nbPuzzles = Math.round(nbAcceptablePuzzles * thresholdRatio);
 
-  print(`tier: ${tierName}, threshold: ${thresholdRatio}, puzzles: ${nbPuzzles}`);
+  const pathLength = Math.max(20, Math.min(100, Math.round(nbPuzzles / 100)));
+
+  const nbRatingBuckets = Math.max(1, Math.min(10, Math.round(nbPuzzles / pathLength / 20)));
+
+  print(`theme: ${theme}, tier: ${tierName}, threshold: ${thresholdRatio}, puzzles: ${nbPuzzles}, path length: ${pathLength}, rating buckets: ${nbRatingBuckets}`);
 
   const ratingBuckets = db.puzzle2_puzzle.aggregate([{
-    $match: acceptableVoteSelect
+    $match: selector
   }, {
     $sort: {
       vote: -1
@@ -75,21 +84,22 @@ function makeTier(tierName, thresholdRatio) {
     const nbPaths = Math.floor(bucket.puzzles.length / pathLength);
     const puzzles = bucket.puzzles.slice(0, nbPaths * pathLength);
     const paths = explodeArray(puzzles, nbPaths);
-    print(`  ${ratingMin}->${ratingMax} paths: ${paths.length}`);
+    // print(`  ${ratingMin}->${ratingMax} paths: ${paths.length}`);
     paths.forEach((ids, i) => {
       pathColl.insert({
-        _id: `${generation}_${tierName}_${ratingMin}-${ratingMax}_${i}`,
+        _id: `${theme || 'any'}_${tierName}_${ratingMin}-${ratingMax}_${generation}_${i}`,
         tier: tierName,
+        theme: theme,
         min: ratingMin,
         max: ratingMax,
-        ids
+        ids,
+        length: ids.length
       });
     });
   });
 }
 
-print()
-print(`rating buckets: ${nbRatingBuckets}, path length: ${pathLength}`);
-print()
-
-tiers.forEach(([name, threshold]) => makeTier(name, threshold));
+themes.concat([null]).forEach(theme =>
+// ['exposedKing'].forEach(theme =>
+  tiers.forEach(([name, threshold]) => makeTier(theme, name, threshold))
+);
