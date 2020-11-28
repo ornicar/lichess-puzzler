@@ -23,31 +23,17 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
-version = 21
+version = 22
 mate_soon = Mate(15)
 allow_one_mater = True
 allow_one_mover = False
 
 # is pair.best the only continuation?
 def is_valid_attack(pair: NextMovePair) -> bool:
-    if pair.second is None:
-        return True
-    if pair.best.score >= Mate(3):
-        return pair.second.score < Cp(300)
-    if win_chances(pair.best.score) > win_chances(pair.second.score) + 0.6:
-        return True
-    # if best move is mate, and second move still good but doesn't win material,
-    # then best move is valid attack
-    if pair.best.score.is_mate() and pair.second.score < Cp(400):
-        next_node = pair.node.add_variation(pair.second.move)
-        return not "x" in next_node.san()
-    return False
+    return pair.second is None or win_chances(pair.best.score) > win_chances(pair.second.score) + 0.64
 
 def is_valid_defense(pair: NextMovePair) -> bool:
     return True
-    if pair.second is None or pair.second.score == Mate(1):
-        return True
-    return win_chances(pair.second.score) > win_chances(pair.best.score) + 0.25
 
 def get_next_move(engine: SimpleEngine, node: GameNode, winner: Color) -> Optional[NextMovePair]:
     board = node.board()
@@ -155,7 +141,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: GameNode, prev_
 
     logger.debug("{} {} to {}".format(node.ply(), node.move.uci() if node.move else None, score))
 
-    if prev_score > Cp(300) and (score < mate_soon or prev_score > Cp(700)):
+    if prev_score > Cp(300) and score < mate_soon:
         logger.debug("{} Too much of a winning position to start with {} -> {}".format(node.ply(), prev_score, score))
         return score
     if is_up_in_material(board, winner):
