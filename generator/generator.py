@@ -30,7 +30,7 @@ allow_one_mover = False
 
 # is pair.best the only continuation?
 def is_valid_attack(pair: NextMovePair) -> bool:
-    return pair.second is None or win_chances(pair.best.score) > win_chances(pair.second.score) + 0.64
+    return pair.second is None or pair.best.score == Mate(1) or win_chances(pair.best.score) > win_chances(pair.second.score) + 0.64
 
 def is_valid_defense(pair: NextMovePair) -> bool:
     return True
