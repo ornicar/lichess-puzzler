@@ -408,4 +408,4 @@ def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
         return "mateIn3"
     elif moves_to_mate == 4:
         return "mateIn4"
-    return "mateIn5+"
+    return "mateIn5"

@@ -24,7 +24,7 @@ TagKind = Literal[
     "hangingPiece",
     "interference",
     "long",
-    "mateIn5+",
+    "mateIn5",
     "mateIn4",
     "mateIn3",
     "mateIn2",
@@ -45,7 +45,7 @@ TagKind = Literal[
 
 static_kinds = [
     "enPassant",
-    "mateIn5+",
+    "mateIn5",
     "mateIn4",
     "mateIn3",
     "mateIn2",
