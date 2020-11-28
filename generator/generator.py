@@ -22,8 +22,8 @@ from server import Server
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
-version = 20
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
+version = 21
 mate_soon = Mate(15)
 allow_one_mater = True
 allow_one_mover = False
