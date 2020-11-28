@@ -32,11 +32,7 @@ allow_one_mover = False
 def is_valid_attack(pair: NextMovePair) -> bool:
     if pair.second is None:
         return True
-    if pair.best.score == Mate(1):
-        return True
-    if pair.best.score == Mate(2):
-        return pair.second.score < Cp(500)
-    if pair.best.score == Mate(3):
+    if pair.best.score >= Mate(3):
         return pair.second.score < Cp(300)
     if win_chances(pair.best.score) > win_chances(pair.second.score) + 0.6:
         return True
