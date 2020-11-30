@@ -12,7 +12,7 @@ import generator
 
 class TestGenerator(unittest.TestCase):
 
-    engine = generator.make_engine("stockfish", 24)
+    engine = generator.make_engine("stockfish", 6) # don't use more than 6 threads! it fails at finding mates
     server = Server(logger, "", "", 0)
     logger.setLevel(logging.DEBUG)
 
@@ -70,19 +70,11 @@ class TestGenerator(unittest.TestCase):
         self.get_puzzle("b4nk1/5p1p/2n1pPpB/q2p2N1/2pP2Q1/1pP5/1P3PPP/3B2K1 b - - 0 27",
                 Cp(380), "f8d7", Mate(4), "g4e6 f7e6 f6f7 g8h8 g5e6 g6g5 h6g7")
 
-    def test_puzzle_12(self) -> None:
-        self.get_puzzle("2kr3r/ppp2pp1/1b6/1P2p3/4P3/P2B2P1/2P2PP1/R4RK1 w - - 0 18",
-                Cp(20), "f1d1", Mate(4), "h8h1 g1h1 b6f2 d3e2 d8h8 e2h5 h8h5")
-
     # https://lichess.org/study/55NSdxBQ
     def test_puzzle_13(self) -> None:
         self.get_puzzle("1r4k1/1b2K1pp/7b/2pp3P/6NB/2Q1ppp1/8/5r2 b - - 0 1",
                 Cp(-950), "e3e2", Mate(4), "g4h6 g7h6 c3h8 g8h8 e7f7 b8f8 f7f8 f3f2 h4f6")
                 # Cp(-950), "e3e2", Mate(4), "g4h6 g8h8 h6f7 h8g8 c3g7 g8g7 h4f6 g7g8 f7h6")
-
-    def test_puzzle_14(self):
-        self.get_puzzle("5r1k/1Q3p2/5q1p/8/2P4p/1P4P1/P4P2/R4RK1 w - - 0 29",
-                Cp(-1010), "g3h4", Cp(0), "f8g8 b7g2 g8g2")
 
     # https://lichess.org/3GvkmJcw#43
     def test_puzzle_15(self):
@@ -92,6 +84,10 @@ class TestGenerator(unittest.TestCase):
     def test_puzzle_16(self):
         self.get_puzzle("kr6/p5pp/Q4np1/3p4/6P1/2P1qP2/PK4P1/3R3R w - - 1 26",
                 Cp(-30), "b2a1", Mate(1), "e3c3")
+
+    def test_puzzle_17(self):
+        self.get_puzzle("6k1/Q4pp1/8/6p1/3pr3/4q2P/P1P3P1/3R3K w - - 0 31",
+                Cp(0), "d1d3", Cp(2000), "e3c1")
 
     def test_not_puzzle_1(self) -> None:
         # https://lichess.org/LywqL7uc#32
@@ -137,6 +133,14 @@ class TestGenerator(unittest.TestCase):
     def test_not_puzzle_10(self):
         self.not_puzzle("2Qr3k/p2P2p1/2p1n3/4n1p1/8/4q1P1/PP2P2P/R4R1K w - - 0 33",
                 Cp(100), "c8d8", Cp(500))
+
+    def test_not_puzzle_11(self) -> None:
+        self.not_puzzle("2kr3r/ppp2pp1/1b6/1P2p3/4P3/P2B2P1/2P2PP1/R4RK1 w - - 0 18",
+                Cp(20), "f1d1", Mate(4))
+
+    def test_not_puzzle_12(self):
+        self.not_puzzle("5r1k/1Q3p2/5q1p/8/2P4p/1P4P1/P4P2/R4RK1 w - - 0 29",
+                Cp(-1010), "g3h4", Cp(0), "f8g8 b7g2 g8g2")
 
     def get_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
         board = Board(fen)
