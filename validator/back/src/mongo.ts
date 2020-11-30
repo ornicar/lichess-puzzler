@@ -37,7 +37,7 @@ export class PuzzleMongo {
   }
 
   nextSkip = (skip: number): Promise<Puzzle | null> =>
-    this.coll.find(this.selectReviewed(false)).sort({_id:1}).skip(skip).limit(1).next();
+    this.coll.find(this.selectReviewed(false)).sort({createdAt:-1}).skip(skip).limit(1).next();
 
   review = (puzzle: Puzzle, review: Review): Promise<UpdateWriteOpResult> =>
     this.coll.updateOne({ _id: puzzle._id }, { $set: { review: review } });
@@ -51,11 +51,6 @@ export class PuzzleMongo {
       nbCandidates,
       nbReviewed
     }));
-
-  nextId = async (): Promise<number> => {
-    const last = await this.coll.find().sort({ _id: -1 }).limit(1).next();
-    return last ? last._id + 1 : 1;
-  }
 
   insert = (puzzle: Puzzle): Promise<any> =>
     this.coll.insertOne(puzzle);
