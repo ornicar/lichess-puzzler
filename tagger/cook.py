@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple, Literal, Union
 import chess
 from chess import square_rank, square_file, square_name, Move, SquareSet, Piece, PieceType
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
+from chess import WHITE, BLACK
 from chess.pgn import Game, GameNode
 from model import Puzzle, TagKind
 import util
@@ -83,6 +84,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if capturing_defender(puzzle):
         tags.append("capturingDefender")
 
+    if rook_endgame(puzzle):
+        tags.append("rookEndgame")
+
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
     elif len(puzzle.mainline) == 4:
@@ -95,7 +99,7 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     return tags
 
 def advanced_pawn(puzzle: Puzzle) -> bool:
-    for node in puzzle.mainline:
+    for node in puzzle.mainline[1::2]:
         if util.is_advanced_pawn_move(node):
             return True
     return False
@@ -395,6 +399,16 @@ def capturing_defender(puzzle: Puzzle) -> bool:
                     defender_square in init_board.attackers(defender.color, node.move.to_square) and
                     not init_board.is_check()):
                     return True
+
+def rook_endgame(puzzle: Puzzle) -> bool:
+    board: Board = puzzle.mainline[0].board()
+    if not board.pieces(ROOK, WHITE) and not board.pieces(ROOK, BLACK):
+        return False
+    for color in [WHITE, BLACK]:
+        for piece in [QUEEN, BISHOP, KNIGHT]:
+            if board.pieces(piece, color):
+                return False
+    return True
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
     if not puzzle.game.end().board().is_checkmate():

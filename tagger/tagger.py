@@ -17,21 +17,20 @@ logger.setLevel(logging.INFO)
 def read(doc) -> Puzzle:
     board = Board(doc["fen"])
     node = Game.from_board(board)
-    for uci in doc["moves"]:
+    for uci in doc["line"].split(' '):
         move = Move.from_uci(uci)
         node = node.add_main_variation(move)
     return Puzzle(doc["_id"], node.game())
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='tagger.py', description='automatically tags lichess puzzles')
-    parser.add_argument("--dry", "-d", help="dry run")
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
     args = parser.parse_args()
     if args.verbose == 1:
         logger.setLevel(logging.DEBUG)
     mongo = pymongo.MongoClient()
     db = mongo['puzzler']
-    puzzle_coll = db['puzzle2']
+    play_coll = db['puzzle2_puzzle']
     round_coll = db['puzzle2_round']
     nb = 0
 
@@ -41,29 +40,30 @@ if __name__ == "__main__":
 
     def process_batch(batch: List[Dict[str, Any]]):
         for id, tags in pool.imap_unordered(tags_of, batch):
-            if not args.dry:
-                round_coll.insert_one({
-                    "_id": f"lichess:{id}",
-                    # "u": "lichess",
+            round_coll.update_one({
+                "_id": f"lichess:{id}"
+            }, {
+                "$set": {
                     "p": id,
                     "d": datetime.now(),
                     "w": 10,
                     "t": [f"+{t}" for t in tags if not t in static_kinds]
-                })
-                puzzle_coll.update_one({"_id":id},{"$addToSet":{"tags":{"$each":tags}}})
+                }
+            }, upsert = True);
+            play_coll.update_one({"_id":id},{"$set":{"themes":tags}})
 
-    with Pool(processes=8) as pool:
+    with Pool(processes=16) as pool:
         batch = []
-        for doc in puzzle_coll.find():
+        for doc in play_coll.find():
             id = doc["_id"]
-            if round_coll.count_documents({"_id":f"lichess:{id}"}) > 0:
-                continue
-            if len(batch) < 200:
+            # if round_coll.count_documents({"_id":f"lichess:{id}"}) > 0:
+            #     continue
+            if len(batch) < 256:
                 batch.append(doc)
                 continue
             process_batch(batch)
             nb += len(batch)
-            if nb % 1000 == 0:
+            if nb % 1024 == 0:
                 logger.info(nb)
             batch = []
         process_batch(batch)
