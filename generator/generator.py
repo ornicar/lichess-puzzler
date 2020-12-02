@@ -33,9 +33,9 @@ def is_valid_attack(pair: NextMovePair, engine: SimpleEngine) -> bool:
     return pair.second is None or is_valid_mate_in_one(pair, engine) or win_chances(pair.best.score) > win_chances(pair.second.score) + 0.64
 
 def is_valid_mate_in_one(pair: NextMovePair, engine: SimpleEngine) -> bool:
-    non_mate_win_threshold = 0.5
     if pair.best.score != Mate(1):
         return False
+    non_mate_win_threshold = 0.5
     if not pair.second or win_chances(pair.second.score) <= non_mate_win_threshold:
         return True
     if pair.second.score == Mate(1):
