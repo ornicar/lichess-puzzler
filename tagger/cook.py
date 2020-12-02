@@ -84,7 +84,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if capturing_defender(puzzle):
         tags.append("capturingDefender")
 
-    if rook_endgame(puzzle):
+    if pawn_endgame(puzzle):
+        tags.append("pawnEndgame")
+    elif rook_endgame(puzzle):
         tags.append("rookEndgame")
 
     if len(puzzle.mainline) == 2:
@@ -406,6 +408,14 @@ def rook_endgame(puzzle: Puzzle) -> bool:
         return False
     for color in [WHITE, BLACK]:
         for piece in [QUEEN, BISHOP, KNIGHT]:
+            if board.pieces(piece, color):
+                return False
+    return True
+
+def pawn_endgame(puzzle: Puzzle) -> bool:
+    board: Board = puzzle.mainline[0].board()
+    for color in [WHITE, BLACK]:
+        for piece in [QUEEN, BISHOP, KNIGHT, ROOK]:
             if board.pieces(piece, color):
                 return False
     return True

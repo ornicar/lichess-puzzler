@@ -31,6 +31,7 @@ TagKind = Literal[
     "mateIn1",
     "oneMove",
     "overloading",
+    "pawnEndgame",
     "pin",
     "promotion",
     "quietMove",
