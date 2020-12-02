@@ -140,7 +140,12 @@ class TestGenerator(unittest.TestCase):
 
     def test_not_puzzle_12(self):
         self.not_puzzle("5r1k/1Q3p2/5q1p/8/2P4p/1P4P1/P4P2/R4RK1 w - - 0 29",
-                Cp(-1010), "g3h4", Cp(0), "f8g8 b7g2 g8g2")
+                Cp(-1010), "g3h4", Cp(0))
+
+    # https://lichess.org/oKiQW6Wn/black#86
+    def test_not_puzzle_13(self):
+        self.not_puzzle("8/5p1k/4p1p1/4Q3/3Pp1Kp/4P2P/5qP1/8 w - - 2 44",
+                Cp(-6360), "e5e4", Mate(1))
 
     def get_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
         board = Board(fen)

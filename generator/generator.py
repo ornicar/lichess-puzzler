@@ -23,14 +23,30 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
-version = 23
+version = 24
 mate_soon = Mate(15)
 allow_one_mater = False
 allow_one_mover = False
 
 # is pair.best the only continuation?
-def is_valid_attack(pair: NextMovePair) -> bool:
-    return pair.second is None or pair.best.score == Mate(1) or win_chances(pair.best.score) > win_chances(pair.second.score) + 0.64
+def is_valid_attack(pair: NextMovePair, engine: SimpleEngine) -> bool:
+    return pair.second is None or is_valid_mate_in_one(pair, engine) or win_chances(pair.best.score) > win_chances(pair.second.score) + 0.64
+
+def is_valid_mate_in_one(pair: NextMovePair, engine: SimpleEngine) -> bool:
+    non_mate_win_threshold = 0.5
+    if pair.best.score != Mate(1):
+        return False
+    if not pair.second or win_chances(pair.second.score) <= non_mate_win_threshold:
+        return True
+    if pair.second.score == Mate(1):
+        # if there's more than one mate in one, gotta look if the best non-mating move is bad enough
+        logger.info('Looking for best non-mating move...')
+        info = engine.analyse(pair.node.board(), multipv = 5, limit = get_move_limit)
+        for score in [pv["score"].pov(pair.winner) for pv in info]:
+            if score < Mate(1) and win_chances(score) > non_mate_win_threshold:
+                return False
+        return True
+    return False
 
 def is_valid_defense(pair: NextMovePair) -> bool:
     return True
@@ -39,7 +55,7 @@ def get_next_move(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optio
     board = node.board()
     pair = get_next_move_pair(engine, node, winner, get_move_limit)
     logger.debug("{} {} {}".format("attack" if board.turn == winner else "defense", pair.best, pair.second))
-    if board.turn == winner and not is_valid_attack(pair):
+    if board.turn == winner and not is_valid_attack(pair, engine):
         logger.debug("No valid attack {}".format(pair))
         return None
     if board.turn != winner and not is_valid_defense(pair):

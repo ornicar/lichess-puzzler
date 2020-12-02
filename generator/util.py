@@ -24,7 +24,7 @@ def get_next_move_pair(engine: SimpleEngine, node: GameNode, winner: Color, limi
     # print(info)
     best = EngineMove(info[0]["pv"][0], info[0]["score"].pov(winner))
     second = EngineMove(info[1]["pv"][0], info[1]["score"].pov(winner)) if len(info) > 1 else None
-    return NextMovePair(node, best, second)
+    return NextMovePair(node, winner, best, second)
 
 def win_chances(score: Score) -> float:
     """
