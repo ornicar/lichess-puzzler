@@ -4,11 +4,11 @@ import sys
 import argparse
 from multiprocessing import Pool
 from datetime import datetime
-import cook
 from chess import Move, Color, Board, WHITE, BLACK
 from chess.pgn import Game, GameNode
 from typing import List, Optional, Tuple, Literal, Union, Dict, Any
-from model import Puzzle, TagKind, static_kinds
+from .model import Puzzle, TagKind, static_kinds
+from .cook import cook
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
