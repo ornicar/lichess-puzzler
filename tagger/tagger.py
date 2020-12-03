@@ -1,14 +1,13 @@
 import pymongo
 import logging
-import sys
 import argparse
 from multiprocessing import Pool
 from datetime import datetime
-from chess import Move, Color, Board, WHITE, BLACK
+from chess import Move, Board
 from chess.pgn import Game, GameNode
-from typing import List, Optional, Tuple, Literal, Union, Dict, Any
-from .model import Puzzle, TagKind, static_kinds
-from .cook import cook
+from typing import List, Tuple, Dict, Any
+from model import Puzzle, TagKind, static_kinds
+from cook import cook
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -16,7 +15,7 @@ logger.setLevel(logging.INFO)
 
 def read(doc) -> Puzzle:
     board = Board(doc["fen"])
-    node = Game.from_board(board)
+    node: GameNode = Game.from_board(board)
     for uci in doc["line"].split(' '):
         move = Move.from_uci(uci)
         node = node.add_main_variation(move)
@@ -34,9 +33,9 @@ if __name__ == "__main__":
     round_coll = db['puzzle2_round']
     nb = 0
 
-    def tags_of(doc) -> Tuple[Puzzle, List[TagKind]]:
+    def tags_of(doc) -> Tuple[str, List[TagKind]]:
         puzzle = read(doc)
-        return puzzle.id, cook.cook(puzzle)
+        return puzzle.id, cook(puzzle)
 
     def process_batch(batch: List[Dict[str, Any]]):
         for id, tags in pool.imap_unordered(tags_of, batch):
@@ -53,7 +52,7 @@ if __name__ == "__main__":
             play_coll.update_one({"_id":id},{"$set":{"themes":tags}})
 
     with Pool(processes=16) as pool:
-        batch = []
+        batch: List[Dict[str, Any]] = []
         for doc in play_coll.find():
             id = doc["_id"]
             # if round_coll.count_documents({"_id":f"lichess:{id}"}) > 0:

@@ -1,14 +1,11 @@
 import unittest
 import logging
-import cook
-import util
 import chess
+import util
 from model import Puzzle
 from tagger import logger, read
-from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
-from chess import Move, Color, Board, Square, parse_square
-from chess.pgn import Game, GameNode
-from typing import List, Optional, Tuple, Literal, Union
+from cook import *
+from chess import parse_square
 
 def make(id: str, fen: str, line: str) -> Puzzle:
     return read({ "_id": id, "fen": fen, "line": line })

@@ -1,14 +1,11 @@
 import logging
-from copy import deepcopy
-from typing import List, Optional, Tuple, Literal, Union
+from typing import List, Optional
 import chess
-from chess import square_rank, square_file, square_name, Move, SquareSet, Piece, PieceType
+from chess import square_file, SquareSet, Piece, PieceType
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess import WHITE, BLACK
-from chess.pgn import Game, GameNode
 from model import Puzzle, TagKind
-import util
-from util import material_diff
+from util import *
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -104,7 +101,7 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
 def advanced_pawn(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
-        if util.is_advanced_pawn_move(node):
+        if is_advanced_pawn_move(node):
             return True
     return False
 
@@ -125,16 +122,16 @@ def sacrifice(puzzle: Puzzle) -> bool:
 
 def fork(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][:-1]:
-        if util.moved_piece_type(node) is not KING:
+        if moved_piece_type(node) is not KING:
             board = node.board()
             if board.is_checkmate():
                 return False
             nb = 0
-            for (piece, square) in util.attacked_opponent_squares(board, node.move.to_square, puzzle.pov):
+            for (piece, square) in attacked_opponent_squares(board, node.move.to_square, puzzle.pov):
                 if piece.piece_type == PAWN:
                     continue
                 if (piece.piece_type == KING or
-                    util.values[piece.piece_type] > util.values[util.moved_piece_type(node)] or
+                    values[piece.piece_type] > util.values[util.moved_piece_type(node)] or
                     util.is_hanging(board, piece, square)):
                     nb += 1
             if nb > 1:

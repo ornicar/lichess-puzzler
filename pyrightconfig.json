@@ -1,0 +1,10 @@
+{
+    "executionEnvironments": [
+        {
+            "root": "tagger"
+        },
+        {
+            "root": "generator"
+        }
+    ]
+}
