@@ -15,7 +15,8 @@ buildColl.find({'review.approved':{$ne:false}}).forEach(p => {
       },
       plays: NumberInt(0),
       vote: NumberInt(1),
-      line: p.moves.join(' ')
+      line: p.moves.join(' '),
+      generator: generator
     });
   } catch {}
 });
