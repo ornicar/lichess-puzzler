@@ -2,9 +2,9 @@ import unittest
 import logging
 import chess
 import util
+import cook
 from model import Puzzle
 from tagger import logger, read
-from cook import *
 from chess import parse_square
 
 def make(id: str, fen: str, line: str) -> Puzzle:

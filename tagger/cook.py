@@ -1,11 +1,13 @@
 import logging
 from typing import List, Optional
 import chess
-from chess import square_file, SquareSet, Piece, PieceType
+from chess import square_file, SquareSet, Piece, PieceType, Board
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess import WHITE, BLACK
+from chess.pgn import ChildNode
 from model import Puzzle, TagKind
-from util import *
+import util
+from util import material_diff
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -101,7 +103,7 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
 def advanced_pawn(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
-        if is_advanced_pawn_move(node):
+        if util.is_advanced_pawn_move(node):
             return True
     return False
 
@@ -122,16 +124,16 @@ def sacrifice(puzzle: Puzzle) -> bool:
 
 def fork(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][:-1]:
-        if moved_piece_type(node) is not KING:
+        if util.moved_piece_type(node) is not KING:
             board = node.board()
             if board.is_checkmate():
                 return False
             nb = 0
-            for (piece, square) in attacked_opponent_squares(board, node.move.to_square, puzzle.pov):
+            for (piece, square) in util.attacked_opponent_squares(board, node.move.to_square, puzzle.pov):
                 if piece.piece_type == PAWN:
                     continue
                 if (piece.piece_type == KING or
-                    values[piece.piece_type] > util.values[util.moved_piece_type(node)] or
+                    util.values[piece.piece_type] > util.values[util.moved_piece_type(node)] or
                     util.is_hanging(board, piece, square)):
                     nb += 1
             if nb > 1:
@@ -157,6 +159,7 @@ def trapped_piece(puzzle: Puzzle) -> bool:
         captured = node.parent.board().piece_at(square)
         if captured and captured.piece_type != PAWN:
             prev = node.parent
+            assert isinstance(prev, ChildNode)
             if prev.move.to_square == square:
                 square = prev.move.from_square
             if util.is_trapped(prev.parent.board(), square):
@@ -169,9 +172,11 @@ def discovered_attack(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][1:]:
         if util.is_capture(node):
             between = SquareSet.between(node.move.from_square, node.move.to_square)
+            assert isinstance(node.parent, ChildNode)
             if node.parent.move.to_square == node.move.to_square:
                 return False
             prev = node.parent.parent
+            assert isinstance(prev, ChildNode)
             if prev.move.from_square in between and node.move.to_square != prev.move.to_square:
                 return True
     return False
@@ -245,13 +250,16 @@ def deflection(puzzle: Puzzle) -> bool:
                 continue
             square = node.move.to_square
             prev_op_move = node.parent.move
-            prev_player_move = node.parent.parent.move
-            prev_player_capture = node.parent.parent.parent.board().piece_at(prev_player_move.to_square)
+            assert(prev_op_move)
+            grandpa = node.parent.parent
+            assert isinstance(grandpa, ChildNode)
+            prev_player_move = grandpa.move
+            prev_player_capture = grandpa.parent.board().piece_at(prev_player_move.to_square)
             if (
-                (not prev_player_capture or util.values[prev_player_capture.piece_type] < util.moved_piece_type(node.parent.parent)) and
+                (not prev_player_capture or util.values[prev_player_capture.piece_type] < util.moved_piece_type(grandpa)) and
                 (square != prev_op_move.to_square and square != prev_player_move.to_square) and
                 (prev_op_move.to_square == prev_player_move.to_square) and
-                (square in node.parent.parent.board().attacks(prev_op_move.from_square)) and
+                (square in grandpa.board().attacks(prev_op_move.from_square)) and
                 (not square in node.parent.board().attacks(prev_op_move.to_square))
             ):
                 return True
@@ -265,6 +273,7 @@ def exposed_king(puzzle: Puzzle) -> bool:
         pov = not puzzle.pov
         board = puzzle.mainline[0].board().mirror()
     king = board.king(not pov)
+    assert king
     if chess.square_rank(king) < 5:
         return False
     squares = SquareSet.from_square(king - 8)
@@ -287,10 +296,12 @@ def skewer(puzzle: Puzzle) -> bool:
         return 10 if pt == KING else util.values[pt]
     for node in puzzle.mainline[1::2][1:]:
         prev = node.parent
+        assert isinstance(prev, ChildNode)
         capture = prev.board().piece_at(node.move.to_square)
         if capture and util.moved_piece_type(node) in util.ray_piece_types and not node.board().is_checkmate():
             between = SquareSet.between(node.move.from_square, node.move.to_square)
             op_move = prev.move
+            assert op_move
             if (op_move.to_square == node.move.to_square or not op_move.from_square in between):
                 continue
             if value(util.moved_piece_type(prev)) > value(capture.piece_type):
@@ -304,11 +315,14 @@ def self_interference(puzzle: Puzzle) -> bool:
         square = node.move.to_square
         capture = prev_board.piece_at(square)
         if capture and util.is_hanging(prev_board, capture, square):
-            init_board = node.parent.parent.board()
+            grandpa = node.parent.parent
+            assert grandpa
+            init_board = grandpa.board()
             defenders = init_board.attackers(capture.color, square)
             defender = defenders.pop() if defenders else None
-            if defender and init_board.piece_at(defender).piece_type in util.ray_piece_types:
-                if node.parent.move.to_square in SquareSet.between(square, defender):
+            defender_piece = init_board.piece_at(defender) if defender else None
+            if defender and defender_piece and defender_piece.piece_type in util.ray_piece_types:
+                if node.parent.move and node.parent.move.to_square in SquareSet.between(square, defender):
                     return True
     return False
 
@@ -318,13 +332,18 @@ def interference(puzzle: Puzzle) -> bool:
         prev_board = node.parent.board()
         square = node.move.to_square
         capture = prev_board.piece_at(square)
+        assert node.parent.move
         if capture and square != node.parent.move.to_square and util.is_hanging(prev_board, capture, square):
+            assert node.parent
+            assert node.parent.parent
+            assert node.parent.parent.parent
             init_board = node.parent.parent.parent.board()
             defenders = init_board.attackers(capture.color, square)
             defender = defenders.pop() if defenders else None
-            if defender and init_board.piece_at(defender).piece_type in util.ray_piece_types:
+            defender_piece = init_board.piece_at(defender) if defender else None
+            if defender and defender_piece and defender_piece.piece_type in util.ray_piece_types:
                 interfering = node.parent.parent
-                if interfering.move.to_square in SquareSet.between(square, defender):
+                if interfering.move and interfering.move.to_square in SquareSet.between(square, defender):
                     return True
     return False
 
@@ -344,21 +363,27 @@ def pin(puzzle: Puzzle) -> bool:
                         util.is_hanging(board, attacked, attack)
                     ):
                     return True
+    return False
 
 def attacking_f2_f7(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
         square = node.move.to_square
         if node.parent.board().piece_at(node.move.to_square) and square in [chess.F2, chess.F7]:
             king = node.board().piece_at(chess.E8 if square == chess.F7 else chess.E1)
-            return king and king.piece_type == KING and king.color != puzzle.pov
+            return king is not None and king.piece_type == KING and king.color != puzzle.pov
+    return False
 
 def clearance(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][1:]:
         board = node.board()
         if not node.parent.board().piece_at(node.move.to_square):
-            if board.piece_at(node.move.to_square).piece_type in util.ray_piece_types:
+            piece = board.piece_at(node.move.to_square)
+            if piece and piece.piece_type in util.ray_piece_types:
                 prev = node.parent.parent
+                assert prev
                 prev_move = prev.move
+                assert prev_move
+                assert isinstance(node.parent, ChildNode)
                 if (not prev_move.promotion and
                     prev_move.to_square != node.move.from_square and
                     prev_move.to_square != node.move.to_square and
@@ -366,8 +391,9 @@ def clearance(puzzle: Puzzle) -> bool:
                     (not board.is_check() or util.moved_piece_type(node.parent) != KING)):
                     if (prev_move.from_square == node.move.to_square or 
                         prev_move.from_square in SquareSet.between(node.move.from_square, node.move.to_square)):
-                        if not prev.parent.board().piece_at(prev_move.to_square) or util.is_in_bad_spot(prev.board(), prev_move.to_square):
+                        if prev.parent and not prev.parent.board().piece_at(prev_move.to_square) or util.is_in_bad_spot(prev.board(), prev_move.to_square):
                             return True
+    return False
 
 def en_passant(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
@@ -376,11 +402,13 @@ def en_passant(puzzle: Puzzle) -> bool:
             not node.parent.board().piece_at(node.move.to_square)
         ):
             return True
+    return False
 
 def promotion(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
         if node.move.promotion:
             return True
+    return False
 
 def capturing_defender(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][1:]:
@@ -392,7 +420,10 @@ def capturing_defender(puzzle: Puzzle) -> bool:
             util.values[capture.piece_type] <= util.values[util.moved_piece_type(node)] and
             util.is_hanging(node.parent.board(), capture, node.move.to_square)):
             prev = node.parent.parent
+            assert isinstance(prev, ChildNode)
             if not prev.board().is_check() and prev.move.to_square != node.move.from_square:
+                assert node.parent.parent
+                assert node.parent.parent.parent
                 init_board = node.parent.parent.parent.board()
                 defender_square = prev.move.to_square
                 defender = init_board.piece_at(defender_square)
@@ -400,6 +431,7 @@ def capturing_defender(puzzle: Puzzle) -> bool:
                     defender_square in init_board.attackers(defender.color, node.move.to_square) and
                     not init_board.is_check()):
                     return True
+    return False
 
 def rook_endgame(puzzle: Puzzle) -> bool:
     board: Board = puzzle.mainline[0].board()
