@@ -24,7 +24,7 @@ object Main extends App {
   // Database and collections: Get references
   val futureConnection = parsedUri.flatMap(driver.connect(_))
   def db: Future[DB] = futureConnection.flatMap(_.database("puzzler"))
-  def puzzleColl = db.map(_.collection("puzzle2"))
+  def puzzleColl = db.map(_.collection("puzzle2_puzzle"))
 
   case class Puzzle(id: String, fen: FEN, move: String)
 
@@ -32,7 +32,7 @@ object Main extends App {
     for {
       id <- doc.string("_id")
       fen <- doc.string("fen").map(FEN.apply)
-      move <- doc.getAsOpt[List[String]]("moves").flatMap(_.headOption)
+      move <- doc.getAsOpt[String]("line").map(_.takeWhile(' ' !=))
     } yield Puzzle(id, fen, move)
   } getOrElse sys.error(s"Can't read BSONDocument ${doc.string("_id")}")
 
@@ -56,7 +56,7 @@ object Main extends App {
     // ) flatMap { _ =>
     coll.update.one(
       BSONDocument("_id" -> puzzle.id),
-      BSONDocument("$addToSet" -> BSONDocument("tags" -> phase))
+      BSONDocument("$addToSet" -> BSONDocument("themes" -> phase))
     )
   }
 
@@ -65,7 +65,7 @@ object Main extends App {
       coll
         .find(
           BSONDocument(
-            "tags" -> BSONDocument(
+            "themes" -> BSONDocument(
               "$nin" -> List("opening", "middlegame", "endgame")
             )
           )
@@ -74,7 +74,7 @@ object Main extends App {
         .documentSource()
         .map(read)
         .map(p => p -> phaseOf(p))
-        .mapAsyncUnordered(8) { case (p, phase) =>
+        .mapAsyncUnordered(12) { case (p, phase) =>
           update(coll, p, phase)
         }
         .toMat(Sink.ignore)(Keep.right)
