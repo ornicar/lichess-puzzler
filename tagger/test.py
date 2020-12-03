@@ -5,7 +5,7 @@ import util
 import cook
 from model import Puzzle
 from tagger import logger, read
-from chess import parse_square
+from chess import parse_square, ROOK
 
 def make(id: str, fen: str, line: str) -> Puzzle:
     return read({ "_id": id, "fen": fen, "line": line })
@@ -101,9 +101,9 @@ class TestTagger(unittest.TestCase):
         self.assertTrue(cook.advanced_pawn(make("qqs1r", "6r1/pppq3k/2np2np/8/3P2pB/N1PR1p2/PP2QPBN/6K1 w - - 0 33", "g2f3 g4f3 e2f1 g6h4")))
 
     def test_rook_endgame(self):
-        self.assertFalse(cook.rook_endgame(make("qgryh", "8/p5KP/k7/6R1/6P1/1p6/8/7r w - - 0 44", "h7h8q h1h8 g7h8 b3b2 g5h5 b2b1q")))
-        self.assertFalse(cook.rook_endgame(make("p5BrZ", "8/4R1P1/8/3r4/6K1/8/4p3/3k4 b - - 0 62", "e2e1q e7e1 d1e1 g7g8q")))
-        self.assertTrue(cook.rook_endgame(make("j0qyE", "8/5p2/5k2/p4p2/8/1PPp1R2/r7/3K2R1 w - - 1 36", "f3d3 a2a1 d1d2 a1g1")))
+        self.assertFalse(cook.piece_endgame(make("qgryh", "8/p5KP/k7/6R1/6P1/1p6/8/7r w - - 0 44", "h7h8q h1h8 g7h8 b3b2 g5h5 b2b1q"), ROOK))
+        self.assertFalse(cook.piece_endgame(make("p5BrZ", "8/4R1P1/8/3r4/6K1/8/4p3/3k4 b - - 0 62", "e2e1q e7e1 d1e1 g7g8q"), ROOK))
+        self.assertTrue(cook.piece_endgame(make("j0qyE", "8/5p2/5k2/p4p2/8/1PPp1R2/r7/3K2R1 w - - 1 36", "f3d3 a2a1 d1d2 a1g1"), ROOK))
 
 class TestUtil(unittest.TestCase):
 

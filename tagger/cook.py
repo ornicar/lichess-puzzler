@@ -83,12 +83,16 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if capturing_defender(puzzle):
         tags.append("capturingDefender")
 
-    if pawn_endgame(puzzle):
+    if piece_endgame(puzzle, PAWN):
         tags.append("pawnEndgame")
-    elif rook_endgame(puzzle):
+    elif piece_endgame(puzzle, QUEEN):
+        tags.append("queenEndgame")
+    elif piece_endgame(puzzle, ROOK):
         tags.append("rookEndgame")
-    elif bishop_endgame(puzzle):
+    elif piece_endgame(puzzle, BISHOP):
         tags.append("bishopEndgame")
+    elif piece_endgame(puzzle, KNIGHT):
+        tags.append("knightEndgame")
 
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
@@ -433,32 +437,13 @@ def capturing_defender(puzzle: Puzzle) -> bool:
                     return True
     return False
 
-def rook_endgame(puzzle: Puzzle) -> bool:
+def piece_endgame(puzzle: Puzzle, piece_type: PieceType) -> bool:
     board: Board = puzzle.mainline[0].board()
-    if not board.pieces(ROOK, WHITE) and not board.pieces(ROOK, BLACK):
+    if not board.pieces(piece_type, WHITE) and not board.pieces(piece_type, BLACK):
         return False
-    for color in [WHITE, BLACK]:
-        for piece in [QUEEN, BISHOP, KNIGHT]:
-            if board.pieces(piece, color):
-                return False
-    return True
-
-def bishop_endgame(puzzle: Puzzle) -> bool:
-    board: Board = puzzle.mainline[0].board()
-    if not board.pieces(BISHOP, WHITE) and not board.pieces(BISHOP, BLACK):
-        return False
-    for color in [WHITE, BLACK]:
-        for piece in [QUEEN, ROOK, KNIGHT]:
-            if board.pieces(piece, color):
-                return False
-    return True
-
-def pawn_endgame(puzzle: Puzzle) -> bool:
-    board: Board = puzzle.mainline[0].board()
-    for color in [WHITE, BLACK]:
-        for piece in [QUEEN, BISHOP, KNIGHT, ROOK]:
-            if board.pieces(piece, color):
-                return False
+    for piece in board.piece_map().values():
+        if not piece.piece_type in [KING, PAWN, piece_type]:
+            return False
     return True
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
