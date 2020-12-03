@@ -4,13 +4,13 @@ const pathColl = db.puzzle2_path;
 const generation = Date.now()
 
 const tiers = [
-  ['top', 25 / 100],
+  ['top', 33 / 100],
   ['all', 100 / 100]
 ];
 
 const acceptableVoteSelect = {
   vote: {
-    $gt: -100
+    $gt: -150
   }
 };
 
@@ -31,9 +31,7 @@ function makeTier(theme, tierName, thresholdRatio) {
 
   const pathLength = Math.max(20, Math.min(100, Math.round(nbPuzzles / 100)));
 
-  const nbRatingBuckets = Math.max(1, Math.min(10, Math.round(nbPuzzles / pathLength / 20)));
-
-  print(`theme: ${theme}, tier: ${tierName}, threshold: ${thresholdRatio}, puzzles: ${nbPuzzles}, path length: ${pathLength}, rating buckets: ${nbRatingBuckets}`);
+  const nbRatingBuckets = Math.max(3, Math.min(8, Math.round(nbPuzzles / pathLength / 15)));
 
   // explodeArray([1..12], 3)
   // [[1, 4, 7, 10], [2, 5, 8, 11], [3, 5, 9, 12]]
@@ -88,6 +86,8 @@ function makeTier(theme, tierName, thresholdRatio) {
       });
     });
   });
+
+  print(`theme: ${theme}, tier: ${tierName}, threshold: ${thresholdRatio}, puzzles: ${nbPuzzles}, path length: ${pathLength}, rating buckets: ${nbRatingBuckets}, paths: ${docs.length}`);
 
   return docs;
 }
