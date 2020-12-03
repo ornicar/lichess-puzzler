@@ -2,10 +2,9 @@ from dataclasses import dataclass
 import math
 import chess
 from model import EngineMove, NextMovePair
-from chess import Move, Color, Board
+from chess import Color, Board
 from chess.pgn import GameNode
-from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
-from typing import List, Optional, Tuple, Literal, Union
+from chess.engine import SimpleEngine, Score
 
 
 def material_count(board: Board, side: Color) -> int:
