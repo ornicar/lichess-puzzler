@@ -11,6 +11,6 @@ function randn_bm() {
 playColl.find({
   // 'vote': 1
 }, { _id: true }).forEach(p => {
-  const vote = Math.round(randn_bm() * 800 + 500);
+  const vote = Math.round(randn_bm() * 700 + 500);
   playColl.update({_id:p._id}, {$set:{'vote': vote}});
 });
