@@ -7,11 +7,6 @@ cd ~/lichess-puzzler
 echo "Copy"
 mongo puzzler bin/copy-to-play.js
 
-echo "Tag"
-cd ~/lichess-puzzler/tagger
-. venv/bin/activate
-python tagger.py
-
 echo "Phase"
 cd ~/lichess-puzzler/phaser
 sbt run
@@ -24,9 +19,9 @@ echo "Votes"
 cd ~/lichess-puzzler
 mongo puzzler bin/random-votes.js
 
-echo "Paths"
+echo "Themes"
 cd ~/lichess-puzzler
-mongo puzzler bin/make-paths.js
+./bin/retag.sh
 
 echo "Games"
 cd ~/lichess-mongo-import

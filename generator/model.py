@@ -2,7 +2,7 @@ from chess.pgn import GameNode
 from chess import Move, Color
 from chess.engine import Score, Mate, Cp
 from dataclasses import dataclass
-from typing import Tuple, Literal, Union
+from typing import Tuple, List, Optional
 
 @dataclass
 class Puzzle:

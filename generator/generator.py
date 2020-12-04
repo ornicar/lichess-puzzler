@@ -1,8 +1,5 @@
 import logging
-import json
-import time
 import argparse
-import requests
 import chess
 import chess.pgn
 import chess.engine
@@ -10,13 +7,13 @@ import copy
 import sys
 import util
 import bz2
-from model import Puzzle, EngineMove, NextMovePair
+from model import Puzzle, NextMovePair
 from io import StringIO
-from chess import Move, Color, Board
+from chess import Move, Color
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess.pgn import Game, ChildNode
-from typing import List, Optional, Tuple, Literal, Union
-from util import EngineMove, get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
+from typing import List, Optional, Union
+from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
 logger = logging.getLogger(__name__)
@@ -25,7 +22,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
 version = 24
 mate_soon = Mate(15)
-allow_one_mater = False
+allow_one_mater = True
 allow_one_mover = False
 
 # is pair.best the only continuation?
@@ -48,7 +45,7 @@ def is_valid_mate_in_one(pair: NextMovePair, engine: SimpleEngine) -> bool:
         return True
     return False
 
-def is_valid_defense(pair: NextMovePair) -> bool:
+def is_valid_defense(_pair: NextMovePair) -> bool:
     return True
 
 def get_next_move(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[NextMovePair]:
@@ -88,9 +85,6 @@ def cook_mate(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[
 
 
 def cook_advantage(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[List[NextMovePair]]:
-
-    is_capture = "x" in node.san() # monkaS
-    up_in_material = is_up_in_material(node.board(), winner)
 
     if node.board().is_repetition(2):
         logger.info("Found repetition, canceling")
@@ -242,6 +236,7 @@ def main() -> None:
     engine = make_engine(args.engine, args.threads)
     server = Server(logger, args.url, args.token, version)
     games = 0
+    site = "?"
     skip = int(args.skip)
     logger.info("Skipping first {} games".format(skip))
 

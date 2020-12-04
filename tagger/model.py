@@ -1,10 +1,7 @@
 from dataclasses import dataclass, field
-import chess
 from chess.pgn import Game, ChildNode
-from chess import Move, Color
-from typing import List, Optional, Tuple, Literal, Union
-
-PuzzleKind = Literal["mate", "material"]  # Literal["mate", "other"]
+from chess import Color
+from typing import List, Literal, Union
 
 TagKind = Literal[
     "advancedPawn",
@@ -24,6 +21,7 @@ TagKind = Literal[
     "fork",
     "hangingPiece",
     "interference",
+    "kingsideAttack",
     "knightEndgame",
     "long",
     "mateIn5",
@@ -37,6 +35,7 @@ TagKind = Literal[
     "pin",
     "promotion",
     "queenEndgame",
+    "queensideAttack",
     "quietMove",
     "rookEndgame",
     "sacrifice",
@@ -46,20 +45,6 @@ TagKind = Literal[
     "trappedPiece",
     "veryLong",
     "zugzwang"
-]
-
-static_kinds = [
-    "enPassant",
-    "mateIn5",
-    "mateIn4",
-    "mateIn3",
-    "mateIn2",
-    "mateIn1",
-    "oneMove",
-    "promotion",
-    "short",
-    "long",
-    "veryLong"
 ]
 
 @dataclass

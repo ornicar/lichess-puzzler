@@ -6,7 +6,7 @@ from datetime import datetime
 from chess import Move, Board
 from chess.pgn import Game, GameNode
 from typing import List, Tuple, Dict, Any
-from model import Puzzle, TagKind, static_kinds
+from model import Puzzle, TagKind
 from cook import cook
 
 logger = logging.getLogger(__name__)
@@ -39,24 +39,24 @@ if __name__ == "__main__":
 
     def process_batch(batch: List[Dict[str, Any]]):
         for id, tags in pool.imap_unordered(tags_of, batch):
-            round_coll.update_one({
+            result = round_coll.update_one({
                 "_id": f"lichess:{id}"
             }, {
                 "$set": {
                     "p": id,
                     "d": datetime.now(),
                     "w": 10,
-                    "t": [f"+{t}" for t in tags if not t in static_kinds]
+                    "t": [f"+{t}" for t in tags]
                 }
             }, upsert = True);
-            play_coll.update_one({"_id":id},{"$set":{"themes":tags}})
+            play_coll.update_one({"_id":id},{"$set":{"dirty":True}})
 
     with Pool(processes=16) as pool:
         batch: List[Dict[str, Any]] = []
         for doc in play_coll.find():
             id = doc["_id"]
-            # if round_coll.count_documents({"_id":f"lichess:{id}"}) > 0:
-            #     continue
+            if round_coll.count_documents({"_id":f"lichess:{id}"}) > 0:
+                continue
             if len(batch) < 256:
                 batch.append(doc)
                 continue

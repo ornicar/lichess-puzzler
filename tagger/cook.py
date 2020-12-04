@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 import chess
-from chess import square_file, SquareSet, Piece, PieceType, Board
+from chess import square_rank, square_file, SquareSet, Piece, PieceType, Board
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess import WHITE, BLACK
 from chess.pgn import ChildNode
@@ -70,6 +70,11 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if attacking_f2_f7(puzzle):
         tags.append("attackingF2F7")
+
+    if kingside_attack(puzzle):
+        tags.append("kingsideAttack")
+    elif queenside_attack(puzzle):
+        tags.append("queensideAttack")
 
     if clearance(puzzle):
         tags.append("clearance")
@@ -277,7 +282,7 @@ def exposed_king(puzzle: Puzzle) -> bool:
         pov = not puzzle.pov
         board = puzzle.mainline[0].board().mirror()
     king = board.king(not pov)
-    assert king
+    assert king is not None
     if chess.square_rank(king) < 5:
         return False
     squares = SquareSet.from_square(king - 8)
@@ -375,6 +380,26 @@ def attacking_f2_f7(puzzle: Puzzle) -> bool:
         if node.parent.board().piece_at(node.move.to_square) and square in [chess.F2, chess.F7]:
             king = node.board().piece_at(chess.E8 if square == chess.F7 else chess.E1)
             return king is not None and king.piece_type == KING and king.color != puzzle.pov
+    return False
+
+def kingside_attack(puzzle: Puzzle) -> bool:
+    return side_attack(puzzle, [6, 7], 20)
+
+def queenside_attack(puzzle: Puzzle) -> bool:
+    return side_attack(puzzle, [0, 1, 2], 16)
+
+def side_attack(puzzle: Puzzle, king_files: List[int], nb_pieces: int) -> bool:
+    for node in puzzle.mainline[1::2]:
+        if node.board().is_check():
+            board = node.board()
+            king_square = board.king(not puzzle.pov)
+            assert king_square is not None
+            back_rank = 7 if puzzle.pov else 0
+            return (
+                    square_rank(king_square) == back_rank and 
+                    square_file(king_square) in king_files and
+                    len(board.piece_map()) >= nb_pieces # no endgames
+                )
     return False
 
 def clearance(puzzle: Puzzle) -> bool:
