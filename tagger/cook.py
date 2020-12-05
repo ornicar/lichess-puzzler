@@ -65,7 +65,7 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if self_interference(puzzle) or interference(puzzle):
         tags.append("interference")
 
-    if pin(puzzle):
+    if pin_prevents_attack(puzzle) or pin_prevents_escape(puzzle):
         tags.append("pin")
 
     if attacking_f2_f7(puzzle):
@@ -356,7 +356,8 @@ def interference(puzzle: Puzzle) -> bool:
                     return True
     return False
 
-def pin(puzzle: Puzzle) -> bool:
+# the pinned piece can't attack a player piece
+def pin_prevents_attack(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][:-1]:
         board = node.board()
         for square, piece in board.piece_map().items():
@@ -372,6 +373,27 @@ def pin(puzzle: Puzzle) -> bool:
                         util.is_hanging(board, attacked, attack)
                     ):
                     return True
+    return False
+
+# the pinned piece can't escape the attack
+def pin_prevents_escape(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2][:-1]:
+        board = node.board()
+        for pinned_square, pinned_piece in board.piece_map().items():
+            if pinned_piece.color == puzzle.pov:
+                continue
+            pin_dir = board.pin(pinned_piece.color, pinned_square)
+            if pin_dir == chess.BB_ALL:
+                continue
+            for attacker_square in board.attackers(puzzle.pov, pinned_square):
+                if attacker_square in pin_dir:
+                    attacker = board.piece_at(attacker_square)
+                    assert(attacker)
+                    if util.values[pinned_piece.piece_type] > util.values[attacker.piece_type]:
+                        return True
+                    if (util.is_hanging(board, pinned_piece, pinned_square) and 
+                        pinned_square not in board.attackers(not puzzle.pov, attacker_square)):
+                        return True
     return False
 
 def attacking_f2_f7(puzzle: Puzzle) -> bool:

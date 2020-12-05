@@ -31,6 +31,7 @@ def next_next_node(node: ChildNode) -> Optional[ChildNode]:
     return next_node(nn) if nn else None
 
 values = { PAWN: 1, KNIGHT: 3, BISHOP: 3, ROOK: 5, QUEEN: 9 }
+king_values = { PAWN: 1, KNIGHT: 3, BISHOP: 3, ROOK: 5, QUEEN: 9, KING: 99 }
 ray_piece_types = [QUEEN, ROOK, BISHOP]
 
 def piece_value(piece_type: chess.PieceType) -> int:

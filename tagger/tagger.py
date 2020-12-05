@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     def process_batch(batch: List[Dict[str, Any]]):
         for id, tags in pool.imap_unordered(tags_of, batch):
-            result = round_coll.update_one({
+            round_coll.update_one({
                 "_id": f"lichess:{id}"
             }, {
                 "$set": {
