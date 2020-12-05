@@ -2,6 +2,7 @@ const buildColl = db.puzzle2;
 const playColl = db.puzzle2_puzzle;
 
 buildColl.find({'review.approved':{$ne:false}}).forEach(p => {
+  if (p.moves.length < 2) return;
   try {
     playColl.insert({
       _id: p._id,
