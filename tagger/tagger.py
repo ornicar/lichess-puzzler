@@ -45,7 +45,7 @@ if __name__ == "__main__":
                 "$set": {
                     "p": id,
                     "d": datetime.now(),
-                    "w": 10,
+                    "w": 50,
                     "t": [f"+{t}" for t in tags]
                 }
             }, upsert = True);

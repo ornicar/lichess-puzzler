@@ -8,7 +8,7 @@ buildColl.find({'review.approved':{$ne:false}}).forEach(p => {
       _id: p._id,
       gameId: p.gameId,
       fen: p.fen,
-      themes: p.tags,
+      themes: [],
       glicko: {
         r: 1500,
         d: 500,
