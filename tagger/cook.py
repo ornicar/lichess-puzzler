@@ -112,7 +112,7 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
 def advanced_pawn(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
-        if util.is_advanced_pawn_move(node):
+        if util.is_very_advanced_pawn_move(node):
             return True
     return False
 

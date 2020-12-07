@@ -17,6 +17,12 @@ def is_advanced_pawn_move(node: ChildNode) -> bool:
     to_rank = square_rank(node.move.to_square)
     return to_rank < 3 if node.turn() else to_rank > 4
 
+def is_very_advanced_pawn_move(node: ChildNode) -> bool:
+    if not is_advanced_pawn_move(node):
+        return False
+    to_rank = square_rank(node.move.to_square)
+    return to_rank < 2 if node.turn() else to_rank > 5
+
 def is_king_move(node: ChildNode) -> bool:
     return moved_piece_type(node) == chess.KING
 
