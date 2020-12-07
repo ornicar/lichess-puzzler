@@ -31,7 +31,7 @@ def win_chances(score: Score) -> float:
     """
     mate = score.mate()
     if mate is not None:
-        return 1 if mate > 0 else 0
+        return 1 if mate > 0 else -1
 
     cp = score.score()
     return 2 / (1 + math.exp(-0.004 * cp)) - 1 if cp is not None else 0

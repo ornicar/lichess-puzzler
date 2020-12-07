@@ -22,12 +22,16 @@ logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
 version = 25
 mate_soon = Mate(15)
-allow_one_mater = False
+allow_one_mater = True
 allow_one_mover = False
 
 # is pair.best the only continuation?
 def is_valid_attack(pair: NextMovePair, engine: SimpleEngine) -> bool:
-    return pair.second is None or is_valid_mate_in_one(pair, engine) or win_chances(pair.best.score) > win_chances(pair.second.score) + 0.64
+    return (
+        pair.second is None or 
+        is_valid_mate_in_one(pair, engine) or 
+        win_chances(pair.best.score) > win_chances(pair.second.score) + 0.64
+    )
 
 def is_valid_mate_in_one(pair: NextMovePair, engine: SimpleEngine) -> bool:
     if pair.best.score != Mate(1):
