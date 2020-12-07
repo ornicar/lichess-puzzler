@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 import chess
-from chess import square_rank, square_file, SquareSet, Piece, PieceType, Board, square_distance
+from chess import square_rank, square_file, square_name, SquareSet, Piece, PieceType, Board, square_distance
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess import WHITE, BLACK
 from chess.pgn import ChildNode
@@ -415,7 +415,9 @@ def pin_prevents_escape(puzzle: Puzzle) -> bool:
                     if util.values[pinned_piece.piece_type] > util.values[attacker.piece_type]:
                         return True
                     if (util.is_hanging(board, pinned_piece, pinned_square) and 
-                        pinned_square not in board.attackers(not puzzle.pov, attacker_square)):
+                        pinned_square not in board.attackers(not puzzle.pov, attacker_square) and
+                        [m for m in board.pseudo_legal_moves if m.from_square == pinned_square and m.to_square not in pin_dir]
+                    ):
                         return True
     return False
 
