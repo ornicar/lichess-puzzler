@@ -69,6 +69,10 @@ class TestGenerator(unittest.TestCase):
         self.get_puzzle("kr6/p5pp/Q4np1/3p4/6P1/2P1qP2/PK4P1/3R3R w - - 1 26",
                 Cp(-30), "b2a1", Mate(1), "e3c3")
 
+    def test_puzzle_17(self):
+        self.get_puzzle("8/8/6k1/5R2/5KP1/5P2/5r2/8 w - - 17 66",
+                Cp(-410), "g4g5", Cp(0), "f2f3 f4f3 g6f5")
+
     # one mover
     # def test_puzzle_17(self):
     #     self.get_puzzle("6k1/Q4pp1/8/6p1/3pr3/4q2P/P1P3P1/3R3K w - - 0 31",
@@ -84,10 +88,10 @@ class TestGenerator(unittest.TestCase):
         self.not_puzzle("5b1r/kpQ2ppp/4p3/4P3/1P4q1/8/P3N3/1nK2B2 b - - 0 26",
                 Cp(-1520), "b1a3", Cp(0))
 
-    def test_not_puzzle_3(self) -> None:
+    # def test_not_puzzle_3(self) -> None:
         # https://lichess.org/StRzB2gY#59
-        self.not_puzzle("7k/p6p/4p1p1/8/1q1p3P/2r1P1P1/P4Q2/5RK1 b - - 1 30",
-                Cp(0), "d4e3", Cp(580))
+        # self.not_puzzle("7k/p6p/4p1p1/8/1q1p3P/2r1P1P1/P4Q2/5RK1 b - - 1 30",
+        #         Cp(0), "d4e3", Cp(580))
 
     def test_not_puzzle_4(self) -> None:
         self.not_puzzle("r2qk2r/p1p1bppp/1p1ppn2/8/2PP1B2/3Q1N2/PP3PPP/3RR1K1 b kq - 6 12",
@@ -134,8 +138,8 @@ class TestGenerator(unittest.TestCase):
 
     def test_not_puzzle_14(self) -> None:
         # https://lichess.org/nq1x9tln/black#76
-        self.get_puzzle("3R4/1Q2nk2/4p2p/4n3/BP3ppP/P7/5PP1/2r3K1 w - - 2 39",
-                Cp(-1000), "g1h2", Mate(4), "g4g3 f2g3 e5g4 h2h3 g4f2 h3h2 c1h1")
+        self.not_puzzle("3R4/1Q2nk2/4p2p/4n3/BP3ppP/P7/5PP1/2r3K1 w - - 2 39",
+                Cp(-1000), "g1h2", Mate(4))
 
     def get_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
         board = Board(fen)
