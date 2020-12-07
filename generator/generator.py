@@ -192,6 +192,9 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
         if not solution or (len(solution) == 1 and not allow_one_mover):
             logger.info("Discard one-mover")
             return score
+        for node in puzzle_node.mainline():
+            if node.board().is_repetition(count=2):
+                return score
         return Puzzle(node, [p.best.move for p in solution])
     else:
         return score
