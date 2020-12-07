@@ -42,6 +42,7 @@ TagKind = Literal[
     "short",
     "simplification",
     "skewer",
+    "smotheredMate",
     "trappedPiece",
     "veryLong",
     "zugzwang"

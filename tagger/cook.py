@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 import chess
-from chess import square_rank, square_file, SquareSet, Piece, PieceType, Board
+from chess import square_rank, square_file, SquareSet, Piece, PieceType, Board, square_distance
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess import WHITE, BLACK
 from chess.pgn import ChildNode
@@ -22,6 +22,8 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     mate_tag = mate_in(puzzle)
     if mate_tag:
         tags.append(mate_tag)
+        if smothered_mate(puzzle):
+            tags.append("smotheredMate")
 
     if attraction(puzzle):
         tags.append("attraction")
@@ -492,6 +494,21 @@ def piece_endgame(puzzle: Puzzle, piece_type: PieceType) -> bool:
         if not piece.piece_type in [KING, PAWN, piece_type]:
             return False
     return True
+
+def smothered_mate(puzzle: Puzzle) -> bool:
+    board = puzzle.game.end().board()
+    king_square = board.king(not puzzle.pov)
+    assert king_square is not None
+    for checker_square in board.checkers():
+        piece = board.piece_at(checker_square)
+        assert piece
+        if piece.piece_type == KNIGHT:
+            for escape_square in [s for s in chess.SQUARES if square_distance(s, king_square) == 1]:
+                blocker = board.piece_at(escape_square)
+                if not blocker or blocker.color == puzzle.pov:
+                    return False
+            return True
+    return False
 
 def mate_in(puzzle: Puzzle) -> Optional[TagKind]:
     if not puzzle.game.end().board().is_checkmate():
