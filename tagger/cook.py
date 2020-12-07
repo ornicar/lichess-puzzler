@@ -67,6 +67,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if self_interference(puzzle) or interference(puzzle):
         tags.append("interference")
 
+    if intermezzo(puzzle):
+        tags.append("intermezzo")
+
     if pin_prevents_attack(puzzle) or pin_prevents_escape(puzzle):
         tags.append("pin")
 
@@ -303,8 +306,6 @@ def exposed_king(puzzle: Puzzle) -> bool:
     return False
 
 def skewer(puzzle: Puzzle) -> bool:
-    def value(pt: PieceType):
-        return 10 if pt == KING else util.values[pt]
     for node in puzzle.mainline[1::2][1:]:
         prev = node.parent
         assert isinstance(prev, ChildNode)
@@ -315,7 +316,7 @@ def skewer(puzzle: Puzzle) -> bool:
             assert op_move
             if (op_move.to_square == node.move.to_square or not op_move.from_square in between):
                 continue
-            if value(util.moved_piece_type(prev)) > value(capture.piece_type):
+            if util.king_values[util.moved_piece_type(prev)] > util.king_values[capture.piece_type]:
                 return True
     return False
 
@@ -356,6 +357,26 @@ def interference(puzzle: Puzzle) -> bool:
                 interfering = node.parent.parent
                 if interfering.move and interfering.move.to_square in SquareSet.between(square, defender):
                     return True
+    return False
+
+def intermezzo(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2][1:]:
+        if util.is_capture(node):
+            capture_move = node.move
+            capture_square = node.move.to_square
+            op_node = node.parent
+            assert isinstance(op_node, ChildNode)
+            prev_pov_node = node.parent.parent
+            assert isinstance(prev_pov_node, ChildNode)
+            if not op_node.move.from_square in prev_pov_node.board().attackers(not puzzle.pov, capture_square):
+                if prev_pov_node.move.to_square != capture_square:
+                    prev_op_node = prev_pov_node.parent
+                    assert isinstance(prev_op_node, ChildNode)
+                    return (
+                        prev_op_node.move.to_square == capture_square and
+                        util.is_capture(prev_op_node) and 
+                        capture_move in prev_op_node.board().legal_moves
+                    )
     return False
 
 # the pinned piece can't attack a player piece

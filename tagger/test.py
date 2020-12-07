@@ -113,6 +113,12 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.piece_endgame(make("p5BrZ", "8/4R1P1/8/3r4/6K1/8/4p3/3k4 b - - 0 62", "e2e1q e7e1 d1e1 g7g8q"), ROOK))
         self.assertTrue(cook.piece_endgame(make("j0qyE", "8/5p2/5k2/p4p2/8/1PPp1R2/r7/3K2R1 w - - 1 36", "f3d3 a2a1 d1d2 a1g1"), ROOK))
 
+    def test_intermezzo(self):
+        self.assertTrue(cook.intermezzo(make("11pYZ", "8/5rpk/7p/8/3Q4/B4NKP/R2n2P1/5q2 b - - 3 42", "d2f3 d4e4 g7g6 g2f3")))
+        self.assertTrue(cook.intermezzo(make("1E2zU", "6k1/4rpp1/3r3p/p2N4/PbB5/1Pq2Q1P/R2p1PP1/3R2K1 b - - 8 31", "c3f3 d5e7 g8f8 g2f3")))
+        self.assertFalse(cook.intermezzo(make("1KWbk", "3r2k1/p3bqpp/2b1p3/2p2p2/8/2PNB1QP/PP3PP1/R5K1 w - - 2 26", "d3c5 f5f4 e3f4 e7c5")))
+        self.assertFalse(cook.intermezzo(make("21ViC", "4b2r/r6k/6p1/3BQ1Rn/3P1P1P/p1qN4/2P5/2K5 b - - 0 33", "c3c7 g5h5 g6h5 d5e4 e8g6 e5h5 h7g8 h5g6")))
+
 class TestUtil(unittest.TestCase):
 
     def test_trapped(self):
