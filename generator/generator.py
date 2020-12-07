@@ -269,12 +269,12 @@ def main() -> None:
                     try:
                         puzzle = analyze_game(server, engine, game)
                         if puzzle is not None:
-                            print("Game {}".format(games))
+                            print(f'{args.file} Game {games}')
                             server.post(game_id, puzzle)
                     except Exception as e:
                         logger.error("Exception on {}: {}".format(game_id, e))
     except KeyboardInterrupt:
-        print("\nLast game: {}".format(games))
+        print(f'{args.file} Game {games}')
         sys.exit(1)
 
     engine.close()
