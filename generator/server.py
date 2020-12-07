@@ -65,6 +65,9 @@ class Server:
             'moves': [puzzle.node.uci()] + list(map(lambda m : m.uci(), puzzle.moves)),
             'generator_version': self.version,
         }
+        if not self.url:
+            print(json)
+            return False
         try:
             r = http.post("{}/puzzle?token={}".format(self.url, self.token), json=json)
             self.logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
