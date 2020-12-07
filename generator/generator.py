@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
-version = 25
+version = 26
 mate_soon = Mate(15)
-allow_one_mater = True
+allow_one_mater = False
 allow_one_mover = False
 
 # is pair.best the only continuation?
@@ -195,14 +195,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
         for node in puzzle_node.mainline():
             if node.board().is_repetition(count=2):
                 return score
-        last = list(puzzle_node.mainline())[len(solution)]
-        gain = material_diff(last.board(), winner) - material_diff(board, winner)
-        if gain > 1 or (
-            len(solution) == 1 and
-            solution[0].second and
-            win_chances(solution[0].best.score) > win_chances(solution[0].second.score) + 0.5):
-            return Puzzle(node, [p.best.move for p in solution])
-        return score
+        return Puzzle(node, [p.best.move for p in solution])
     else:
         return score
 
