@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
-version = 24
+version = 25
 mate_soon = Mate(15)
 allow_one_mater = False
 allow_one_mover = False
@@ -188,6 +188,9 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
         if not solution or (len(solution) == 1 and not allow_one_mover):
             logger.info("Discard one-mover")
             return score
+        for node in puzzle_node.mainline():
+            if node.board().is_repetition(count=2):
+                return score
         last = list(puzzle_node.mainline())[len(solution)]
         gain = material_diff(last.board(), winner) - material_diff(board, winner)
         if gain > 1 or (
