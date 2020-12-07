@@ -6,7 +6,7 @@ cd ~/lichess-puzzler/tagger
 python tagger.py
 
 echo "Themes denormalize"
-mongo puzzler ~/lila/bin/cron/mongodb-puzzle-denormalize-themes.js
+mongo puzzler ~/lichess-sysadmin/cron/mongodb-puzzle-denormalize-themes.js
 
 echo "Paths"
-mongo puzzler ~/lila/bin/cron/mongodb-puzzle-regen-paths.js
+mongo puzzler ~/lichess-sysadmin/cron/mongodb-puzzle-regen-paths.js
