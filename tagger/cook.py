@@ -508,12 +508,12 @@ def capturing_defender(puzzle: Puzzle) -> bool:
     return False
 
 def piece_endgame(puzzle: Puzzle, piece_type: PieceType) -> bool:
-    board: Board = puzzle.mainline[0].board()
-    if not board.pieces(piece_type, WHITE) and not board.pieces(piece_type, BLACK):
-        return False
-    for piece in board.piece_map().values():
-        if not piece.piece_type in [KING, PAWN, piece_type]:
+    for board in [puzzle.mainline[i].board() for i in [0, 1]]:
+        if not board.pieces(piece_type, WHITE) and not board.pieces(piece_type, BLACK):
             return False
+        for piece in board.piece_map().values():
+            if not piece.piece_type in [KING, PAWN, piece_type]:
+                return False
     return True
 
 def smothered_mate(puzzle: Puzzle) -> bool:

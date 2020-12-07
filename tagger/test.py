@@ -92,6 +92,7 @@ class TestTagger(unittest.TestCase):
         self.assertTrue(cook.pin_prevents_attack(make("aJPsJ", "r2q1r1k/pp3pp1/2p2n1p/3PB2b/3P4/1B5P/P1PQ1PP1/R3R1K1 b - - 0 18", "f6d5 d2h6 h8g8 h6g7")))
         self.assertFalse(cook.pin_prevents_attack(make("9CkIh", "r4r2/pp3pkp/2p5/3pPp1q/3p1P2/3Q1R2/PPP3PP/R5K1 b - - 3 18", "c6c5 f3h3 h5g6 h3g3 g7h8 g3g6")))
         self.assertFalse(cook.pin_prevents_attack(make("0CR44", "r2q4/4b1kp/6p1/2ppPr2/3P4/2P2N2/P4RQP/R5K1 w - - 0 27", "f3d2 f5g5 d2f3 g5g2")))
+        self.assertFalse(cook.pin_prevents_attack(make("NCP9T", "1kr5/p3R3/7p/5Pp1/6P1/6K1/PP1R1P1P/6r1 w - - 1 32", "g3h3 h6h5 g4h5 c8h8 e7e8 h8e8")))
 
     def test_pin_prevents_escape(self):
         self.assertFalse(cook.pin_prevents_escape(make("P2D4h", "2k5/p7/bpq1p3/8/2PP2P1/1K2P1p1/4Q1P1/8 b - - 4 36", "a6c4 e2c4 c6c4 b3c4")))
@@ -106,12 +107,13 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.advanced_pawn(make("C3gv2", "4r3/R1p2k2/3p1pp1/2r2p1p/1pN2Pn1/1P2PKP1/2P3P1/4R3 b - - 3 39", "d6d5 c4d6 f7e7 d6e8")))
         self.assertFalse(cook.advanced_pawn(make("JgJgO", "1R6/6kp/4Pp1q/3P4/R1P5/P5pP/6P1/7K w - - 1 34", "e6e7 h6c1")))
         self.assertTrue(cook.advanced_pawn(make("PKGhN", "2R5/2P2kpp/8/1p4b1/4n3/P6P/2p2PPK/2B5 b - - 0 41", "g5c1 c8f8 f7f8 c7c8q")))
-        self.assertTrue(cook.advanced_pawn(make("qqs1r", "6r1/pppq3k/2np2np/8/3P2pB/N1PR1p2/PP2QPBN/6K1 w - - 0 33", "g2f3 g4f3 e2f1 g6h4")))
+        self.assertFalse(cook.advanced_pawn(make("qqs1r", "6r1/pppq3k/2np2np/8/3P2pB/N1PR1p2/PP2QPBN/6K1 w - - 0 33", "g2f3 g4f3 e2f1 g6h4")))
 
     def test_rook_endgame(self):
         self.assertFalse(cook.piece_endgame(make("qgryh", "8/p5KP/k7/6R1/6P1/1p6/8/7r w - - 0 44", "h7h8q h1h8 g7h8 b3b2 g5h5 b2b1q"), ROOK))
         self.assertFalse(cook.piece_endgame(make("p5BrZ", "8/4R1P1/8/3r4/6K1/8/4p3/3k4 b - - 0 62", "e2e1q e7e1 d1e1 g7g8q"), ROOK))
         self.assertTrue(cook.piece_endgame(make("j0qyE", "8/5p2/5k2/p4p2/8/1PPp1R2/r7/3K2R1 w - - 1 36", "f3d3 a2a1 d1d2 a1g1"), ROOK))
+        self.assertFalse(cook.piece_endgame(make("Zjk3J", "8/pppk4/3p4/3P1p1p/PP3Rr1/4PpPK/5P2/8 w - - 5 36", "f4g4 h5g4 h3h4 c7c5 d5c6 b7c6 h4g5 d7e6"), ROOK))
 
     def test_intermezzo(self):
         self.assertTrue(cook.intermezzo(make("11pYZ", "8/5rpk/7p/8/3Q4/B4NKP/R2n2P1/5q2 b - - 3 42", "d2f3 d4e4 g7g6 g2f3")))
