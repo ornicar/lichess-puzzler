@@ -221,7 +221,7 @@ def defensive_move(puzzle: Puzzle) -> bool:
         return False
     node = puzzle.mainline[-1]
     # no check given, no piece taken
-    if node.board().checkers() or util.is_capture(node):
+    if node.board().is_check() or util.is_capture(node):
         return False
     # no piece attacked
     if util.attacked_opponent_pieces(node.board(), node.move.to_square, puzzle.pov):
@@ -232,6 +232,8 @@ def defensive_move(puzzle: Puzzle) -> bool:
 def check_escape(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
         if node.board().is_check() or util.is_capture(node):
+            return False
+        if node.parent.board().legal_moves.count() < 3:
             return False
         if node.parent.board().is_check():
             return True
