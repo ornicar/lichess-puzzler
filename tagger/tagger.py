@@ -70,9 +70,7 @@ if __name__ == "__main__":
         for id, tags in pool.imap_unordered(tags_of, batch):
             round_id = f"lichess:{id}"
             existing = round_coll.find_one({"_id": round_id})
-            zugs = [t for t in existing.t if t in ['+zugzwang', '-zugzwang']] if existing else []
-            if existing and len(existing.t) > 1:
-                continue
+            zugs = [t for t in existing["t"] if t in ['+zugzwang', '-zugzwang']] if existing else []
             round_coll.update_one({
                 "_id": round_id
             }, {
@@ -89,6 +87,8 @@ if __name__ == "__main__":
         batch: List[Dict[str, Any]] = []
         for doc in play_coll.find():
             id = doc["_id"]
+            if round_coll.count_documents({"_id": f"lichess:{id}", "t.1": {"$exists":True}}):
+                continue
             if len(batch) < 256:
                 batch.append(doc)
                 continue
