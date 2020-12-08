@@ -40,7 +40,7 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if quiet_move(puzzle):
         tags.append("quietMove")
 
-    if defensive_move(puzzle):
+    if defensive_move(puzzle) or check_escape(puzzle):
         tags.append("defensiveMove")
 
     if sacrifice(puzzle):
@@ -228,6 +228,14 @@ def defensive_move(puzzle: Puzzle) -> bool:
         return False
     # no advanced pawn push
     return not util.is_advanced_pawn_move(node)
+
+def check_escape(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2]:
+        if node.board().is_check() or util.is_capture(node):
+            return False
+        if node.parent.board().is_check():
+            return True
+    return False
 
 def attraction(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1:]:
