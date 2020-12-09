@@ -86,7 +86,7 @@ if __name__ == "__main__":
                 }, upsert = True);
                 play_coll.update_one({"_id":id},{"$set":{"dirty":True}})
 
-    with Pool(processes=16) as pool:
+    with Pool(processes=args.threads) as pool:
         batch: List[Dict[str, Any]] = []
         for doc in play_coll.find():
             id = doc["_id"]
