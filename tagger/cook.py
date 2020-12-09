@@ -537,7 +537,6 @@ def back_rank_mate(puzzle: Puzzle) -> bool:
         if chess.square_file(king) > 0:
             squares.add(king - 9 * factor)
         if all([board.piece_at(square) is not None and board.piece_at(square).color != puzzle.pov for square in squares]):
-            log(puzzle)
             return True
     return False
 
