@@ -141,6 +141,15 @@ class TestGenerator(unittest.TestCase):
         self.not_puzzle("3R4/1Q2nk2/4p2p/4n3/BP3ppP/P7/5PP1/2r3K1 w - - 2 39",
                 Cp(-1000), "g1h2", Mate(4))
 
+    def test_not_puzzle_15(self) -> None:
+        # https://lichess.org/nq1x9tln/black#76
+        self.not_puzzle("3r4/8/2p2n2/7k/P1P4p/1P6/2K5/6R1 w - - 0 43",
+                Cp(-1000), "b3b4", Mate(4))
+
+    def test_not_puzzle_16(self) -> None:
+        self.not_puzzle("8/Pkp3pp/8/4p3/1P2b3/4K3/1P3r1P/R7 b - - 1 30",
+                Cp(0), "f2f3", Cp(5000))
+
     def get_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
         board = Board(fen)
         game = Game.from_board(board)
