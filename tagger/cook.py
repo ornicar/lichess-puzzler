@@ -149,9 +149,12 @@ def fork(puzzle: Puzzle) -> bool:
             for (piece, square) in util.attacked_opponent_squares(board, node.move.to_square, puzzle.pov):
                 if piece.piece_type == PAWN:
                     continue
-                if (piece.piece_type == KING or
-                    util.values[piece.piece_type] > util.values[util.moved_piece_type(node)] or
-                    util.is_hanging(board, piece, square)):
+                if (
+                    util.king_values[piece.piece_type] > util.king_values[util.moved_piece_type(node)] or (
+                        util.is_hanging(board, piece, square) and
+                        square not in board.attackers(not puzzle.pov, node.move.to_square)
+                    )
+                ):
                     nb += 1
             if nb > 1:
                 return True
@@ -530,14 +533,22 @@ def back_rank_mate(puzzle: Puzzle) -> bool:
     assert king is not None
     back_rank = 7 if puzzle.pov else 0
     if board.is_checkmate() and square_rank(king) == back_rank:
-        factor = 1 if puzzle.pov else -1
-        squares = SquareSet.from_square(king - 8 * factor)
-        if chess.square_file(king) < 7:
-            squares.add(king - 7 * factor)
-        if chess.square_file(king) > 0:
-            squares.add(king - 9 * factor)
-        if all([board.piece_at(square) is not None and board.piece_at(square).color != puzzle.pov for square in squares]):
-            return True
+        squares = SquareSet.from_square(king + (-8 if puzzle.pov else 8))
+        if puzzle.pov:
+            if chess.square_file(king) < 7:
+                squares.add(king - 7)
+            if chess.square_file(king) > 0:
+                squares.add(king - 9)
+        else:
+            if chess.square_file(king) < 7:
+                squares.add(king + 9)
+            if chess.square_file(king) > 0:
+                squares.add(king + 7)
+        for square in squares:
+            piece = board.piece_at(square)
+            if piece is None or piece.color == puzzle.pov or board.attackers(puzzle.pov, square):
+                return False
+        return True
     return False
 
 def piece_endgame(puzzle: Puzzle, piece_type: PieceType) -> bool:
