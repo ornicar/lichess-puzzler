@@ -16,11 +16,12 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
+version = 27
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
-version = 27
 mate_soon = Mate(15)
 allow_one_mater = False
 allow_one_mover = False
@@ -263,7 +264,7 @@ def main() -> None:
                     try:
                         puzzle = analyze_game(server, engine, game)
                         if puzzle is not None:
-                            print(f'v{version} {args.file} Game {games}')
+                            print(f'v{version} {args.file} {util.avg_knps()} knps, Game {games}')
                             server.post(game_id, puzzle)
                     except Exception as e:
                         logger.error("Exception on {}: {}".format(game_id, e))

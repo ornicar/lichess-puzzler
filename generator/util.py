@@ -6,6 +6,7 @@ from chess import Color, Board
 from chess.pgn import GameNode
 from chess.engine import SimpleEngine, Score
 
+nps = []
 
 def material_count(board: Board, side: Color) -> int:
     values = { chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9 }
@@ -20,10 +21,17 @@ def is_up_in_material(board: Board, side: Color) -> bool:
 
 def get_next_move_pair(engine: SimpleEngine, node: GameNode, winner: Color, limit: chess.engine.Limit) -> NextMovePair:
     info = engine.analyse(node.board(), multipv = 2, limit = limit)
+    global nps
+    nps.append(info[0]["nps"])
+    nps = nps[-20:]
     # print(info)
     best = EngineMove(info[0]["pv"][0], info[0]["score"].pov(winner))
     second = EngineMove(info[1]["pv"][0], info[1]["score"].pov(winner)) if len(info) > 1 else None
     return NextMovePair(node, winner, best, second)
+
+def avg_knps():
+    global nps
+    return round(sum(nps) / len(nps) / 1000) if nps else 0
 
 def win_chances(score: Score) -> float:
     """
