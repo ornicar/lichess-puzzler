@@ -561,7 +561,7 @@ def back_rank_mate(puzzle: Puzzle) -> bool:
     assert king is not None
     assert isinstance(node, ChildNode)
     back_rank = 7 if puzzle.pov else 0
-    if board.is_checkmate() and square_rank(king) == back_rank and util.moved_piece_type(node) in [QUEEN, ROOK]:
+    if board.is_checkmate() and square_rank(king) == back_rank:
         squares = SquareSet.from_square(king + (-8 if puzzle.pov else 8))
         if puzzle.pov:
             if chess.square_file(king) < 7:
@@ -577,7 +577,7 @@ def back_rank_mate(puzzle: Puzzle) -> bool:
             piece = board.piece_at(square)
             if piece is None or piece.color == puzzle.pov or board.attackers(puzzle.pov, square):
                 return False
-        return True
+        return any(square_rank(checker) == back_rank for checker in board.checkers())
     return False
 
 def piece_endgame(puzzle: Puzzle, piece_type: PieceType) -> bool:
