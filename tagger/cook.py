@@ -399,7 +399,7 @@ def intermezzo(puzzle: Puzzle) -> bool:
 
 # the pinned piece can't attack a player piece
 def pin_prevents_attack(puzzle: Puzzle) -> bool:
-    for node in puzzle.mainline[1::2][:-1]:
+    for node in puzzle.mainline[1::2]:
         board = node.board()
         for square, piece in board.piece_map().items():
             if piece.color == puzzle.pov:
@@ -418,7 +418,7 @@ def pin_prevents_attack(puzzle: Puzzle) -> bool:
 
 # the pinned piece can't escape the attack
 def pin_prevents_escape(puzzle: Puzzle) -> bool:
-    for node in puzzle.mainline[1::2][:-1]:
+    for node in puzzle.mainline[1::2]:
         board = node.board()
         for pinned_square, pinned_piece in board.piece_map().items():
             if pinned_piece.color == puzzle.pov:
