@@ -24,6 +24,8 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
         tags.append(mate_tag)
         if smothered_mate(puzzle):
             tags.append("smotheredMate")
+        elif back_rank_mate(puzzle):
+            tags.append("backRankMate")
 
     if attraction(puzzle):
         tags.append("attraction")
@@ -45,6 +47,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if sacrifice(puzzle):
         tags.append("sacrifice")
+
+    if x_ray(puzzle):
+        tags.append("xRayAttack")
 
     if fork(puzzle):
         tags.append("fork")
@@ -89,12 +94,11 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if promotion(puzzle):
         tags.append("promotion")
+        if under_promotion(puzzle):
+            tags.append("underPromotion")
 
     if capturing_defender(puzzle):
         tags.append("capturingDefender")
-
-    if back_rank_mate(puzzle):
-        tags.append("backRankMate")
 
     if piece_endgame(puzzle, PAWN):
         tags.append("pawnEndgame")
@@ -137,6 +141,23 @@ def sacrifice(puzzle: Puzzle) -> bool:
     for d in diffs[1::2][1:]:
         if d - initial <= -2:
             return True
+    return False
+
+def x_ray(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2][1:]:
+        if not util.is_capture(node):
+            continue
+        prev_op_node = node.parent
+        assert isinstance(prev_op_node, ChildNode)
+        if prev_op_node.move.to_square != node.move.to_square or util.moved_piece_type(prev_op_node) == KING:
+            continue
+        prev_pl_node = prev_op_node.parent
+        assert isinstance(prev_pl_node, ChildNode)
+        if prev_pl_node.move.to_square != prev_op_node.move.to_square:
+            continue
+        if prev_op_node.move.from_square in SquareSet.between(node.move.from_square, node.move.to_square):
+            return True
+
     return False
 
 def fork(puzzle: Puzzle) -> bool:
@@ -504,6 +525,12 @@ def promotion(puzzle: Puzzle) -> bool:
             return True
     return False
 
+def under_promotion(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2]:
+        if node.move.promotion and node.move.promotion != QUEEN:
+            return True
+    return False
+
 def capturing_defender(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][1:]:
         board = node.board()
@@ -528,11 +555,13 @@ def capturing_defender(puzzle: Puzzle) -> bool:
     return False
 
 def back_rank_mate(puzzle: Puzzle) -> bool:
-    board = puzzle.game.end().board()
+    node = puzzle.game.end()
+    board = node.board()
     king = board.king(not puzzle.pov)
     assert king is not None
+    assert isinstance(node, ChildNode)
     back_rank = 7 if puzzle.pov else 0
-    if board.is_checkmate() and square_rank(king) == back_rank:
+    if board.is_checkmate() and square_rank(king) == back_rank and util.moved_piece_type(node) in [QUEEN, ROOK]:
         squares = SquareSet.from_square(king + (-8 if puzzle.pov else 8))
         if puzzle.pov:
             if chess.square_file(king) < 7:

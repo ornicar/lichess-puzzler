@@ -92,6 +92,12 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.interference(make("2t6Xz", "6k1/1b1q1pbp/4pnp1/2Pp4/rp1P1P2/3BPRNP/4Q1P1/4B1K1 b - - 1 26", "f6e4 d3b5 b7c6 b5a4")))
         self.assertTrue(cook.interference(make("QssMO", "r5k1/ppp2r2/3p3p/3Pp3/1P2N1bb/R5N1/1P3P1K/6R1 b - - 5 25", "g4f3 g3f5 g8h7 a3f3")))
 
+    # def test_clearance(self):
+    #     self.assertTrue(cook.clearance(make("iq12Z", "1R6/1P2r1pk/7p/6pr/3Pp3/1KP1R3/8/8 b - - 0 55", "g5g4 b8h8 h7h8 b7b8q")))
+
+    def test_x_ray(self):
+        self.assertTrue(cook.x_ray(make("fo0LG", "5R2/8/p1p4p/1p1p2k1/6r1/1P2P1r1/P1PKR3/8 b - - 3 33", "g3g2 f8g8 g5f6 e2g2 g4g2 g8g2")))
+
     def test_pin_prevents_attack(self):
         # pins the queen from attacking the g2 pawn
         self.assertTrue(cook.pin_prevents_attack(make("P2D4h", "2k5/p7/bpq1p3/8/2PP2P1/1K2P1p1/4Q1P1/8 b - - 4 36", "a6c4 e2c4 c6c4 b3c4")))
