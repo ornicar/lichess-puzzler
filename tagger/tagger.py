@@ -69,6 +69,7 @@ if __name__ == "__main__":
         return puzzle.id, tags
 
     def process_batch(batch: List[Dict[str, Any]]):
+        puzzle_ids = []
         for id, tags in pool.imap_unordered(tags_of, batch):
             round_id = f"lichess:{id}"
             if not args.dry:
@@ -84,7 +85,9 @@ if __name__ == "__main__":
                         "t": [f"+{t}" for t in tags] + zugs
                     }
                 }, upsert = True);
-                play_coll.update_one({"_id":id},{"$set":{"dirty":True}})
+                puzzle_ids.append(id)
+        if puzzle_ids:
+            play_coll.update_many({"_id":{"$in":puzzle_ids}},{"$set":{"dirty":True}})
 
     with Pool(processes=int(args.threads)) as pool:
         batch: List[Dict[str, Any]] = []
@@ -92,12 +95,11 @@ if __name__ == "__main__":
             id = doc["_id"]
             if not args.all and round_coll.count_documents({"_id": f"lichess:{id}", "t.1": {"$exists":True}}):
                 continue
-            if len(batch) < 256:
+            if len(batch) < 1024:
                 batch.append(doc)
                 continue
             process_batch(batch)
             nb += len(batch)
-            if nb % 1024 == 0:
-                logger.info(nb)
+            logger.info(nb)
             batch = []
         process_batch(batch)
