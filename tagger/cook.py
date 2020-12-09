@@ -234,13 +234,17 @@ def discovered_check(puzzle: Puzzle) -> bool:
 
 def quiet_move(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline:
-        # on player move, not the last move of the puzzle
-        if node.turn() != puzzle.pov and not node.is_end():
+        if (
+            # on player move, not the last move of the puzzle
+            node.turn() != puzzle.pov and not node.is_end() and
             # no check given or escaped
-            if not node.board().checkers() and not node.parent.board().checkers():
-                # no capture made or threatened
-                if not util.is_capture(node):
-                    return not util.attacked_opponent_pieces(node.board(), node.move.to_square, puzzle.pov)
+            not node.board().is_check() and not node.parent.board().is_check() and
+            # no capture made or threatened
+            not util.is_capture(node) and not util.attacked_opponent_pieces(node.board(), node.move.to_square, puzzle.pov) and
+            # no advanced pawn push
+            not util.is_advanced_pawn_move(node)
+        ):
+            return True
     return False
 
 def defensive_move(puzzle: Puzzle) -> bool:
