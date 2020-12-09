@@ -103,6 +103,7 @@ class TestTagger(unittest.TestCase):
         self.assertTrue(cook.pin_prevents_escape(make("9CkIh", "r4r2/pp3pkp/2p5/3pPp1q/3p1P2/3Q1R2/PPP3PP/R5K1 b - - 3 18", "c6c5 f3h3 h5g6 h3g3 g7h8 g3g6")))
         self.assertTrue(cook.pin_prevents_escape(make("0CR44", "r2q4/4b1kp/6p1/2ppPr2/3P4/2P2N2/P4RQP/R5K1 w - - 0 27", "f3d2 f5g5 d2f3 g5g2")))
         self.assertFalse(cook.pin_prevents_escape(make("NCP9T", "1kr5/p3R3/7p/5Pp1/6P1/6K1/PP1R1P1P/6r1 w - - 1 32", "g3h3 h6h5 g4h5 c8h8 e7e8 h8e8")))
+        self.assertFalse(cook.pin_prevents_escape(make("6Jh1x", "2r5/1KP5/8/4k3/7p/7P/4p3/2R5 b - - 1 49", "c8e8 c1e1 e5f4 e1e2 e8e2 c7c8q")))
 
     def test_hanging_piece(self):
         self.assertTrue(cook.hanging_piece(make("069il", "r2qr1k1/1p3ppp/p1p2nb1/8/4P3/1P5P/PBQN1PP1/R3R1K1 w - - 1 17", "c2c4 d8d2 b2f6 g7f6")))
@@ -125,6 +126,11 @@ class TestTagger(unittest.TestCase):
         self.assertTrue(cook.intermezzo(make("1E2zU", "6k1/4rpp1/3r3p/p2N4/PbB5/1Pq2Q1P/R2p1PP1/3R2K1 b - - 8 31", "c3f3 d5e7 g8f8 g2f3")))
         self.assertFalse(cook.intermezzo(make("1KWbk", "3r2k1/p3bqpp/2b1p3/2p2p2/8/2PNB1QP/PP3PP1/R5K1 w - - 2 26", "d3c5 f5f4 e3f4 e7c5")))
         self.assertFalse(cook.intermezzo(make("21ViC", "4b2r/r6k/6p1/3BQ1Rn/3P1P1P/p1qN4/2P5/2K5 b - - 0 33", "c3c7 g5h5 g6h5 d5e4 e8g6 e5h5 h7g8 h5g6")))
+
+    def test_back_rank_mate(self):
+        self.assertTrue(cook.back_rank_mate(make("tMEri", "5r1k/4q1p1/p2pP2p/1p6/1P2Q3/PB6/1BP3PP/6K1 w - - 1 27", "e4g6 e7a7 b2d4 a7d4 g1h1 f8f1")))
+        self.assertFalse(cook.back_rank_mate(make("08VjT", "3r2k1/1bQ3p1/p2p3p/3qp1b1/1p6/1P1B4/P1P3PP/1K3R2 b - - 4 25", "d5c6 c7f7 g8h8 f7f8 d8f8 f1f8")))
+        self.assertTrue(cook.back_rank_mate(make("LYKY0", "r5k1/pQ3ppp/8/8/B1pp4/4q3/PP5P/5R1K b - - 0 26", "a8d8 b7f7 g8h8 f7f8 d8f8 f1f8")))
 
 class TestUtil(unittest.TestCase):
 

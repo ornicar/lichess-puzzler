@@ -26,6 +26,8 @@ def read(doc) -> Puzzle:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='tagger.py', description='automatically tags lichess puzzles')
     parser.add_argument("--zug", "-z", help="only zugzwang", action="store_true")
+    parser.add_argument("--dry", "-d", help="dry run", action="store_true")
+    parser.add_argument("--all", "-a", help="don't skip existing", action="store_true")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
     args = parser.parse_args()
     mongo = pymongo.MongoClient()
@@ -69,25 +71,26 @@ if __name__ == "__main__":
     def process_batch(batch: List[Dict[str, Any]]):
         for id, tags in pool.imap_unordered(tags_of, batch):
             round_id = f"lichess:{id}"
-            existing = round_coll.find_one({"_id": round_id})
-            zugs = [t for t in existing["t"] if t in ['+zugzwang', '-zugzwang']] if existing else []
-            round_coll.update_one({
-                "_id": round_id
-            }, {
-                "$set": {
-                    "p": id,
-                    "d": datetime.now(),
-                    "e": 50,
-                    "t": [f"+{t}" for t in tags] + zugs
-                }
-            }, upsert = True);
-            play_coll.update_one({"_id":id},{"$set":{"dirty":True}})
+            if not args.dry:
+                existing = round_coll.find_one({"_id": round_id})
+                zugs = [t for t in existing["t"] if t in ['+zugzwang', '-zugzwang']] if existing else []
+                round_coll.update_one({
+                    "_id": round_id
+                }, {
+                    "$set": {
+                        "p": id,
+                        "d": datetime.now(),
+                        "e": 50,
+                        "t": [f"+{t}" for t in tags] + zugs
+                    }
+                }, upsert = True);
+                play_coll.update_one({"_id":id},{"$set":{"dirty":True}})
 
     with Pool(processes=16) as pool:
         batch: List[Dict[str, Any]] = []
         for doc in play_coll.find():
             id = doc["_id"]
-            if round_coll.count_documents({"_id": f"lichess:{id}", "t.1": {"$exists":True}}):
+            if not args.all and round_coll.count_documents({"_id": f"lichess:{id}", "t.1": {"$exists":True}}):
                 continue
             if len(batch) < 256:
                 batch.append(doc)

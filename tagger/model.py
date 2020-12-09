@@ -7,6 +7,7 @@ TagKind = Literal[
     "advancedPawn",
     "attackingF2F7",
     "attraction",
+    "backRankMate",
     "bishopEndgame",
     "blocking",
     "capturingDefender",

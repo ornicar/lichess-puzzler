@@ -93,6 +93,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if capturing_defender(puzzle):
         tags.append("capturingDefender")
 
+    if back_rank_mate(puzzle):
+        tags.append("backRankMate")
+
     if piece_endgame(puzzle, PAWN):
         tags.append("pawnEndgame")
     elif piece_endgame(puzzle, QUEEN):
@@ -519,6 +522,23 @@ def capturing_defender(puzzle: Puzzle) -> bool:
                     defender_square in init_board.attackers(defender.color, node.move.to_square) and
                     not init_board.is_check()):
                     return True
+    return False
+
+def back_rank_mate(puzzle: Puzzle) -> bool:
+    board = puzzle.game.end().board()
+    king = board.king(not puzzle.pov)
+    assert king is not None
+    back_rank = 7 if puzzle.pov else 0
+    if board.is_checkmate() and square_rank(king) == back_rank:
+        factor = 1 if puzzle.pov else -1
+        squares = SquareSet.from_square(king - 8 * factor)
+        if chess.square_file(king) < 7:
+            squares.add(king - 7 * factor)
+        if chess.square_file(king) > 0:
+            squares.add(king - 9 * factor)
+        if all([board.piece_at(square) is not None and board.piece_at(square).color != puzzle.pov for square in squares]):
+            log(puzzle)
+            return True
     return False
 
 def piece_endgame(puzzle: Puzzle, piece_type: PieceType) -> bool:
