@@ -9,7 +9,6 @@ TagKind = Literal[
     "attraction",
     "backRankMate",
     "bishopEndgame",
-    "blocking",
     "capturingDefender",
     "clearance",
     "coercion",
@@ -46,7 +45,9 @@ TagKind = Literal[
     "skewer",
     "smotheredMate",
     "trappedPiece",
+    "underPromotion",
     "veryLong",
+    "xRayAttack",
     "zugzwang"
 ]
 
