@@ -16,7 +16,7 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 29
+version = 30
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -95,10 +95,6 @@ def cook_advantage(engine: SimpleEngine, node: ChildNode, winner: Color) -> Opti
         logger.info("Found repetition, canceling")
         return None
 
-    # if not is_capture and up_in_material and len(node.board().checkers()) == 0:
-    #     logger.info("Not a capture and we're up in material, end of the line")
-    #     return []
-
     next = get_next_move(engine, node, winner)
 
     if not next:
@@ -107,6 +103,10 @@ def cook_advantage(engine: SimpleEngine, node: ChildNode, winner: Color) -> Opti
 
     if next.best.score.is_mate():
         logger.info("Expected advantage, got mate?!")
+        return None
+
+    if next.best.score < Cp(200):
+        logger.info("Not winning enough, aborting")
         return None
 
     follow_up = cook_advantage(engine, node.add_main_variation(next.best.move), winner)
@@ -173,7 +173,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
         mate_solution = cook_mate(engine, copy.deepcopy(node), winner)
         server.set_seen(node.game())
         return Puzzle(node, mate_solution, 999999999) if mate_solution is not None else score
-    elif score >= Cp(0) and win_chances(score) > win_chances(prev_score) + 0.5:
+    elif score >= Cp(200) and win_chances(score) > win_chances(prev_score) + 0.5:
         if score < Cp(400) and material_diff(board, winner) > -1:
             logger.info("Not clearly winning and not from being down in material, aborting")
             return score
