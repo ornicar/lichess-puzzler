@@ -1,4 +1,5 @@
 import logging
+
 from typing import List, Optional
 import chess
 from chess import square_rank, square_file, square_name, SquareSet, Piece, PieceType, Board, square_distance
@@ -7,7 +8,7 @@ from chess import WHITE, BLACK
 from chess.pgn import ChildNode
 from model import Puzzle, TagKind
 import util
-from util import material_diff
+from util import material_diff, pp
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -422,7 +423,7 @@ def intermezzo(puzzle: Puzzle) -> bool:
                     assert isinstance(prev_op_node, ChildNode)
                     return (
                         prev_op_node.move.to_square == capture_square and
-                        util.is_capture(prev_op_node) and 
+                        util.is_capture(prev_op_node) and
                         capture_move in prev_op_node.board().legal_moves
                     )
     return False
@@ -462,7 +463,7 @@ def pin_prevents_escape(puzzle: Puzzle) -> bool:
                     assert(attacker)
                     if util.values[pinned_piece.piece_type] > util.values[attacker.piece_type]:
                         return True
-                    if (util.is_hanging(board, pinned_piece, pinned_square) and 
+                    if (util.is_hanging(board, pinned_piece, pinned_square) and
                         pinned_square not in board.attackers(not puzzle.pov, attacker_square) and
                         [m for m in board.pseudo_legal_moves if m.from_square == pinned_square and m.to_square not in pin_dir]
                     ):
@@ -491,7 +492,7 @@ def side_attack(puzzle: Puzzle, king_files: List[int], nb_pieces: int) -> bool:
             assert king_square is not None
             back_rank = 7 if puzzle.pov else 0
             return (
-                    square_rank(king_square) == back_rank and 
+                    square_rank(king_square) == back_rank and
                     square_file(king_square) in king_files and
                     len(board.piece_map()) >= nb_pieces # no endgames
                 )
@@ -513,7 +514,7 @@ def clearance(puzzle: Puzzle) -> bool:
                     prev_move.to_square != node.move.to_square and
                     not node.parent.board().is_check() and
                     (not board.is_check() or util.moved_piece_type(node.parent) != KING)):
-                    if (prev_move.from_square == node.move.to_square or 
+                    if (prev_move.from_square == node.move.to_square or
                         prev_move.from_square in SquareSet.between(node.move.from_square, node.move.to_square)):
                         if prev.parent and not prev.parent.board().piece_at(prev_move.to_square) or util.is_in_bad_spot(prev.board(), prev_move.to_square):
                             return True
@@ -521,7 +522,7 @@ def clearance(puzzle: Puzzle) -> bool:
 
 def en_passant(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
-        if (util.moved_piece_type(node) == PAWN and 
+        if (util.moved_piece_type(node) == PAWN and
             square_file(node.move.from_square) != square_file(node.move.to_square) and
             not node.parent.board().piece_at(node.move.to_square)
         ):
@@ -545,7 +546,7 @@ def capturing_defender(puzzle: Puzzle) -> bool:
         board = node.board()
         capture = node.parent.board().piece_at(node.move.to_square)
         if board.is_checkmate() or (
-            capture and 
+            capture and
             util.moved_piece_type(node) != KING and
             util.values[capture.piece_type] <= util.values[util.moved_piece_type(node)] and
             util.is_hanging(node.parent.board(), capture, node.move.to_square)):
@@ -557,7 +558,7 @@ def capturing_defender(puzzle: Puzzle) -> bool:
                 init_board = node.parent.parent.parent.board()
                 defender_square = prev.move.to_square
                 defender = init_board.piece_at(defender_square)
-                if (defender and 
+                if (defender and
                     defender_square in init_board.attackers(defender.color, node.move.to_square) and
                     not init_board.is_check()):
                     return True
