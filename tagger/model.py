@@ -10,6 +10,7 @@ TagKind = Literal[
     "backRankMate",
     "bishopEndgame",
     "capturingDefender",
+    "castling",
     "clearance",
     "coercion",
     "defensiveMove",

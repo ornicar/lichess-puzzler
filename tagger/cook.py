@@ -93,6 +93,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if en_passant(puzzle):
         tags.append("enPassant")
 
+    if castling(puzzle):
+        tags.append("castling")
+
     if promotion(puzzle):
         tags.append("promotion")
         if under_promotion(puzzle):
@@ -526,6 +529,13 @@ def en_passant(puzzle: Puzzle) -> bool:
             square_file(node.move.from_square) != square_file(node.move.to_square) and
             not node.parent.board().piece_at(node.move.to_square)
         ):
+            return True
+    return False
+
+def castling(puzzle: Puzzle) -> bool:
+    for node in puzzle.mainline[1::2]:
+        if (util.moved_piece_type(node) == KING and
+                square_distance(node.move.from_square, node.move.to_square) > 1):
             return True
     return False
 
