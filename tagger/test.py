@@ -99,6 +99,9 @@ class TestTagger(unittest.TestCase):
     def test_x_ray(self):
         self.assertTrue(cook.x_ray(make("fo0LG", "5R2/8/p1p4p/1p1p2k1/6r1/1P2P1r1/P1PKR3/8 b - - 3 33", "g3g2 f8g8 g5f6 e2g2 g4g2 g8g2")))
 
+    def test_quiet_move(self):
+        self.assertFalse(cook.quiet_move(make("SxOf2", "7r/3k4/1P3p2/1K1Pp1p1/2N1P1P1/8/8/8 b - - 2 49", "h8h4 b6b7 h4h1 b7b8n")))
+
     def test_pin_prevents_attack(self):
         # pins the queen from attacking the g2 pawn
         self.assertTrue(cook.pin_prevents_attack(make("P2D4h", "2k5/p7/bpq1p3/8/2PP2P1/1K2P1p1/4Q1P1/8 b - - 4 36", "a6c4 e2c4 c6c4 b3c4")))
@@ -163,20 +166,6 @@ class TestUtil(unittest.TestCase):
         self.assertTrue(util.is_trapped(
             chess.Board("8/3P4/8/4N2b/7p/6N1/8/4K3 b - - 0 1"), parse_square("h5")
         ))
-
-    # def test_takers(self):
-    #     # https://lichess.org/editor/1r1bk2b/1R4n1/4N3/8/3Q1P1q/8/8/1K6_w_-_-_0_1
-    #     board = chess.Board("1r1bk2b/1R4n1/4N3/8/3Q1P1q/8/8/1K6 w - - 0 1")
-    #     def check(dest: Square, origs: List[Square]):
-    #         square = parse_square(dest)
-    #         takers = [(board.piece_at(s), s) for s in [parse_square(s) for s in origs]]
-    #         self.assertCountEqual(util.takers(board, square), takers)
-    #     check("c2", ["b1"])
-    #     check("b8", ["b7"])
-    #     check("d8", ["d4", "e6"])
-    #     check("g7", ["d4", "e6"])
-    #     check("h8", [])
-    #     check("h4", [])
 
 if __name__ == '__main__':
     unittest.main()
