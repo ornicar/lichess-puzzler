@@ -95,7 +95,7 @@ if __name__ == "__main__":
             id = doc["_id"]
             if not args.all and round_coll.count_documents({"_id": f"lichess:{id}", "t.1": {"$exists":True}}):
                 continue
-            if len(batch) < 1024:
+            if len(batch) < 2048:
                 batch.append(doc)
                 continue
             process_batch(batch)
