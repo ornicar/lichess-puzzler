@@ -3,6 +3,12 @@ import chess
 from chess import square_rank, Color, Board, Square, Piece
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess.pgn import ChildNode
+from typing import Type, TypeVar
+
+A = TypeVar('A')
+def pp(a: A, msg = None) -> A:
+    print(f'{msg + ": " if msg else ""}{a}')
+    return a
 
 def moved_piece_type(node: ChildNode) -> chess.PieceType:
     pt = node.board().piece_type_at(node.move.to_square)
