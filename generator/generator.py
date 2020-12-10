@@ -239,6 +239,8 @@ def main() -> None:
     skip = int(args.skip)
     logger.info("Skipping first {} games".format(skip))
 
+    print(f'v{version} {args.file}')
+
     try:
         with open_file(args.file) as pgn:
             skip_next = False
