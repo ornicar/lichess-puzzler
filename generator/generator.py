@@ -16,7 +16,7 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 28
+version = 29
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -194,7 +194,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
             logger.info("Discard one-mover")
             return score
         cp = solution[len(solution) - 1].best.score.score()
-        return Puzzle(node, [p.best.move for p in solution], cp if cp else 999999998)
+        return Puzzle(node, [p.best.move for p in solution], 999999998 if cp is None else cp)
     else:
         return score
 
