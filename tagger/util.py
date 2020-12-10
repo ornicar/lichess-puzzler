@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 import chess
-from chess import square_rank, Color, Board, Square, Piece
+from chess import square_rank, Color, Board, Square, Piece, square_distance
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess.pgn import ChildNode
 from typing import Type, TypeVar
@@ -31,6 +31,9 @@ def is_very_advanced_pawn_move(node: ChildNode) -> bool:
 
 def is_king_move(node: ChildNode) -> bool:
     return moved_piece_type(node) == chess.KING
+
+def is_castling(node: ChildNode) -> bool:
+    return is_king_move(node) and square_distance(node.move.from_square, node.move.to_square) > 1
 
 def is_capture(node: ChildNode) -> bool:
     return node.parent.board().is_capture(node.move)

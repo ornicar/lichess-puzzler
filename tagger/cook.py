@@ -224,7 +224,7 @@ def discovered_attack(puzzle: Puzzle) -> bool:
                 return False
             prev = node.parent.parent
             assert isinstance(prev, ChildNode)
-            if prev.move.from_square in between and node.move.to_square != prev.move.to_square:
+            if prev.move.from_square in between and node.move.to_square != prev.move.to_square and not util.is_castling(prev):
                 return True
     return False
 
@@ -534,8 +534,7 @@ def en_passant(puzzle: Puzzle) -> bool:
 
 def castling(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
-        if (util.moved_piece_type(node) == KING and
-                square_distance(node.move.from_square, node.move.to_square) > 1):
+        if util.is_castling(node):
             return True
     return False
 
