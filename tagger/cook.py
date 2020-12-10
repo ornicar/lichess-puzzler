@@ -303,7 +303,7 @@ def deflection(puzzle: Puzzle) -> bool:
         capture = node.parent.board().piece_at(node.move.to_square)
         if capture or node.move.promotion:
             piece = util.moved_piece_type(node)
-            if capture and piece != KING and util.values[capture.piece_type] > util.values[piece]:
+            if capture and util.king_values[capture.piece_type] > util.king_values[piece]:
                 continue
             square = node.move.to_square
             prev_op_move = node.parent.move
@@ -314,9 +314,14 @@ def deflection(puzzle: Puzzle) -> bool:
             prev_player_capture = grandpa.parent.board().piece_at(prev_player_move.to_square)
             if (
                 (not prev_player_capture or util.values[prev_player_capture.piece_type] < util.moved_piece_type(grandpa)) and
-                (square != prev_op_move.to_square and square != prev_player_move.to_square) and
+                square != prev_op_move.to_square and square != prev_player_move.to_square and
                 (prev_op_move.to_square == prev_player_move.to_square) and
-                (square in grandpa.board().attacks(prev_op_move.from_square)) and
+                (
+                    square in grandpa.board().attacks(prev_op_move.from_square) or
+                    node.move.promotion and
+                        square_file(node.move.to_square) == square_file(prev_op_move.from_square) and
+                        node.move.from_square in grandpa.board().attacks(prev_op_move.from_square)
+                ) and
                 (not square in node.parent.board().attacks(prev_op_move.to_square))
             ):
                 return True
