@@ -172,7 +172,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
             return score
         mate_solution = cook_mate(engine, copy.deepcopy(node), winner)
         server.set_seen(node.game())
-        return Puzzle(node, mate_solution) if mate_solution is not None else score
+        return Puzzle(node, mate_solution, 999999999) if mate_solution is not None else score
     elif score >= Cp(0) and win_chances(score) > win_chances(prev_score) + 0.5:
         if score < Cp(400) and material_diff(board, winner) > -1:
             logger.info("Not clearly winning and not from being down in material, aborting")
@@ -193,7 +193,8 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
         if not solution or (len(solution) == 1 and not allow_one_mover):
             logger.info("Discard one-mover")
             return score
-        return Puzzle(node, [p.best.move for p in solution])
+        cp = solution[len(solution) - 1].best.score.score()
+        return Puzzle(node, [p.best.move for p in solution], cp if cp else 999999998)
     else:
         return score
 

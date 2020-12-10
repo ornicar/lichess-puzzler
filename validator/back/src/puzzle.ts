@@ -9,6 +9,7 @@ export interface Puzzle {
   fen: string;
   ply: number;
   moves: Uci[];
+  cp?: number;
   review?: Review;
   generator: number;
   ip?: string;

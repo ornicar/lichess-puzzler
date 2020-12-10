@@ -1,4 +1,4 @@
-from chess.pgn import GameNode
+from chess.pgn import GameNode, ChildNode
 from chess import Move, Color
 from chess.engine import Score, Mate, Cp
 from dataclasses import dataclass
@@ -6,8 +6,9 @@ from typing import Tuple, List, Optional
 
 @dataclass
 class Puzzle:
-    node: GameNode
+    node: ChildNode
     moves: List[Move]
+    cp: int
 
 @dataclass
 class Line:

@@ -1,5 +1,5 @@
 import logging
-from chess.pgn import Game, GameNode
+from chess.pgn import Game, GameNode, ChildNode
 from model import Puzzle
 import requests
 import urllib.parse
@@ -42,7 +42,7 @@ class Server:
         except Exception as e:
             self.logger.error(e)
 
-    def is_seen_pos(self, node: GameNode) -> bool:
+    def is_seen_pos(self, node: ChildNode) -> bool:
         if not self.url:
             return False
         id = urllib.parse.quote(f"{node.parent.board().fen()}:{node.uci()}")
@@ -57,17 +57,19 @@ class Server:
         return "{}/seen?token={}&id={}".format(self.url, self.token, id)
 
     def post(self, game_id: str, puzzle: Puzzle) -> None:
-        parent : GameNode = puzzle.node.parent
+        parent = puzzle.node.parent
+        assert parent
         json = {
             'game_id': game_id,
             'fen': parent.board().fen(),
             'ply': parent.ply(),
             'moves': [puzzle.node.uci()] + list(map(lambda m : m.uci(), puzzle.moves)),
+            'cp': puzzle.cp,
             'generator_version': self.version,
         }
         if not self.url:
             print(json)
-            return False
+            return None
         try:
             r = http.post("{}/puzzle?token={}".format(self.url, self.token), json=json)
             self.logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
