@@ -17,7 +17,8 @@ function process(buf) {
     },
     plays: NumberInt(0),
     vote: NumberInt(1),
-    line: p.moves.join(' ')
+    line: p.moves.join(' '),
+    cp: p.cp
   }));
   if (missing.length) playColl.insertMany(missing, {ordered:false});
 }
