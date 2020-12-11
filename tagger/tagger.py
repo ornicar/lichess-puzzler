@@ -22,7 +22,7 @@ def read(doc) -> Puzzle:
     for uci in (doc["line"].split(' ') if "line" in doc else doc["moves"]):
         move = Move.from_uci(uci)
         node = node.add_main_variation(move)
-    return Puzzle(doc["_id"], node.game())
+    return Puzzle(doc["_id"], node.game(), int(doc["cp"]) if "cp" in doc else None)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='tagger.py', description='automatically tags lichess puzzles')
@@ -63,9 +63,8 @@ if __name__ == "__main__":
 
     if args.eval:
         threads = int(args.threads)
-        eval_nb = 0
         def cruncher(thread_id: int):
-            global eval_nb
+            eval_nb = 0
             build_coll = pymongo.MongoClient()['puzzler']['puzzle2']
             engine = SimpleEngine.popen_uci('./stockfish')
             engine.configure({'Threads': 1})

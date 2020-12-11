@@ -23,10 +23,18 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     mate_tag = mate_in(puzzle)
     if mate_tag:
         tags.append(mate_tag)
+        tags.append("mate")
         if smothered_mate(puzzle):
             tags.append("smotheredMate")
         elif back_rank_mate(puzzle):
             tags.append("backRankMate")
+    elif puzzle.cp is not None:
+        if puzzle.cp > 600:
+            tags.append("crushing")
+        elif puzzle.cp > 200:
+            tags.append("advantage")
+        else:
+            tags.append("equality")
 
     if attraction(puzzle):
         tags.append("attraction")

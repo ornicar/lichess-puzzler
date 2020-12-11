@@ -1,10 +1,11 @@
 from dataclasses import dataclass, field
 from chess.pgn import Game, ChildNode
 from chess import Color
-from typing import List, Literal, Union
+from typing import List, Literal, Optional
 
 TagKind = Literal[
     "advancedPawn",
+    "advantage",
     "attackingF2F7",
     "attraction",
     "backRankMate",
@@ -13,10 +14,12 @@ TagKind = Literal[
     "castling",
     "clearance",
     "coercion",
+    "crushing",
     "defensiveMove",
     "discoveredAttack",
     "deflection",
     "doubleCheck",
+    "equality",
     "enPassant",
     "exposedKing",
     "fork",
@@ -26,6 +29,7 @@ TagKind = Literal[
     "kingsideAttack",
     "knightEndgame",
     "long",
+    "mate",
     "mateIn5",
     "mateIn4",
     "mateIn3",
@@ -58,6 +62,7 @@ class Puzzle:
     game: Game
     pov : Color = field(init=False)
     mainline: List[ChildNode] = field(init=False)
+    cp: Optional[int]
 
     def __post_init__(self):
         self.pov = not self.game.turn()
