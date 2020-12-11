@@ -60,6 +60,7 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.fork(make("qgSLr", "2r3k1/6p1/p2q1rRp/3pp3/3P1p1R/3Q3P/PP3PP1/6K1 w - - 0 31", "g6f6 d6f6 h4h5 e5e4 d3b3 g7g5 b3d5 f6f7 d5e4 c8c1 g1h2 f7h5")))
         self.assertFalse(cook.fork(make("2eqdQ", "r4rk1/pp2qppp/5p2/1b1p4/1b1Q4/2N1B3/PPP2PPP/2KR3R b - - 7 13", "b4c5 d4c5 e7c5 e3c5")))
         self.assertFalse(cook.fork(make("QNrtc", "r2qr1k1/5p1p/pn3bp1/1p6/3P2bN/1P1B2PP/PB3PQ1/R3R1K1 b - - 0 19", "f6d4 e1e8 d8e8 b2d4")))
+        self.assertFalse(cook.fork(make("J72FN", "6k1/7p/3R2p1/8/5p2/P4P2/1P1N2PP/3r1nK1 w - - 0 33", "d2e4 f1d2 g1f2 d2e4")))
 
     def test_trapped(self):
         self.assertTrue(cook.trapped_piece(make("nPqjh", "r4rk1/pp1nppbp/3p1n2/q4p2/8/N1P1PP2/PP1BB1PP/2RQ1RK1 b - - 0 13", "b7b6 e2b5 a7a6 c3c4 a5a3 b2a3")))
@@ -150,6 +151,9 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.back_rank_mate(make("08VjT", "3r2k1/1bQ3p1/p2p3p/3qp1b1/1p6/1P1B4/P1P3PP/1K3R2 b - - 4 25", "d5c6 c7f7 g8h8 f7f8 d8f8 f1f8")))
         self.assertTrue(cook.back_rank_mate(make("LYKY0", "r5k1/pQ3ppp/8/8/B1pp4/4q3/PP5P/5R1K b - - 0 26", "a8d8 b7f7 g8h8 f7f8 d8f8 f1f8")))
         self.assertFalse(cook.back_rank_mate(make("ABCL2", "3r2k1/1b4pp/1p2pr2/p5N1/8/PP2n1P1/1BR2bBP/4R2K w - - 1 27", "b2f6 b7g2")))
+
+    def side_attack(self):
+        self.assertFalse(cook.kingside_attack(make("KnAMG", "6k1/1p4p1/p1p4p/3p1rq1/3Pp1N1/2P5/PP2K1Q1/5R2 w - - 0 39", "g4h6 g7h6 g2g5 f5g5")))
 
 class TestUtil(unittest.TestCase):
 
