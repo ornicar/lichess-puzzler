@@ -232,7 +232,11 @@ def discovered_attack(puzzle: Puzzle) -> bool:
                 return False
             prev = node.parent.parent
             assert isinstance(prev, ChildNode)
-            if prev.move.from_square in between and node.move.to_square != prev.move.to_square and not util.is_castling(prev):
+            if (prev.move.from_square in between and 
+                node.move.to_square != prev.move.to_square and 
+                node.move.from_square != prev.move.to_square and 
+                not util.is_castling(prev)
+            ):
                 return True
     return False
 

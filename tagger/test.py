@@ -75,6 +75,7 @@ class TestTagger(unittest.TestCase):
         self.assertTrue(cook.discovered_attack(make("07jQK", "r4rk1/p1p1qppp/3b4/4n3/Q7/2NP4/PP3PPP/R1B2RK1 w - - 0 16", "f1e1 e5f3 g2f3 e7e1")))
         self.assertTrue(cook.discovered_attack(make("0VlKP", "5r2/6k1/8/p1p1p1p1/Pp1p2P1/1P1PnN1P/2P1KR2/8 w - - 3 38", "f3e5 f8e8 e5c6 e3g4 e2f1 g4f2")))
         self.assertFalse(cook.discovered_attack(make("m3h3k", "2r3k1/1r2pp1p/bqNp2p1/3P4/1p2P3/4bN2/1P4PP/2RQR2K w - - 0 24", "c6e7 b7e7 c1c8 a6c8")))
+        self.assertFalse(cook.discovered_attack(make("PsryZ", "4r2k/6pp/1R6/1pq5/8/P4QPP/1P3P1K/8 w - - 3 41", "f3c6 c5f2 c6g2 f2b6")))
 
     def test_deflection(self):
         self.assertTrue(cook.deflection(make("25Qpt", "r1bqkbnr/pp3p1p/6p1/2pBp3/4P3/2P1B3/PP3PPP/RN1QK2R b KQkq - 0 9", "g8f6 d5f7 e8f7 d1d8")))
