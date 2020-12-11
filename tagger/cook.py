@@ -168,8 +168,8 @@ def fork(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][:-1]:
         if util.moved_piece_type(node) is not KING:
             board = node.board()
-            if board.is_checkmate():
-                return False
+            if board.is_checkmate() or util.is_in_bad_spot(board, node.move.to_square):
+                continue
             nb = 0
             for (piece, square) in util.attacked_opponent_squares(board, node.move.to_square, puzzle.pov):
                 if piece.piece_type == PAWN:
