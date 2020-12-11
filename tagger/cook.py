@@ -316,10 +316,10 @@ def attraction(puzzle: Puzzle) -> bool:
 
 def deflection(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][1:]:
-        capture = node.parent.board().piece_at(node.move.to_square)
-        if capture or node.move.promotion:
-            piece = util.moved_piece_type(node)
-            if capture and util.king_values[capture.piece_type] > util.king_values[piece]:
+        captured_piece = node.parent.board().piece_at(node.move.to_square)
+        if captured_piece or node.move.promotion:
+            capturing_piece = util.moved_piece_type(node)
+            if captured_piece and util.king_values[captured_piece.piece_type] > util.king_values[capturing_piece]:
                 continue
             square = node.move.to_square
             prev_op_move = node.parent.move
@@ -331,7 +331,7 @@ def deflection(puzzle: Puzzle) -> bool:
             if (
                 (not prev_player_capture or util.values[prev_player_capture.piece_type] < util.moved_piece_type(grandpa)) and
                 square != prev_op_move.to_square and square != prev_player_move.to_square and
-                (prev_op_move.to_square == prev_player_move.to_square) and
+                (prev_op_move.to_square == prev_player_move.to_square or grandpa.board().is_check()) and
                 (
                     square in grandpa.board().attacks(prev_op_move.from_square) or
                     node.move.promotion and
