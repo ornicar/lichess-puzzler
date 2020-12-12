@@ -570,13 +570,14 @@ def capturing_defender(puzzle: Puzzle) -> bool:
             capture and
             util.moved_piece_type(node) != KING and
             util.values[capture.piece_type] <= util.values[util.moved_piece_type(node)] and
-            util.is_hanging(node.parent.board(), capture, node.move.to_square)):
+            util.is_hanging(node.parent.board(), capture, node.move.to_square) and
+            node.parent.move.to_square != node.move.to_square
+        ):
             prev = node.parent.parent
             assert isinstance(prev, ChildNode)
             if not prev.board().is_check() and prev.move.to_square != node.move.from_square:
-                assert node.parent.parent
-                assert node.parent.parent.parent
-                init_board = node.parent.parent.parent.board()
+                assert prev.parent
+                init_board = prev.parent.board()
                 defender_square = prev.move.to_square
                 defender = init_board.piece_at(defender_square)
                 if (defender and
