@@ -40,56 +40,68 @@ if __name__ == "__main__":
     nb = 0
 
     if args.zug:
-        engine = SimpleEngine.popen_uci('./stockfish')
-        engine.configure({'Threads': args.threads})
-        theme = {"t":"+zugzwang"}
-        for doc in play_coll.find():
-            puzzle = read(doc)
-            round_id = f'lichess:{puzzle.id}'
-            if round_coll.count_documents({"_id": round_id, "t": {"$in": ["+zugzwang", "-zugzwang"]}}):
-                continue
-            zug = zugzwang(engine, puzzle)
-            if zug:
-                cook.log(puzzle)
-            round_coll.update_one(
-                { "_id": round_id }, 
-                {"$addToSet": {"t": "+zugzwang" if zug else "-zugzwang"}}
-            )
-            play_coll.update_one({"_id":puzzle.id},{"$set":{"dirty":True}})
-            nb += 1
-            if nb % 1024 == 0:
-                logger.info(nb)
+        threads = int(args.threads)
+        def cruncher(thread_id: int):
+            db = pymongo.MongoClient()['puzzler']
+            round_coll = db['puzzle2_round']
+            play_coll = db['puzzle2_puzzle']
+            engine = SimpleEngine.popen_uci('./stockfish')
+            engine.configure({'Threads': 4})
+            for doc in round_coll.aggregate([
+                {"$match":{"_id":{"$regex":"^lichess:"},"t":{"$nin":['+zugzwang','-zugzwang']}}},
+                {'$lookup':{'from':'puzzle2_puzzle','as':'puzzle','localField':'p','foreignField':'_id'}},
+                {'$unwind':'$puzzle'},{'$replaceRoot':{'newRoot':'$puzzle'}}
+            ]):
+                try:
+                    if ord(doc["_id"][4]) % threads != thread_id:
+                        continue
+                    puzzle = read(doc)
+                    round_id = f'lichess:{puzzle.id}'
+                    zug = zugzwang(engine, puzzle)
+                    if zug:
+                        cook.log(puzzle)
+                    round_coll.update_one(
+                        { "_id": round_id }, 
+                        {"$addToSet": {"t": "+zugzwang" if zug else "-zugzwang"}}
+                    )
+                    play_coll.update_one({"_id":puzzle.id},{"$set":{"dirty":True}})
+                except Exception as e:
+                    print(doc)
+                    logger.error(e)
+        with Pool(processes=threads) as pool:
+            for i in range(int(args.threads)):
+                Process(target=cruncher, args=(i,)).start()
         exit(0)
 
     if args.eval:
         threads = int(args.threads)
         def cruncher(thread_id: int):
-                eval_nb = 0
-                build_coll = pymongo.MongoClient()['puzzler']['puzzle2']
-                engine = SimpleEngine.popen_uci('./stockfish')
-                engine.configure({'Threads': 1})
-                engine_limit = chess.engine.Limit(depth = 30, time = 15, nodes = 12_000_000)
-                for doc in build_coll.find({"cp": None}):
-                    try:
-                        if ord(doc["_id"][4]) % threads != thread_id:
-                            continue
-                        puzzle = read(doc)
-                        board = puzzle.game.end().board()
-                        if board.is_checkmate():
-                            cp = 999999999
-                            eval_nb += 1
-                            logger.info(f'{thread_id} {eval_nb} {puzzle.id}: mate')
-                        else:
-                            info = engine.analyse(board, limit = engine_limit)
-                            score = info["score"].pov(puzzle.pov)
-                            score_cp = score.score()
-                            cp = 999999999 if score.is_mate() else (999999998 if score_cp is None else score_cp)
-                            eval_nb += 1
-                            logger.info(f'{thread_id} {eval_nb} {puzzle.id}: {cp} knps: {int(info["nps"] / 1000)} kn: {int(info["nodes"] / 1000)} depth: {info["depth"]} time: {info["time"]}')
-                        build_coll.update_one({"_id":puzzle.id},{"$set":{"cp":cp}})
-                    except Exception as e:
-                        print(doc)
-                        logger.error(e)
+            eval_nb = 0
+            build_coll = pymongo.MongoClient()['puzzler']['puzzle2']
+            engine = SimpleEngine.popen_uci('./stockfish')
+            engine.configure({'Threads': 4})
+            engine_limit = chess.engine.Limit(depth = 30, time = 15, nodes = 12_000_000)
+            for doc in build_coll.find({"cp": None}):
+                try:
+                    if ord(doc["_id"][4]) % threads != thread_id:
+                        continue
+                    puzzle = read(doc)
+                    board = puzzle.game.end().board()
+                    if board.is_checkmate():
+                        cp = 999999999
+                        eval_nb += 1
+                        logger.info(f'{thread_id} {eval_nb} {puzzle.id}: mate')
+                    else:
+                        info = engine.analyse(board, limit = engine_limit)
+                        score = info["score"].pov(puzzle.pov)
+                        score_cp = score.score()
+                        cp = 999999999 if score.is_mate() else (999999998 if score_cp is None else score_cp)
+                        eval_nb += 1
+                        logger.info(f'{thread_id} {eval_nb} {puzzle.id}: {cp} knps: {int(info["nps"] / 1000)} kn: {int(info["nodes"] / 1000)} depth: {info["depth"]} time: {info["time"]}')
+                    build_coll.update_one({"_id":puzzle.id},{"$set":{"cp":cp}})
+                except Exception as e:
+                    print(doc)
+                    logger.error(e)
         with Pool(processes=threads) as pool:
             for i in range(int(args.threads)):
                 Process(target=cruncher, args=(i,)).start()
