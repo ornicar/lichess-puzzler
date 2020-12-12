@@ -68,9 +68,9 @@ if __name__ == "__main__":
             build_coll = pymongo.MongoClient()['puzzler']['puzzle2']
             engine = SimpleEngine.popen_uci('./stockfish')
             engine.configure({'Threads': 1})
-            engine_limit = chess.engine.Limit(depth = 50, time = 10, nodes = 20_000_000)
+            engine_limit = chess.engine.Limit(depth = 30, time = 15, nodes = 12_000_000)
             for doc in build_coll.find({"cp": None}):
-                if ord(doc["_id"][0]) % threads != thread_id:
+                if ord(doc["_id"][4]) % threads != thread_id:
                     continue
                 puzzle = read(doc)
                 board = puzzle.game.end().board()
@@ -84,7 +84,7 @@ if __name__ == "__main__":
                     score_cp = score.score()
                     cp = 999999999 if score.is_mate() else (999999998 if score_cp is None else score_cp)
                     eval_nb += 1
-                    logger.info(f'{thread_id} {eval_nb} {puzzle.id}: {int(info["nps"] / 1000)} knps -> {cp}')
+                    logger.info(f'{thread_id} {eval_nb} {puzzle.id}: {cp} knps: {int(info["nps"] / 1000)} kn: {int(info["nodes"] / 1000)} depth: {info["depth"]} time: {info["time"]}')
                 build_coll.update_one({"_id":puzzle.id},{"$set":{"cp":cp}})
         with Pool(processes=threads) as pool:
             for i in range(int(args.threads)):
