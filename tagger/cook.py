@@ -2,13 +2,13 @@ import logging
 
 from typing import List, Optional
 import chess
-from chess import square_rank, square_file, square_name, SquareSet, Piece, PieceType, Board, square_distance
+from chess import square_rank, square_file, SquareSet, Piece, PieceType, square_distance
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess import WHITE, BLACK
 from chess.pgn import ChildNode
 from model import Puzzle, TagKind
 import util
-from util import material_diff, pp
+from util import material_diff
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
