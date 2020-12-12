@@ -22,7 +22,7 @@ def read(doc) -> Puzzle:
     for uci in (doc["line"].split(' ') if "line" in doc else doc["moves"]):
         move = Move.from_uci(uci)
         node = node.add_main_variation(move)
-    return Puzzle(doc["_id"], node.game(), int(doc["cp"]) if "cp" in doc else None)
+    return Puzzle(doc["_id"], node.game(), int(doc["cp"]) if "cp" in doc and doc["cp"] else None)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='tagger.py', description='automatically tags lichess puzzles')
@@ -64,28 +64,32 @@ if __name__ == "__main__":
     if args.eval:
         threads = int(args.threads)
         def cruncher(thread_id: int):
-            eval_nb = 0
-            build_coll = pymongo.MongoClient()['puzzler']['puzzle2']
-            engine = SimpleEngine.popen_uci('./stockfish')
-            engine.configure({'Threads': 1})
-            engine_limit = chess.engine.Limit(depth = 30, time = 15, nodes = 12_000_000)
-            for doc in build_coll.find({"cp": None}):
-                if ord(doc["_id"][4]) % threads != thread_id:
-                    continue
-                puzzle = read(doc)
-                board = puzzle.game.end().board()
-                if board.is_checkmate():
-                    cp = 999999999
-                    eval_nb += 1
-                    logger.info(f'{thread_id} {eval_nb} {puzzle.id}: mate')
-                else:
-                    info = engine.analyse(board, limit = engine_limit)
-                    score = info["score"].pov(puzzle.pov)
-                    score_cp = score.score()
-                    cp = 999999999 if score.is_mate() else (999999998 if score_cp is None else score_cp)
-                    eval_nb += 1
-                    logger.info(f'{thread_id} {eval_nb} {puzzle.id}: {cp} knps: {int(info["nps"] / 1000)} kn: {int(info["nodes"] / 1000)} depth: {info["depth"]} time: {info["time"]}')
-                build_coll.update_one({"_id":puzzle.id},{"$set":{"cp":cp}})
+                eval_nb = 0
+                build_coll = pymongo.MongoClient()['puzzler']['puzzle2']
+                engine = SimpleEngine.popen_uci('./stockfish')
+                engine.configure({'Threads': 1})
+                engine_limit = chess.engine.Limit(depth = 30, time = 15, nodes = 12_000_000)
+                for doc in build_coll.find({"cp": None}):
+                    try:
+                        if ord(doc["_id"][4]) % threads != thread_id:
+                            continue
+                        puzzle = read(doc)
+                        board = puzzle.game.end().board()
+                        if board.is_checkmate():
+                            cp = 999999999
+                            eval_nb += 1
+                            logger.info(f'{thread_id} {eval_nb} {puzzle.id}: mate')
+                        else:
+                            info = engine.analyse(board, limit = engine_limit)
+                            score = info["score"].pov(puzzle.pov)
+                            score_cp = score.score()
+                            cp = 999999999 if score.is_mate() else (999999998 if score_cp is None else score_cp)
+                            eval_nb += 1
+                            logger.info(f'{thread_id} {eval_nb} {puzzle.id}: {cp} knps: {int(info["nps"] / 1000)} kn: {int(info["nodes"] / 1000)} depth: {info["depth"]} time: {info["time"]}')
+                        build_coll.update_one({"_id":puzzle.id},{"$set":{"cp":cp}})
+                    except Exception as e:
+                        print(doc)
+                        logger.error(e)
         with Pool(processes=threads) as pool:
             for i in range(int(args.threads)):
                 Process(target=cruncher, args=(i,)).start()
