@@ -5,7 +5,7 @@ from chess import Board, Move, Color
 from chess.engine import SimpleEngine, Score
 from model import Puzzle
 
-engine_limit = chess.engine.Limit(depth = 30, time = 10, nodes = 10_000_000)
+engine_limit = chess.engine.Limit(depth = 30, time = 10, nodes = 12_000_000)
 
 def zugzwang(engine: SimpleEngine, puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
@@ -28,6 +28,7 @@ def zugzwang(engine: SimpleEngine, puzzle: Puzzle) -> bool:
 
 def score_of(engine: SimpleEngine, board: Board, pov: Color):
     info = engine.analyse(board, limit = engine_limit)
+    print(f'knps: {int(info["nps"] / 1000)} kn: {int(info["nodes"] / 1000)} depth: {info["depth"]} time: {info["time"]}')
     return info["score"].pov(pov)
 
 def win_chances(score: Score) -> float:
