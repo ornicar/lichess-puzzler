@@ -5,6 +5,15 @@ buffer = [];
 
 function process(buf) {
   const existingIds = new Set(playColl.distinct('_id', {_id:{$in:buf.map(p => p._id)}}));
+  const generatorVote =
+    // possible rejected mate in X when mate in one available
+    p.generator < 24 && p.cp == 999999999 ? -15 : (
+      // 40 meganodes
+      p.generator < 13 ? -10 : (
+        // 0.64 win diff
+        p.generator < 22 ? -5 : 1
+      )
+    );
   const missing = buf.filter(p => !existingIds.has(p._id)).map(p => ({
     _id: p._id,
     gameId: p.gameId,
@@ -16,7 +25,7 @@ function process(buf) {
       v: 0.09
     },
     plays: NumberInt(0),
-    vote: NumberInt(1),
+    vote: NumberInt(generatorVote),
     line: p.moves.join(' '),
     cp: p.cp
   }));
