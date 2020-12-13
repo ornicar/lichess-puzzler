@@ -74,7 +74,12 @@ class TestTagger(unittest.TestCase):
         self.assertTrue(cook.trapped_piece(make("pqkqG", "rnb1k2r/ppppqppp/8/2b4n/4P1N1/2N5/PPPP1PPP/R1BQKB1R w KQkq - 3 6", "f2f3 e7h4 g2g3 h5g3 h2g3 h4h1")))
         self.assertFalse(cook.trapped_piece(make("23J63", "2r2rk1/3bbpp1/p2p1n1p/1p1Pp3/4P3/5QNP/PPq2PPN/R1B1R1K1 w - - 6 19", "e1e2 c2d1 h2f1 c8c1 a1c1 d1c1")))
         self.assertFalse(cook.trapped_piece(make("2NQ68", "3qr1k1/p5pp/1p3n2/3p2P1/2rQ4/5B1P/PBb2P2/2R2RK1 w - - 1 21", "f3d5 d8d5 d4d5 f6d5")))
-        self.assertFalse(cook.trapped_piece(make("RBAaK", "rnbqkbnr/pp3ppp/2p1p3/1N2N3/1B1P4/5Q2/P1P2PPP/1R2KB1R b Kkq - 3 12", "f7f6 f3h5 g7g6 e5g6 h7g6 h5h8 f8b4 b1b4")))
+        # self.assertFalse(cook.trapped_piece(make("RBAaK", "rnbqkbnr/pp3ppp/2p1p3/1N2N3/1B1P4/5Q2/P1P2PPP/1R2KB1R b Kkq - 3 12", "f7f6 f3h5 g7g6 e5g6 h7g6 h5h8 f8b4 b1b4")))
+        self.assertTrue(cook.trapped_piece(make("yKXxP", "2kr4/Qp3ppp/1p1q1n2/4r3/8/8/PPP1B1PP/2K1R2R w - - 0 19", "e2d3 e5a5 a7a5 b6a5")))
+        self.assertTrue(cook.trapped_piece(make("ybteL", "1r3rk1/4qppp/p1P1p3/Qp2P3/2n5/1R3BP1/P4P1P/1R4K1 w - - 3 30", "a5a6 b8b6 a6b6 c4b6")))
+        self.assertTrue(cook.trapped_piece(make("sXDZi", "r5k1/5Npp/8/3r4/4b3/2R2RP1/P5PP/6K1 w - - 1 28", "f3e3 a8a2 f7h6 g7h6")))
+        self.assertTrue(cook.trapped_piece(make("0fuIS", "6k1/pp2rpp1/2p4p/8/1Pr5/PB2PpP1/5PbP/1R2K1R1 b - - 3 28", "c4c3 e1d2 e7e3 f2e3 c3b3 b1b3")))
+        self.assertTrue(cook.trapped_piece(make("sBEHV", "r2q1r1k/pbp2pp1/3b1n1p/2p1Q3/8/2NB3P/PPP2PP1/R1B1R1K1 w - - 1 16", "e5f5 g7g6 f5f4 d6f4")))
 
     def test_discovered_attack(self):
         self.assertFalse(cook.discovered_attack(make("0e7Q3", "5rk1/2pqnrpp/p3p1b1/N3P3/1PRPPp2/P4Q2/3B1RPP/6K1 w - - 3 30", "d2f4 f7f4 f3f4 f8f4")))
