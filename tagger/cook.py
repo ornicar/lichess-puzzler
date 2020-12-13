@@ -380,7 +380,10 @@ def skewer(puzzle: Puzzle) -> bool:
             assert op_move
             if (op_move.to_square == node.move.to_square or not op_move.from_square in between):
                 continue
-            if util.king_values[util.moved_piece_type(prev)] > util.king_values[capture.piece_type]:
+            if (
+                util.king_values[util.moved_piece_type(prev)] > util.king_values[capture.piece_type] and
+                util.is_in_bad_spot(prev.board(), node.move.to_square)
+            ):
                 return True
     return False
 
@@ -566,6 +569,7 @@ def capturing_defender(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][1:]:
         board = node.board()
         capture = node.parent.board().piece_at(node.move.to_square)
+        assert isinstance(node.parent, ChildNode)
         if board.is_checkmate() or (
             capture and
             util.moved_piece_type(node) != KING and

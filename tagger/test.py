@@ -43,6 +43,7 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.sacrifice(make("51K8X", "r3r1k1/pp1n1pp1/2p3p1/3p4/3PnqPN/2P4P/PPQN1P2/4RRK1 w - - 2 18", "h4g2 f4d2 c2d2 e4d2 e1e8 a8e8")))
         # temporary exchange sac
         self.assertTrue(cook.sacrifice(make("2pqYA", "6k1/p6p/2r2bp1/1pp4r/5P2/3R2P1/P5BP/3R3K b - - 1 29", "c5c4 d3d8 f6d8 d1d8 g8f7 g2c6")))
+        self.assertFalse(cook.sacrifice(make("bIcc9", "8/8/2R5/7P/2Pk4/p1r5/6P1/6K1 w - - 0 41", "h5h6 a3a2 c6d6 d4c5 d6d1 c3b3 h6h7 b3b1 h7h8q b1d1 g1h2 a2a1q")))
 
     def test_defensive(self):
         self.assertFalse(cook.defensive_move(make("6MVFt", "8/2P5/3K4/8/4pk2/2r3p1/R7/8 b - - 0 50", "f4f3 a2a3 c3a3 c7c8q")))
@@ -98,6 +99,11 @@ class TestTagger(unittest.TestCase):
 
     def test_skewer(self):
         self.assertTrue(cook.skewer(make("29HGS", "3r4/6p1/5r1p/7k/3N1P2/3K2P1/3R4/3R4 w - - 1 50", "d2e2 d8d4 d3d4 f6d6 d4e5 d6d1")))
+        self.assertFalse(cook.skewer(make("aUuGJ", "5R2/p2rkpKp/1p2p1p1/4P1P1/8/8/P7/8 b - - 9 47", "a7a5 f8f7 e7e8 f7d7 e8d7 g7h7 b6b5 h7g6")))
+        self.assertTrue(cook.skewer(make("tipFF", "1rr5/3k4/3bpp2/q5p1/PpRP3p/1P3N1P/1K1Q1PP1/7R w - - 2 25", "h1c1 d6f4 d2d3 f4c1")))
+        self.assertTrue(cook.skewer(make("DcZWN", "rn3rk1/p2p3p/1pb1p1pn/4Q3/P1B5/qNP2PP1/3N3P/4RRK1 b - - 2 21", "c6a4 e1a1 a3e7 a1a4")))
+        self.assertTrue(cook.skewer(make("GeNY1", "3k4/R7/8/1BK3p1/P1P2bPp/6r1/8/8 w - - 3 67", "a4a5 f4e3 c5c6 e3a7")))
+        self.assertTrue(cook.skewer(make("frYL7", "7r/3q4/5k1p/8/4pp2/2Q5/P1P3PP/6K1 b - - 1 35", "f6f5 c3h3 f5f6 h3d7")))
 
     def test_interference(self):
         self.assertFalse(cook.interference(make("2t6Xz", "6k1/1b1q1pbp/4pnp1/2Pp4/rp1P1P2/3BPRNP/4Q1P1/4B1K1 b - - 1 26", "f6e4 d3b5 b7c6 b5a4")))
