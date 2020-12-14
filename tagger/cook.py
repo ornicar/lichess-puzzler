@@ -517,18 +517,21 @@ def side_attack(puzzle: Puzzle, corner_file: int, king_files: List[int], nb_piec
         not king_square or
         square_rank(king_square) != back_rank or
         square_file(king_square) not in king_files or
-        len(init_board.piece_map()) < nb_pieces # no endgames
+        len(init_board.piece_map()) < nb_pieces or # no endgames
+        not any(node.board().is_check() for node in puzzle.mainline[1::2])
     ):
         return False
     score = 0
     corner = chess.square(corner_file, back_rank)
     for node in puzzle.mainline[1::2]:
         corner_dist = square_distance(corner, node.move.to_square)
-        if (node.board().is_check() or util.is_capture(node)) and corner_dist <= 4:
+        if node.board().is_check():
+            score += 1
+        if util.is_capture(node) and corner_dist <= 3:
             score += 1
         elif corner_dist >= 5:
             score -= 1
-    return score >= 1
+    return score >= 2
 
 def clearance(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][1:]:
