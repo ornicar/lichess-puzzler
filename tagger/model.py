@@ -62,7 +62,7 @@ class Puzzle:
     game: Game
     pov : Color = field(init=False)
     mainline: List[ChildNode] = field(init=False)
-    cp: Optional[int]
+    cp: int
 
     def __post_init__(self):
         self.pov = not self.game.turn()

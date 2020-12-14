@@ -22,7 +22,7 @@ def read(doc) -> Puzzle:
     for uci in (doc["line"].split(' ') if "line" in doc else doc["moves"]):
         move = Move.from_uci(uci)
         node = node.add_main_variation(move)
-    return Puzzle(doc["_id"], node.game(), int(doc["cp"]) if "cp" in doc and doc["cp"] else None)
+    return Puzzle(doc["_id"], node.game(), int(doc["cp"]))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='tagger.py', description='automatically tags lichess puzzles')
