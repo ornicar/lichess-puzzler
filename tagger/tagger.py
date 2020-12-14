@@ -46,7 +46,7 @@ if __name__ == "__main__":
             round_coll = db['puzzle2_round']
             play_coll = db['puzzle2_puzzle']
             engine = SimpleEngine.popen_uci('./stockfish')
-            engine.configure({'Threads': 4})
+            engine.configure({'Threads': 2})
             for doc in round_coll.aggregate([
                 {"$match":{"_id":{"$regex":"^lichess:"},"t":{"$nin":['+zugzwang','-zugzwang']}}},
                 {'$lookup':{'from':'puzzle2_puzzle','as':'puzzle','localField':'p','foreignField':'_id'}},
