@@ -32,12 +32,6 @@ if __name__ == "__main__":
     parser.add_argument("--all", "-a", help="don't skip existing", action="store_true")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
     args = parser.parse_args()
-    mongo = pymongo.MongoClient()
-    db = mongo['puzzler']
-    build_coll = db['puzzle2']
-    play_coll = db['puzzle2_puzzle']
-    round_coll = db['puzzle2_round']
-    nb = 0
 
     if args.zug:
         threads = int(args.threads)
@@ -107,48 +101,46 @@ if __name__ == "__main__":
                 Process(target=cruncher, args=(i,)).start()
         exit(0)
 
-    def tags_of(doc) -> Tuple[str, List[TagKind]]:
-        puzzle = read(doc)
-        try:
-            tags = cook.cook(puzzle)
-        except Exception as e:
-            logger.error(puzzle)
-            logger.error(e)
-            tags = []
-        return puzzle.id, tags
+    threads = int(args.threads)
 
-    def process_batch(batch: List[Dict[str, Any]]):
-        puzzle_ids = []
-        for id, tags in pool.imap_unordered(tags_of, batch):
-            round_id = f"lichess:{id}"
-            if not args.dry:
-                existing = round_coll.find_one({"_id": round_id})
-                zugs = [t for t in existing["t"] if t in ['+zugzwang', '-zugzwang']] if existing else []
-                round_coll.update_one({
-                    "_id": round_id
-                }, {
-                    "$set": {
-                        "p": id,
-                        "d": datetime.now(),
-                        "e": 50,
-                        "t": [f"+{t}" for t in tags] + zugs
-                    }
-                }, upsert = True);
-                puzzle_ids.append(id)
-        if puzzle_ids:
-            play_coll.update_many({"_id":{"$in":puzzle_ids}},{"$set":{"dirty":True}})
-
-    with Pool(processes=int(args.threads)) as pool:
-        batch: List[Dict[str, Any]] = []
+    def cruncher(thread_id: int):
+        db = pymongo.MongoClient()['puzzler']
+        play_coll = db['puzzle2_puzzle']
+        round_coll = db['puzzle2_round']
+        total = 0
+        computed = 0
+        updated = 0
         for doc in play_coll.find():
+            total += 1
+            if not thread_id and total % 1000 == 0:
+                logger.info(f'{total} / {computed} / {updated}')
+            if ord(doc["_id"][4]) % threads != thread_id:
+                continue
+            computed += 1
             id = doc["_id"]
             if not args.all and round_coll.count_documents({"_id": f"lichess:{id}", "t.1": {"$exists":True}}):
                 continue
-            if len(batch) < 2048:
-                batch.append(doc)
-                continue
-            process_batch(batch)
-            nb += len(batch)
-            logger.info(nb)
-            batch = []
-        process_batch(batch)
+            tags = cook.cook(read(doc))
+            round_id = f"lichess:{id}"
+            if not args.dry:
+                existing = round_coll.find_one({"_id": round_id},{"t":True})
+                zugs = [t for t in existing["t"] if t in ['+zugzwang', '-zugzwang']] if existing else []
+                new_tags = [f"+{t}" for t in tags] + zugs
+                if not existing or set(new_tags) != set(existing["t"]):
+                    updated += 1
+                    round_coll.update_one({
+                        "_id": round_id
+                    }, {
+                        "$set": {
+                            "p": id,
+                            "d": datetime.now(),
+                            "e": 50,
+                            "t": new_tags
+                        }
+                    }, upsert = True);
+                    play_coll.update_many({"_id":id},{"$set":{"dirty":True}})
+        print(f'{thread_id}/{args.threads} done')
+
+    with Pool(processes=threads) as pool:
+        for i in range(int(args.threads)):
+            Process(target=cruncher, args=(i,)).start()
