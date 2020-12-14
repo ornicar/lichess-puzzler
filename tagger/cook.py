@@ -196,10 +196,10 @@ def fork(puzzle: Puzzle) -> bool:
     return False
 
 def hanging_piece(puzzle: Puzzle) -> bool:
-    if puzzle.mainline[0].board().is_check():
-        return False
     to = puzzle.mainline[1].move.to_square
     captured = puzzle.mainline[0].board().piece_at(to)
+    if puzzle.mainline[0].board().is_check() and (not captured or captured.piece_type == PAWN):
+        return False
     if captured and captured.piece_type != PAWN:
         if util.is_hanging(puzzle.mainline[0].board(), captured, to):
             op_move = puzzle.mainline[0].move

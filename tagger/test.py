@@ -151,6 +151,7 @@ class TestTagger(unittest.TestCase):
         self.assertTrue(cook.hanging_piece(make("069il", "r2qr1k1/1p3ppp/p1p2nb1/8/4P3/1P5P/PBQN1PP1/R3R1K1 w - - 1 17", "c2c4 d8d2 b2f6 g7f6")))
         self.assertTrue(cook.hanging_piece(make("cWlcD", "8/p4p2/2p2Pk1/1p1p2pp/1P4P1/2P4P/2r2R2/5K2 b - - 1 40", "h5g4 f2c2")))
         self.assertTrue(cook.hanging_piece(make("YJNLD", "2B2k2/pp5p/2p5/2n1p3/1PPbPp1q/P6P/4Q1P1/3N3K b - - 0 28", "c5e4 e2e4")))
+        self.assertTrue(cook.hanging_piece(make("yXCrM", "2r3k1/5ppp/bq2p3/p2pPnP1/5PR1/NP3NbP/P2Q4/2BK4 b - - 0 27", "b6g1 f3g1")))
 
     def test_advanced_pawn(self):
         self.assertFalse(cook.advanced_pawn(make("C3gv2", "4r3/R1p2k2/3p1pp1/2r2p1p/1pN2Pn1/1P2PKP1/2P3P1/4R3 b - - 3 39", "d6d5 c4d6 f7e7 d6e8")))
