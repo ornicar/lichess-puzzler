@@ -74,12 +74,15 @@ class TestTagger(unittest.TestCase):
         self.assertTrue(cook.trapped_piece(make("pqkqG", "rnb1k2r/ppppqppp/8/2b4n/4P1N1/2N5/PPPP1PPP/R1BQKB1R w KQkq - 3 6", "f2f3 e7h4 g2g3 h5g3 h2g3 h4h1")))
         self.assertFalse(cook.trapped_piece(make("23J63", "2r2rk1/3bbpp1/p2p1n1p/1p1Pp3/4P3/5QNP/PPq2PPN/R1B1R1K1 w - - 6 19", "e1e2 c2d1 h2f1 c8c1 a1c1 d1c1")))
         self.assertFalse(cook.trapped_piece(make("2NQ68", "3qr1k1/p5pp/1p3n2/3p2P1/2rQ4/5B1P/PBb2P2/2R2RK1 w - - 1 21", "f3d5 d8d5 d4d5 f6d5")))
+        # wontfix
         # self.assertFalse(cook.trapped_piece(make("RBAaK", "rnbqkbnr/pp3ppp/2p1p3/1N2N3/1B1P4/5Q2/P1P2PPP/1R2KB1R b Kkq - 3 12", "f7f6 f3h5 g7g6 e5g6 h7g6 h5h8 f8b4 b1b4")))
         self.assertTrue(cook.trapped_piece(make("yKXxP", "2kr4/Qp3ppp/1p1q1n2/4r3/8/8/PPP1B1PP/2K1R2R w - - 0 19", "e2d3 e5a5 a7a5 b6a5")))
         self.assertTrue(cook.trapped_piece(make("ybteL", "1r3rk1/4qppp/p1P1p3/Qp2P3/2n5/1R3BP1/P4P1P/1R4K1 w - - 3 30", "a5a6 b8b6 a6b6 c4b6")))
         self.assertTrue(cook.trapped_piece(make("sXDZi", "r5k1/5Npp/8/3r4/4b3/2R2RP1/P5PP/6K1 w - - 1 28", "f3e3 a8a2 f7h6 g7h6")))
         self.assertTrue(cook.trapped_piece(make("0fuIS", "6k1/pp2rpp1/2p4p/8/1Pr5/PB2PpP1/5PbP/1R2K1R1 b - - 3 28", "c4c3 e1d2 e7e3 f2e3 c3b3 b1b3")))
         self.assertTrue(cook.trapped_piece(make("sBEHV", "r2q1r1k/pbp2pp1/3b1n1p/2p1Q3/8/2NB3P/PPP2PP1/R1B1R1K1 w - - 1 16", "e5f5 g7g6 f5f4 d6f4")))
+        # wontfix
+        # self.assertFalse(cook.trapped_piece(make("RArZa", "r1b2rk1/3qnpb1/p2pp1p1/1pp3B1/4P3/1PNPR2Q/1PP2PPP/R5K1 b - - 2 16", "e6e5 h3d7 c8d7 g5e7")))
 
     def test_discovered_attack(self):
         self.assertFalse(cook.discovered_attack(make("0e7Q3", "5rk1/2pqnrpp/p3p1b1/N3P3/1PRPPp2/P4Q2/3B1RPP/6K1 w - - 3 30", "d2f4 f7f4 f3f4 f8f4")))
@@ -144,6 +147,7 @@ class TestTagger(unittest.TestCase):
     def test_hanging_piece(self):
         self.assertTrue(cook.hanging_piece(make("069il", "r2qr1k1/1p3ppp/p1p2nb1/8/4P3/1P5P/PBQN1PP1/R3R1K1 w - - 1 17", "c2c4 d8d2 b2f6 g7f6")))
         self.assertTrue(cook.hanging_piece(make("cWlcD", "8/p4p2/2p2Pk1/1p1p2pp/1P4P1/2P4P/2r2R2/5K2 b - - 1 40", "h5g4 f2c2")))
+        self.assertTrue(cook.hanging_piece(make("YJNLD", "2B2k2/pp5p/2p5/2n1p3/1PPbPp1q/P6P/4Q1P1/3N3K b - - 0 28", "c5e4 e2e4")))
 
     def test_advanced_pawn(self):
         self.assertFalse(cook.advanced_pawn(make("C3gv2", "4r3/R1p2k2/3p1pp1/2r2p1p/1pN2Pn1/1P2PKP1/2P3P1/4R3 b - - 3 39", "d6d5 c4d6 f7e7 d6e8")))

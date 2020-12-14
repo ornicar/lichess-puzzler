@@ -200,7 +200,9 @@ def hanging_piece(puzzle: Puzzle) -> bool:
     captured = puzzle.mainline[0].board().piece_at(to)
     if captured and captured.piece_type != PAWN:
         if util.is_hanging(puzzle.mainline[0].board(), captured, to):
-            if util.is_capture(puzzle.mainline[0]) and puzzle.mainline[0].move.to_square == to:
+            op_move = puzzle.mainline[0].move
+            op_capture = puzzle.game.board().piece_at(op_move.to_square)
+            if op_capture and util.values[op_capture.piece_type] >= util.values[captured.piece_type] and op_move.to_square == to:
                 return False
             if len(puzzle.mainline) < 3:
                 return True
