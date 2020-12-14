@@ -91,10 +91,11 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if attacking_f2_f7(puzzle):
         tags.append("attackingF2F7")
 
-    if kingside_attack(puzzle):
-        tags.append("kingsideAttack")
-    elif queenside_attack(puzzle):
-        tags.append("queensideAttack")
+    if "backRankMate" not in tags:
+        if kingside_attack(puzzle):
+            tags.append("kingsideAttack")
+        elif queenside_attack(puzzle):
+            tags.append("queensideAttack")
 
     if clearance(puzzle):
         tags.append("clearance")
