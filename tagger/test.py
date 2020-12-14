@@ -116,6 +116,9 @@ class TestTagger(unittest.TestCase):
     def test_interference(self):
         self.assertFalse(cook.interference(make("2t6Xz", "6k1/1b1q1pbp/4pnp1/2Pp4/rp1P1P2/3BPRNP/4Q1P1/4B1K1 b - - 1 26", "f6e4 d3b5 b7c6 b5a4")))
         self.assertTrue(cook.interference(make("QssMO", "r5k1/ppp2r2/3p3p/3Pp3/1P2N1bb/R5N1/1P3P1K/6R1 b - - 5 25", "g4f3 g3f5 g8h7 a3f3")))
+    
+    def test_overloading(self):
+        self.assertTrue(cook.overloading(make("MB3gB", "r4rk1/ppq2ppp/2nb1n2/1Bpp2N1/6b1/P1N1P1P1/1PQP1P1P/R1B1R1K1 b - - 6 12", "h7h6 c3d5 h6g5 d5c7")))
 
     # def test_clearance(self):
     #     self.assertTrue(cook.clearance(make("iq12Z", "1R6/1P2r1pk/7p/6pr/3Pp3/1KP1R3/8/8 b - - 0 55", "g5g4 b8h8 h7h8 b7b8q")))

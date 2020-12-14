@@ -41,6 +41,8 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if deflection(puzzle):
         tags.append("deflection")
+    elif overloading(puzzle):
+        tags.append("overloading")
 
     if advanced_pawn(puzzle):
         tags.append("advancedPawn")
@@ -221,6 +223,9 @@ def trapped_piece(puzzle: Puzzle) -> bool:
                 square = prev.move.from_square
             if util.is_trapped(prev.parent.board(), square):
                 return True
+    return False
+
+def overloading(puzzle: Puzzle) -> bool:
     return False
 
 def discovered_attack(puzzle: Puzzle) -> bool:
