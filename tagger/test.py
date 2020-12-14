@@ -8,7 +8,7 @@ from tagger import logger, read
 from chess import parse_square, ROOK
 
 def make(id: str, fen: str, line: str) -> Puzzle:
-    return read({ "_id": id, "fen": fen, "line": line })
+    return read({ "_id": id, "fen": fen, "line": line, "cp": 999999998 })
 
 class TestTagger(unittest.TestCase):
 
@@ -117,8 +117,8 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.interference(make("2t6Xz", "6k1/1b1q1pbp/4pnp1/2Pp4/rp1P1P2/3BPRNP/4Q1P1/4B1K1 b - - 1 26", "f6e4 d3b5 b7c6 b5a4")))
         self.assertTrue(cook.interference(make("QssMO", "r5k1/ppp2r2/3p3p/3Pp3/1P2N1bb/R5N1/1P3P1K/6R1 b - - 5 25", "g4f3 g3f5 g8h7 a3f3")))
     
-    def test_overloading(self):
-        self.assertTrue(cook.overloading(make("MB3gB", "r4rk1/ppq2ppp/2nb1n2/1Bpp2N1/6b1/P1N1P1P1/1PQP1P1P/R1B1R1K1 b - - 6 12", "h7h6 c3d5 h6g5 d5c7")))
+    # def test_overloading(self):
+        # self.assertTrue(cook.overloading(make("MB3gB", "r4rk1/ppq2ppp/2nb1n2/1Bpp2N1/6b1/P1N1P1P1/1PQP1P1P/R1B1R1K1 b - - 6 12", "h7h6 c3d5 h6g5 d5c7")))
 
     # def test_clearance(self):
     #     self.assertTrue(cook.clearance(make("iq12Z", "1R6/1P2r1pk/7p/6pr/3Pp3/1KP1R3/8/8 b - - 0 55", "g5g4 b8h8 h7h8 b7b8q")))
@@ -177,8 +177,22 @@ class TestTagger(unittest.TestCase):
         self.assertTrue(cook.back_rank_mate(make("LYKY0", "r5k1/pQ3ppp/8/8/B1pp4/4q3/PP5P/5R1K b - - 0 26", "a8d8 b7f7 g8h8 f7f8 d8f8 f1f8")))
         self.assertFalse(cook.back_rank_mate(make("ABCL2", "3r2k1/1b4pp/1p2pr2/p5N1/8/PP2n1P1/1BR2bBP/4R2K w - - 1 27", "b2f6 b7g2")))
 
-    def side_attack(self):
+    def test_side_attack(self):
         self.assertFalse(cook.kingside_attack(make("KnAMG", "6k1/1p4p1/p1p4p/3p1rq1/3Pp1N1/2P5/PP2K1Q1/5R2 w - - 0 39", "g4h6 g7h6 g2g5 f5g5")))
+        self.assertTrue(cook.kingside_attack(make("mFqus", "3r2k1/1p3ppp/pq6/8/P3B3/5PNb/1PP1Qb1P/R1B3K1 w - - 0 25", "e2f2 d8d1 g3f1 d1f1")))
+        self.assertTrue(cook.kingside_attack(make("XbfXS", "r4rk1/bpp3p1/p2p2qp/3bp3/1P6/P1PP3P/1B1Q1PPN/R4RK1 w - - 1 21", "g2g3 g6g3")))
+        self.assertTrue(cook.kingside_attack(make("djudB", "r1b1kb2/pp1n1p2/4p3/3pP2r/3n4/3B1N1q/PP3P1P/R1BQ1RK1 w q - 0 17", "f3d4 h3h2")))
+        self.assertTrue(cook.kingside_attack(make("NZvxf", "rn1q1rk1/pp1bbpp1/2p4p/2PpN3/3PnN1P/3B1P2/PPQ3P1/R1B2RK1 b - - 0 15", "e4g3 d3h7 g8h8 e5f7 f8f7 f4g6 h8h7 g6f8 h7g8 c2h7 g8f8 h7h8")))
+        # self.assertFalse("kingsideAttack" in cook.cook(make("6h1wj", "r3r1k1/pppb2pp/1b6/3PRp2/1q3B2/1N3Q2/PP3PPP/R5K1 w - - 1 18", "a1e1 b4e1 e5e1 e8e1")))
+        self.assertFalse(cook.kingside_attack(make("fLaC0", "2r2rk1/1q3pp1/p3p2p/1p1N1b2/8/P3PQ2/1P3PPP/R2R2K1 b - - 0 25", "f5c2 d5f6 g7f6 f3b7")))
+        self.assertFalse("kingsideAttack" in cook.cook(make("NIxjp", "r1b1k2r/pppp2pp/5n2/b3q3/8/2PBP3/PP4PP/RNBQ1RK1 w kq - 3 11", "b1d2 e5e3 g1h1 e3d3")))
+
+        self.assertTrue(cook.queenside_attack(make("gO5Jg", "2k2b2/1p3b1p/2p2p2/1p1qp3/6PN/1P2Q2P/P1P2P2/2KB4 w - - 1 28", "h4f5 f8a3 c1b1 d5d1 e3c1 d1c1")))
+        self.assertTrue(cook.queenside_attack(make("Oiyfh", "k2r1b2/ppR1p1p1/7r/4B2p/8/1P3B2/P2PK1PP/8 b - - 2 25", "d8b8 f3b7 b8b7 c7c8 b7b8 c8b8")))
+        # self.assertTrue(cook.queenside_attack(make("nAZo8", "2kr1b2/Q1p2pp1/8/1bPpN1p1/8/2P5/Pr6/R3K3 b - - 0 23", "g5g4 a7a8")))
+        self.assertFalse(cook.queenside_attack(make("TiK0f", "1kq5/pp3pQ1/2p5/4p3/4Pn1p/5P1P/1PP2P1K/5B2 b - - 0 38", "c8c7 g7h8 c7c8 h8e5")))
+        self.assertFalse(cook.queenside_attack(make("Zk4Jr", "3rr1k1/p5pp/2p5/8/1P1bbp2/P1PP1B2/6PP/RK3R2 w - - 0 28", "c3d4 e4d3 b1b2 d3f1")))
+        self.assertFalse(cook.queenside_attack(make("umd5a", "r4r1k/5p1p/5qp1/p3b1RP/1p3P2/8/PP1BQ3/2K4R w - - 0 32", "g5e5 f6c6 c1d1 c6h1")))
 
 class TestUtil(unittest.TestCase):
 

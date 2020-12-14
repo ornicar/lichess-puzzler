@@ -91,12 +91,6 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
     if attacking_f2_f7(puzzle):
         tags.append("attackingF2F7")
 
-    if "backRankMate" not in tags:
-        if kingside_attack(puzzle):
-            tags.append("kingsideAttack")
-        elif queenside_attack(puzzle):
-            tags.append("queensideAttack")
-
     if clearance(puzzle):
         tags.append("clearance")
 
@@ -124,6 +118,12 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
         tags.append("bishopEndgame")
     elif piece_endgame(puzzle, KNIGHT):
         tags.append("knightEndgame")
+
+    if "backRankMate" not in tags and "fork" not in tags:
+        if kingside_attack(puzzle):
+            tags.append("kingsideAttack")
+        elif queenside_attack(puzzle):
+            tags.append("queensideAttack")
 
     if len(puzzle.mainline) == 2:
         tags.append("oneMove")
@@ -504,24 +504,31 @@ def attacking_f2_f7(puzzle: Puzzle) -> bool:
     return False
 
 def kingside_attack(puzzle: Puzzle) -> bool:
-    return side_attack(puzzle, [6, 7], 20)
+    return side_attack(puzzle, 7, [6, 7], 20)
 
 def queenside_attack(puzzle: Puzzle) -> bool:
-    return side_attack(puzzle, [0, 1, 2], 16)
+    return side_attack(puzzle, 0, [0, 1, 2], 18)
 
-def side_attack(puzzle: Puzzle, king_files: List[int], nb_pieces: int) -> bool:
+def side_attack(puzzle: Puzzle, corner_file: int, king_files: List[int], nb_pieces: int) -> bool:
+    back_rank = 7 if puzzle.pov else 0
+    init_board = puzzle.mainline[0].board()
+    king_square = init_board.king(not puzzle.pov)
+    if (
+        not king_square or
+        square_rank(king_square) != back_rank or
+        square_file(king_square) not in king_files or
+        len(init_board.piece_map()) < nb_pieces # no endgames
+    ):
+        return False
+    score = 0
+    corner = chess.square(corner_file, back_rank)
     for node in puzzle.mainline[1::2]:
-        if node.board().is_check():
-            board = node.board()
-            king_square = board.king(not puzzle.pov)
-            assert king_square is not None
-            back_rank = 7 if puzzle.pov else 0
-            return (
-                    square_rank(king_square) == back_rank and
-                    square_file(king_square) in king_files and
-                    len(board.piece_map()) >= nb_pieces # no endgames
-                )
-    return False
+        corner_dist = square_distance(corner, node.move.to_square)
+        if (node.board().is_check() or util.is_capture(node)) and corner_dist <= 4:
+            score += 1
+        elif corner_dist >= 5:
+            score -= 1
+    return score >= 1
 
 def clearance(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][1:]:
