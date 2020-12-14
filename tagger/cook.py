@@ -154,7 +154,7 @@ def sacrifice(puzzle: Puzzle) -> bool:
     initial = diffs[0]
     for d in diffs[1::2][1:]:
         if d - initial <= -2:
-            return True
+            return not any(n.move.promotion for n in puzzle.mainline[::2][1:])
     return False
 
 def x_ray(puzzle: Puzzle) -> bool:
