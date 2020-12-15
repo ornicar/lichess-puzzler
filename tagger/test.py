@@ -178,6 +178,7 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.back_rank_mate(make("ABCL2", "3r2k1/1b4pp/1p2pr2/p5N1/8/PP2n1P1/1BR2bBP/4R2K w - - 1 27", "b2f6 b7g2")))
 
     def test_side_attack(self):
+        self.assertFalse(cook.kingside_attack(make("UTR0G", "rn1qk2r/5ppp/2p1p3/pp3bN1/1b1P2n1/1QN1PP2/P3B2P/R1B2RK1 w kq - 0 13", "f3g4 d8g5 e3e4 g5d8 e4f5 d8d4")))
         self.assertFalse(cook.kingside_attack(make("KnAMG", "6k1/1p4p1/p1p4p/3p1rq1/3Pp1N1/2P5/PP2K1Q1/5R2 w - - 0 39", "g4h6 g7h6 g2g5 f5g5")))
         self.assertTrue(cook.kingside_attack(make("mFqus", "3r2k1/1p3ppp/pq6/8/P3B3/5PNb/1PP1Qb1P/R1B3K1 w - - 0 25", "e2f2 d8d1 g3f1 d1f1")))
         self.assertTrue(cook.kingside_attack(make("XbfXS", "r4rk1/bpp3p1/p2p2qp/3bp3/1P6/P1PP3P/1B1Q1PPN/R4RK1 w - - 1 21", "g2g3 g6g3")))
