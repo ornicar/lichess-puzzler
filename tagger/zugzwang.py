@@ -28,7 +28,8 @@ def zugzwang(engine: SimpleEngine, puzzle: Puzzle) -> bool:
 
 def score_of(engine: SimpleEngine, board: Board, pov: Color):
     info = engine.analyse(board, limit = engine_limit)
-    print(f'knps: {int(info["nps"] / 1000)} kn: {int(info["nodes"] / 1000)} depth: {info["depth"]} time: {info["time"]}')
+    if "nps" in info:
+        print(f'knps: {int(info["nps"] / 1000)} kn: {int(info["nodes"] / 1000)} depth: {info["depth"]} time: {info["time"]}')
     return info["score"].pov(pov)
 
 def win_chances(score: Score) -> float:
