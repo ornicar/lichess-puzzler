@@ -42,7 +42,7 @@ def is_valid_mate_in_one(pair: NextMovePair, engine: SimpleEngine) -> bool:
         return True
     if pair.second.score == Mate(1):
         # if there's more than one mate in one, gotta look if the best non-mating move is bad enough
-        logger.info('Looking for best non-mating move...')
+        logger.debug('Looking for best non-mating move...')
         info = engine.analyse(pair.node.board(), multipv = 5, limit = get_move_limit)
         for score in [pv["score"].pov(pair.winner) for pv in info]:
             if score < Mate(1) and win_chances(score) > non_mate_win_threshold:
@@ -78,7 +78,7 @@ def cook_mate(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[
     next = pair.best
 
     if next.score < mate_soon:
-        logger.info("Best move is not a mate, we're probably not searching deep enough")
+        logger.debug("Best move is not a mate, we're probably not searching deep enough")
         return None
 
     follow_up = cook_mate(engine, node.add_main_variation(next.move), winner)
@@ -92,7 +92,7 @@ def cook_mate(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[
 def cook_advantage(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[List[NextMovePair]]:
 
     if node.board().is_repetition(2):
-        logger.info("Found repetition, canceling")
+        logger.debug("Found repetition, canceling")
         return None
 
     next = get_next_move(engine, node, winner)
@@ -102,11 +102,11 @@ def cook_advantage(engine: SimpleEngine, node: ChildNode, winner: Color) -> Opti
         return []
 
     if next.best.score.is_mate():
-        logger.info("Expected advantage, got mate?!")
+        logger.debug("Expected advantage, got mate?!")
         return None
 
     if next.best.score < Cp(200):
-        logger.info("Not winning enough, aborting")
+        logger.debug("Not winning enough, aborting")
         return None
 
     follow_up = cook_advantage(engine, node.add_main_variation(next.best.move), winner)
@@ -166,20 +166,20 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
         logger.debug("{} mate in one".format(node.ply()))
         return score
     elif score > mate_soon:
-        logger.info("Mate {}#{} Probing...".format(game_url, node.ply()))
+        logger.debug("Mate {}#{} Probing...".format(game_url, node.ply()))
         if server.is_seen_pos(node):
-            logger.info("Skip duplicate position")
+            logger.debug("Skip duplicate position")
             return score
         mate_solution = cook_mate(engine, copy.deepcopy(node), winner)
         server.set_seen(node.game())
         return Puzzle(node, mate_solution, 999999999) if mate_solution is not None else score
     elif score >= Cp(200) and win_chances(score) > win_chances(prev_score) + 0.6:
         if score < Cp(400) and material_diff(board, winner) > -1:
-            logger.info("Not clearly winning and not from being down in material, aborting")
+            logger.debug("Not clearly winning and not from being down in material, aborting")
             return score
-        logger.info("Advantage {}#{} {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
+        logger.debug("Advantage {}#{} {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
         if server.is_seen_pos(node):
-            logger.info("Skip duplicate position")
+            logger.debug("Skip duplicate position")
             return score
         puzzle_node = copy.deepcopy(node)
         solution : Optional[List[NextMovePair]] = cook_advantage(engine, puzzle_node, winner)
@@ -188,10 +188,10 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
             return score
         while len(solution) % 2 == 0 or not solution[-1].second:
             if not solution[-1].second:
-                logger.info("Remove final only-move")
+                logger.debug("Remove final only-move")
             solution = solution[:-1]
         if not solution or (len(solution) == 1 and not allow_one_mover):
-            logger.info("Discard one-mover")
+            logger.debug("Discard one-mover")
             return score
         cp = solution[len(solution) - 1].best.score.score()
         return Puzzle(node, [p.best.move for p in solution], 999999998 if cp is None else cp)
@@ -267,7 +267,7 @@ def main() -> None:
                     try:
                         puzzle = analyze_game(server, engine, game)
                         if puzzle is not None:
-                            print(f'v{version} {args.file} {util.avg_knps()} knps, Game {games}')
+                            logger.info(f'v{version} {args.file} {util.avg_knps()} knps, Game {games}')
                             server.post(game_id, puzzle)
                     except Exception as e:
                         logger.error("Exception on {}: {}".format(game_id, e))
