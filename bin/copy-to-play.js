@@ -22,7 +22,10 @@ function process(buf) {
         // 40 meganodes
         p.generator < 13 ? -10 : (
           // 0.64 win diff
-          p.generator < 22 ? -5 : 1
+          p.generator < 22 ? -5 : (
+            // 0.70 win diff
+            p.generator < 31 ? 1 : 2
+          )
         )
       )
     ),
