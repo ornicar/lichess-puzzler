@@ -21,7 +21,7 @@ version = 31
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
-get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 40_000_000)
+get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 30_000_000)
 mate_soon = Mate(15)
 allow_one_mater = False
 allow_one_mover = False
@@ -204,7 +204,7 @@ def parse_args() -> argparse.Namespace:
         prog='generator.py',
         description='takes a pgn file and produces chess puzzles')
     parser.add_argument("--file", "-f", help="input PGN file", required=True, metavar="FILE.pgn")
-    parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
+    parser.add_argument("--engine", "-e", help="analysis engine", default="./stockfish")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
     parser.add_argument("--url", "-u", help="URL where to post puzzles", default="http://localhost:8000")
     parser.add_argument("--token", help="Server secret token", default="changeme")
