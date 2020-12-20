@@ -16,7 +16,7 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 30
+version = 31
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -31,13 +31,13 @@ def is_valid_attack(pair: NextMovePair, engine: SimpleEngine) -> bool:
     return (
         pair.second is None or 
         is_valid_mate_in_one(pair, engine) or 
-        win_chances(pair.best.score) > win_chances(pair.second.score) + 0.64
+        win_chances(pair.best.score) > win_chances(pair.second.score) + 0.7
     )
 
 def is_valid_mate_in_one(pair: NextMovePair, engine: SimpleEngine) -> bool:
     if pair.best.score != Mate(1):
         return False
-    non_mate_win_threshold = 0.5
+    non_mate_win_threshold = 0.6
     if not pair.second or win_chances(pair.second.score) <= non_mate_win_threshold:
         return True
     if pair.second.score == Mate(1):
@@ -173,7 +173,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
         mate_solution = cook_mate(engine, copy.deepcopy(node), winner)
         server.set_seen(node.game())
         return Puzzle(node, mate_solution, 999999999) if mate_solution is not None else score
-    elif score >= Cp(200) and win_chances(score) > win_chances(prev_score) + 0.5:
+    elif score >= Cp(200) and win_chances(score) > win_chances(prev_score) + 0.6:
         if score < Cp(400) and material_diff(board, winner) > -1:
             logger.info("Not clearly winning and not from being down in material, aborting")
             return score
