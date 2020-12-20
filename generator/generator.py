@@ -230,7 +230,7 @@ def main() -> None:
     args = parse_args()
     if args.verbose == 2:
         logger.setLevel(logging.DEBUG)
-    elif args.verbose == 1:
+    else:
         logger.setLevel(logging.INFO)
     engine = make_engine(args.engine, args.threads)
     server = Server(logger, args.url, args.token, version)
