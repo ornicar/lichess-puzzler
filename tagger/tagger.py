@@ -62,6 +62,9 @@ if __name__ == "__main__":
                 except Exception as e:
                     print(doc)
                     logger.error(e)
+                    engine.close()
+                    exit(1)
+            engine.close()
         with Pool(processes=threads) as pool:
             for i in range(int(args.threads)):
                 Process(target=cruncher, args=(i,)).start()
