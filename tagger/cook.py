@@ -265,7 +265,8 @@ def quiet_move(puzzle: Puzzle) -> bool:
             # no capture made or threatened
             not util.is_capture(node) and not util.attacked_opponent_pieces(node.board(), node.move.to_square, puzzle.pov) and
             # no advanced pawn push
-            not util.is_advanced_pawn_move(node)
+            not util.is_advanced_pawn_move(node) and
+            util.moved_piece_type(node) != KING
         ):
             return True
     return False
