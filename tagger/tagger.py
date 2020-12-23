@@ -137,7 +137,7 @@ if __name__ == "__main__":
                         "$set": {
                             "p": id,
                             "d": datetime.now(),
-                            "e": 50,
+                            "e": 100,
                             "t": new_tags
                         }
                     }, upsert = True);
