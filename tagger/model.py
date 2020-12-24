@@ -44,6 +44,7 @@ TagKind = Literal[
     "queensideAttack",
     "quietMove",
     "rookEndgame",
+    "queenRookEndgame",
     "sacrifice",
     "short",
     "simplification",

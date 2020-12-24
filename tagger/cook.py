@@ -2,7 +2,7 @@ import logging
 
 from typing import List, Optional
 import chess
-from chess import square_rank, square_file, SquareSet, Piece, PieceType, square_distance
+from chess import square_rank, square_file, Board, SquareSet, Piece, PieceType, square_distance
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
 from chess import WHITE, BLACK
 from chess.pgn import ChildNode
@@ -15,7 +15,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%
 logger.setLevel(logging.INFO)
 
 def log(puzzle: Puzzle) -> None:
-    logger.info("http://godot.lichess.ovh:9371/puzzle/{}".format(puzzle.id))
+    logger.info("https://lichess.org/training/{}".format(puzzle.id))
 
 def cook(puzzle: Puzzle) -> List[TagKind]:
     tags : List[TagKind] = []
@@ -118,6 +118,8 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
         tags.append("bishopEndgame")
     elif piece_endgame(puzzle, KNIGHT):
         tags.append("knightEndgame")
+    elif queen_rook_endgame(puzzle):
+        tags.append("queenRookEndgame")
 
     if "backRankMate" not in tags and "fork" not in tags:
         if kingside_attack(puzzle):
@@ -642,6 +644,16 @@ def piece_endgame(puzzle: Puzzle, piece_type: PieceType) -> bool:
             if not piece.piece_type in [KING, PAWN, piece_type]:
                 return False
     return True
+
+def queen_rook_endgame(puzzle: Puzzle) -> bool:
+    def test(board: Board) -> bool:
+        pieces = board.piece_map().values()
+        return (
+            len([p for p in pieces if p.piece_type == QUEEN]) == 1 and
+            any(p.piece_type == ROOK for p in pieces) and
+            all(p.piece_type in [QUEEN, ROOK, PAWN, KING] for p in pieces)
+        )
+    return all(test(puzzle.mainline[i].board()) for i in [0, 1])
 
 def smothered_mate(puzzle: Puzzle) -> bool:
     board = puzzle.game.end().board()
