@@ -1,6 +1,8 @@
 const buildColl = db.puzzle2;
 const playColl = db.puzzle2_puzzle;
 
+const blacklist = 'aZA2E'.split(' ');
+
 buffer = [];
 
 function process(buf) {
@@ -25,7 +27,7 @@ function process(buf) {
   if (missing.length) playColl.insertMany(missing, {ordered:false});
 }
 
-buildColl.find({'review.approved':{$ne:false}}).forEach(p => {
+buildColl.find({'review.approved':{$ne:false},_id:{$nin:blacklist}}).forEach(p => {
   if (p.moves.length < 2) return;
   buffer.push(p);
   if (buffer.length >= 1000) {
@@ -35,3 +37,5 @@ buildColl.find({'review.approved':{$ne:false}}).forEach(p => {
 });
 
 process(buffer);
+
+playColl.remove({_id:{$in:blacklist}});
