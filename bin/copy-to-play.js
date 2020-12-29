@@ -1,7 +1,7 @@
 const buildColl = db.puzzle2;
 const playColl = db.puzzle2_puzzle;
 
-const blacklist = 'aZA2E'.split(' ');
+const blacklist = 'aZA2E DGRGq IAmuX'.split(' ');
 
 buffer = [];
 
