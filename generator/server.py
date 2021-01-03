@@ -7,8 +7,8 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 retry_strategy = Retry(
-    total=12,
-    backoff_factor=2,
+    total=False,
+    backoff_factor=1,
     status_forcelist=[429, 500, 502, 503, 504],
     method_whitelist=["GET", "POST"]
 )

@@ -16,7 +16,7 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 31
+version = 32
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -25,6 +25,7 @@ get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 30_000_000)
 mate_soon = Mate(15)
 allow_one_mater = False
 allow_one_mover = False
+master_blitz = True
 
 # is pair.best the only continuation?
 def is_valid_attack(pair: NextMovePair, engine: SimpleEngine) -> bool:
@@ -209,6 +210,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--url", "-u", help="URL where to post puzzles", default="http://localhost:8000")
     parser.add_argument("--token", help="Server secret token", default="changeme")
     parser.add_argument("--skip", help="How many games to skip from the source", default="0")
+    parser.add_argument('--master', help="Only master blitz games", dest='master', default=False, action='store_true')
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
 
     return parser.parse_args()
@@ -236,6 +238,7 @@ def main() -> None:
     server = Server(logger, args.url, args.token, version)
     games = 0
     site = "?"
+    has_master = False
     skip = int(args.skip)
     logger.info("Skipping first {} games".format(skip))
 
@@ -248,11 +251,16 @@ def main() -> None:
                 if line.startswith("[Site "):
                     site = line
                     games = games + 1
+                    has_master = False
                 elif games < skip:
                     continue
-                elif util.exclude_time_control(line) or util.exclude_rating(line):
+                elif line.startswith("[WhiteTitle ") or line.startswith("[BlackTitle "):
+                    has_master = True
+                elif has_master and util.exclude_master_time_control(line):
                     skip_next = True
-                elif line.startswith("1. ") and skip_next:
+                elif not has_master and (util.exclude_time_control(line) or util.exclude_rating(line)):
+                    skip_next = True
+                elif line.startswith("1. ") and (skip_next or (args.master and not has_master)):
                     logger.debug("Skip {}".format(site))
                     skip_next = False
                 elif "%eval" in line:
@@ -260,7 +268,7 @@ def main() -> None:
                     assert(game)
                     game_id = game.headers.get("Site", "?")[20:]
                     if server.is_seen(game_id):
-                        logger.info("Game was already seen before, skipping a bunch")
+                        logger.info(f'Game was already seen before, skipping a bunch - {games}')
                         skip = games + 1000
                         continue
 
