@@ -47,23 +47,20 @@ def win_chances(score: Score) -> float:
 
 CORRESP_TIME = 999999
 
-def read_game_time(line: str):
+def reject_by_time_control(line: str, has_master: bool, master_only: bool) -> bool:
     if not line.startswith("[TimeControl "):
-        return None
+        return False
+    if master_only and not has_master:
+        return True
     try:
         seconds, increment = line[1:][:-2].split()[1].replace("\"", "").split("+")
-        return int(seconds) + int(increment) * 40
+        total = int(seconds) + int(increment) * 40
+        if master_only:
+            return total < 160 or total >= 480
+        else:
+            return total < (160 if has_master else 480)
     except:
-        # correspondence probably
-        return CORRESP_TIME
-
-def exclude_time_control(line: str) -> bool:
-    t = read_game_time(line)
-    return t == CORRESP_TIME or (t and t < 480)
-
-def exclude_master_time_control(line: str) -> bool:
-    t = read_game_time(line)
-    return t == CORRESP_TIME or (t and (t < 160 or t >=480))
+        return True
 
 def exclude_rating(line: str) -> bool:
     if not line.startswith("[WhiteElo ") and not line.startswith("[BlackElo "):
