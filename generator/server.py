@@ -7,8 +7,8 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 retry_strategy = Retry(
-    total=False,
-    backoff_factor=1,
+    total=999999999,
+    backoff_factor=0.1,
     status_forcelist=[429, 500, 502, 503, 504],
     method_whitelist=["GET", "POST"]
 )
@@ -16,6 +16,8 @@ adapter = HTTPAdapter(max_retries=retry_strategy)
 http = requests.Session()
 http.mount("https://", adapter)
 http.mount("http://", adapter)
+
+TIMEOUT = 5
 
 class Server:
 
@@ -29,7 +31,7 @@ class Server:
         if not self.url:
             return False
         try:
-            status = http.get(self._seen_url(id)).status_code
+            status = http.get(self._seen_url(id), timeout = TIMEOUT).status_code
             return status == 200
         except Exception as e:
             self.logger.error(e)
@@ -38,7 +40,7 @@ class Server:
     def set_seen(self, game: Game) -> None:
         try:
             if self.url:
-                http.post(self._seen_url(game.headers.get("Site", "?")[20:]))
+                http.post(self._seen_url(game.headers.get("Site", "?")[20:]), timeout = TIMEOUT)
         except Exception as e:
             self.logger.error(e)
 
@@ -47,7 +49,7 @@ class Server:
             return False
         id = urllib.parse.quote(f"{node.parent.board().fen()}:{node.uci()}")
         try:
-            status = http.get(self._seen_url(id)).status_code
+            status = http.get(self._seen_url(id), timeout = TIMEOUT).status_code
             return status == 200
         except Exception as e:
             self.logger.error(e)
