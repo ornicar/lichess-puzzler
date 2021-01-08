@@ -5,7 +5,7 @@ from multiprocessing import Process, Queue, Pool, Manager
 from datetime import datetime
 from chess import Move, Board
 from chess.pgn import Game, GameNode
-from chess.engine import SimpleEngine
+from chess.engine import SimpleEngine, Mate, Cp
 from typing import List, Tuple, Dict, Any
 from model import Puzzle, TagKind
 import cook
@@ -27,7 +27,7 @@ def read(doc) -> Puzzle:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='tagger.py', description='automatically tags lichess puzzles')
     parser.add_argument("--zug", "-z", help="only zugzwang", action="store_true")
-    parser.add_argument("--eval", "-e", help="only evals", action="store_true")
+    parser.add_argument("--bad_mate", "-e", help="find bad mates", action="store_true")
     parser.add_argument("--dry", "-d", help="dry run", action="store_true")
     parser.add_argument("--all", "-a", help="don't skip existing", action="store_true")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
@@ -70,34 +70,32 @@ if __name__ == "__main__":
                 Process(target=cruncher, args=(i,)).start()
         exit(0)
 
-    if args.eval:
+    if args.bad_mate:
         threads = int(args.threads)
         def cruncher(thread_id: int):
             eval_nb = 0
-            build_coll = pymongo.MongoClient()['puzzler']['puzzle2']
+            db = pymongo.MongoClient()['puzzler']
+            bad_coll = db['puzzle2_bad_maybe']
+            play_coll = db['puzzle2_puzzle']
             engine = SimpleEngine.popen_uci('./stockfish')
             engine.configure({'Threads': 4})
-            engine_limit = chess.engine.Limit(depth = 30, time = 15, nodes = 12_000_000)
-            for doc in build_coll.find({"cp": None}):
+            for doc in bad_coll.find({"bad": {"$exists":False}}):
                 try:
                     if ord(doc["_id"][4]) % threads != thread_id:
                         continue
+                    doc = play_coll.find_one({'_id': doc['_id']})
+                    if not doc:
+                        continue
                     puzzle = read(doc)
-                    board = puzzle.game.end().board()
-                    if board.is_checkmate():
-                        cp = 999999999
-                        eval_nb += 1
-                        logger.info(f'{thread_id} {eval_nb} {puzzle.id}: mate')
-                    else:
-                        info = engine.analyse(board, limit = engine_limit)
-                        score = info["score"].pov(puzzle.pov)
-                        score_cp = score.score()
-                        cp = 999999999 if score.is_mate() else (999999998 if score_cp is None else score_cp)
-                        eval_nb += 1
-                        logger.info(f'{thread_id} {eval_nb} {puzzle.id}: {cp} knps: {int(info["nps"] / 1000)} kn: {int(info["nodes"] / 1000)} depth: {info["depth"]} time: {info["time"]}')
-                    build_coll.update_one({"_id":puzzle.id},{"$set":{"cp":cp}})
+                    board = puzzle.mainline[len(puzzle.mainline) - 2].board()
+                    info = engine.analyse(board, multipv = 5, limit = chess.engine.Limit(nodes = 30_000_000))
+                    bad = False
+                    for score in [pv["score"].pov(puzzle.pov) for pv in info]:
+                        if score < Mate(1) and score > Cp(250):
+                            bad = True
+                    # logger.info(puzzle.id)
+                    bad_coll.update_one({"_id":puzzle.id},{"$set":{"bad":bad}})
                 except Exception as e:
-                    print(doc)
                     logger.error(e)
         with Pool(processes=threads) as pool:
             for i in range(int(args.threads)):
