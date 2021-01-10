@@ -24,8 +24,6 @@ logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 30_000_000)
 mate_soon = Mate(15)
 allow_one_mater = False
-allow_one_mover = False
-master_blitz = True
 
 # is pair.best the only continuation?
 def is_valid_attack(pair: NextMovePair, engine: SimpleEngine) -> bool:
@@ -163,7 +161,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
     if is_up_in_material(board, winner):
         logger.debug("{} already up in material {} {} {}".format(node.ply(), winner, material_count(board, winner), material_count(board, not winner)))
         return score
-    elif score >= Mate(1) and not allow_one_mover and not allow_one_mater:
+    elif score >= Mate(1) and not allow_one_mater:
         logger.debug("{} mate in one".format(node.ply()))
         return score
     elif score > mate_soon:
@@ -191,7 +189,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
             if not solution[-1].second:
                 logger.debug("Remove final only-move")
             solution = solution[:-1]
-        if not solution or (len(solution) == 1 and not allow_one_mover):
+        if not solution or len(solution) == 1:
             logger.debug("Discard one-mover")
             return score
         cp = solution[len(solution) - 1].best.score.score()
