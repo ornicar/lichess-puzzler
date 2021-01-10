@@ -16,14 +16,14 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 33
+version = 34
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 30_000_000)
 mate_soon = Mate(15)
-allow_one_mater = True
+allow_one_mater = False
 allow_one_mover = False
 master_blitz = True
 
