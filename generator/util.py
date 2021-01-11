@@ -68,4 +68,4 @@ def exclude_rating(line: str) -> bool:
     try:
         return int(line[11:15]) < 1600
     except:
-        return False
+        return True
