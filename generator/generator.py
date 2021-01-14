@@ -252,7 +252,10 @@ def main() -> None:
                     has_master = False
                 elif games < skip:
                     continue
-                elif line.startswith("[WhiteTitle ") or line.startswith("[BlackTitle "):
+                elif (
+                        (line.startswith("[WhiteTitle ") or line.startswith("[BlackTitle ")) and
+                        "BOT" not in line
+                    ):
                     has_master = True
                 elif util.reject_by_time_control(line, has_master = has_master, master_only = args.master):
                     skip_next = True
