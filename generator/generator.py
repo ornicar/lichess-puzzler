@@ -209,6 +209,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--token", help="Server secret token", default="changeme")
     parser.add_argument("--skip", help="How many games to skip from the source", default="0")
     parser.add_argument('--master', help="Only master blitz games", dest='master', default=False, action='store_true')
+    parser.add_argument('--bullet', help="Only master bullet games (for supergms)", dest='bullet', default=False, action='store_true')
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
 
     return parser.parse_args()
@@ -228,6 +229,7 @@ def open_file(file: str):
 def main() -> None:
     sys.setrecursionlimit(10000) # else node.deepcopy() sometimes fails?
     args = parse_args()
+    args.master = args.master or args.bullet
     if args.verbose == 2:
         logger.setLevel(logging.DEBUG)
     else:
@@ -257,7 +259,7 @@ def main() -> None:
                         "BOT" not in line
                     ):
                     has_master = True
-                elif util.reject_by_time_control(line, has_master = has_master, master_only = args.master):
+                elif util.reject_by_time_control(line, has_master = has_master, master_only = args.master, bullet = args.bullet):
                     skip_next = True
                 elif util.exclude_rating(line):
                     skip_next = True

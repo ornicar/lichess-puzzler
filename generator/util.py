@@ -47,7 +47,7 @@ def win_chances(score: Score) -> float:
 
 CORRESP_TIME = 999999
 
-def reject_by_time_control(line: str, has_master: bool, master_only: bool) -> bool:
+def reject_by_time_control(line: str, has_master: bool, master_only: bool, bullet: bool) -> bool:
     if not line.startswith("[TimeControl "):
         return False
     if master_only and not has_master:
@@ -56,7 +56,10 @@ def reject_by_time_control(line: str, has_master: bool, master_only: bool) -> bo
         seconds, increment = line[1:][:-2].split()[1].replace("\"", "").split("+")
         total = int(seconds) + int(increment) * 40
         if master_only:
-            return total < 160 or total >= 480
+            if bullet:
+                return total < 30 or total >= 160
+            else:
+                return total < 160 or total >= 480
         else:
             return total < (160 if has_master else 480)
     except:
