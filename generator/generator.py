@@ -16,7 +16,7 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 36
+version = 37
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -263,6 +263,8 @@ def main() -> None:
                     skip_next = True
                 elif util.exclude_rating(line):
                     skip_next = True
+                elif line.startswith("[Variant ") and not line.startswith("[Variant \"Standard\"]"):
+                    skip_next = True
                 elif line.startswith("1. ") and (skip_next or (args.master and not has_master)):
                     logger.debug("Skip {}".format(site))
                     skip_next = False
@@ -271,8 +273,9 @@ def main() -> None:
                     assert(game)
                     game_id = game.headers.get("Site", "?")[20:]
                     if server.is_seen(game_id):
-                        logger.info(f'Game was already seen before, skipping a bunch - {games}')
-                        skip = games + 1000
+                        to_skip = (0 if args.bullet or args.master else 500)
+                        logger.info(f'Game was already seen before, skipping {to_skip} - {games}')
+                        skip = games + to_skip
                         continue
 
                     try:
