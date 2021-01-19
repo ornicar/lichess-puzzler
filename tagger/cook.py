@@ -1,6 +1,7 @@
 import logging
+from os import posix_fadvise
 
-from typing import List, Optional
+from typing import List, Optional, Union
 import chess
 from chess import square_rank, square_file, Board, SquareSet, Piece, PieceType, square_distance
 from chess import KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN
@@ -32,6 +33,12 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
             tags.append("anastasiaMate")
         elif hook_mate(puzzle):
             tags.append("hookMate")
+        elif arabian_mate(puzzle):
+            tags.append("arabianMate")
+        else:
+            found = boden_or_double_bishop_mate(puzzle)
+            if found:
+                tags.append(found)
     elif puzzle.cp > 600:
         tags.append("crushing")
     elif puzzle.cp > 200:
@@ -675,6 +682,38 @@ def hook_mate(puzzle: Puzzle) -> bool:
                         return True
     return False
 
+def arabian_mate(puzzle: Puzzle) -> bool:
+    node = puzzle.game.end()
+    board = node.board()
+    king = board.king(not puzzle.pov)
+    assert king is not None
+    assert isinstance(node, ChildNode)
+    if square_file(king) in [0, 7] and square_rank(king) in [0, 7] and util.moved_piece_type(node) == ROOK and square_distance(node.move.to_square, king) == 1:
+        for knight_square in board.attackers(puzzle.pov, node.move.to_square):
+            knight = board.piece_at(knight_square)
+            if knight and knight.piece_type == KNIGHT and (
+                abs(square_rank(knight_square) - square_rank(king)) == 2 and
+                abs(square_file(knight_square) - square_file(king)) == 2
+            ):
+                return True
+    return False
+
+def boden_or_double_bishop_mate(puzzle: Puzzle) -> Optional[TagKind]:
+    node = puzzle.game.end()
+    board = node.board()
+    king = board.king(not puzzle.pov)
+    assert king is not None
+    assert isinstance(node, ChildNode)
+    bishop_squares = list(board.pieces(BISHOP, puzzle.pov))
+    if len(bishop_squares) < 2:
+        return None
+    for square in [s for s in SquareSet(chess.BB_ALL) if square_distance(s, king) < 2]:
+        if not all([p.piece_type == BISHOP for p in util.attacker_pieces(board, puzzle.pov, square)]):
+            return None
+    if (square_file(bishop_squares[0]) < square_file(king)) == (square_file(bishop_squares[1]) > square_file(king)):
+        return "bodenMate"
+    else:
+        return "doubleBishopMate"
 
 def piece_endgame(puzzle: Puzzle, piece_type: PieceType) -> bool:
     for board in [puzzle.mainline[i].board() for i in [0, 1]]:

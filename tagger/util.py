@@ -122,6 +122,9 @@ def is_trapped(board: Board, square: Square) -> bool:
             board.pop()
     return True
 
+def attacker_pieces(board: Board, color: Color, square: Square) -> List[Piece]:
+    return [p for p in [board.piece_at(s) for s in board.attackers(color, square)] if p]
+
 # def takers(board: Board, square: Square) -> List[Tuple[Piece, Square]]:
 #     # pieces that can legally take on a square
 #     t = []
