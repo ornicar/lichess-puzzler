@@ -28,6 +28,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
             tags.append("smotheredMate")
         elif back_rank_mate(puzzle):
             tags.append("backRankMate")
+        elif anastasia_mate(puzzle):
+            log(puzzle)
+            tags.append("anastasiaMate")
     elif puzzle.cp > 600:
         tags.append("crushing")
     elif puzzle.cp > 200:
@@ -241,9 +244,9 @@ def discovered_attack(puzzle: Puzzle) -> bool:
                 return False
             prev = node.parent.parent
             assert isinstance(prev, ChildNode)
-            if (prev.move.from_square in between and 
-                node.move.to_square != prev.move.to_square and 
-                node.move.from_square != prev.move.to_square and 
+            if (prev.move.from_square in between and
+                node.move.to_square != prev.move.to_square and
+                node.move.from_square != prev.move.to_square and
                 not util.is_castling(prev)
             ):
                 return True
@@ -634,6 +637,25 @@ def back_rank_mate(puzzle: Puzzle) -> bool:
             if piece is None or piece.color == puzzle.pov or board.attackers(puzzle.pov, square):
                 return False
         return any(square_rank(checker) == back_rank for checker in board.checkers())
+    return False
+
+def anastasia_mate(puzzle: Puzzle) -> bool:
+    node = puzzle.game.end()
+    board = node.board()
+    king = board.king(not puzzle.pov)
+    assert king is not None
+    assert isinstance(node, ChildNode)
+    if square_file(king) in [0, 7] and square_rank(king) not in [0, 7]:
+        if square_file(node.move.to_square) == square_file(king) and util.moved_piece_type(node) in [QUEEN, ROOK]:
+            if square_file(king) != 0:
+                board.apply_transform(chess.flip_horizontal)
+            king = board.king(not puzzle.pov)
+            assert king is not None
+            blocker = board.piece_at(king + 1)
+            if blocker is not None and blocker.color != puzzle.pov:
+                knight = board.piece_at(king + 3)
+                if knight is not None and knight.color == puzzle.pov and knight.piece_type == KNIGHT:
+                    return True
     return False
 
 def piece_endgame(puzzle: Puzzle, piece_type: PieceType) -> bool:

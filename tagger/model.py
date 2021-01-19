@@ -6,6 +6,7 @@ from typing import List, Literal, Optional
 TagKind = Literal[
     "advancedPawn",
     "advantage",
+    "anastasiaMate",
     "attackingF2F7",
     "attraction",
     "backRankMate",
