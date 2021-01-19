@@ -39,6 +39,8 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
             found = boden_or_double_bishop_mate(puzzle)
             if found:
                 tags.append(found)
+            elif dovetail_mate(puzzle):
+                tags.append("dovetailMate")
     elif puzzle.cp > 600:
         tags.append("crushing")
     elif puzzle.cp > 200:
@@ -714,6 +716,31 @@ def boden_or_double_bishop_mate(puzzle: Puzzle) -> Optional[TagKind]:
         return "bodenMate"
     else:
         return "doubleBishopMate"
+
+def dovetail_mate(puzzle: Puzzle) -> bool:
+    node = puzzle.game.end()
+    board = node.board()
+    king = board.king(not puzzle.pov)
+    assert king is not None
+    assert isinstance(node, ChildNode)
+    if square_file(king) in [0, 7] or square_rank(king) in [0, 7]:
+        return False
+    queen_square = node.move.to_square
+    if (util.moved_piece_type(node) != QUEEN or 
+        square_file(queen_square) == square_file(king) or 
+        square_rank(queen_square) == square_rank(king) or 
+        square_distance(queen_square, king) > 1):
+        return False
+    for square in [s for s in SquareSet(chess.BB_ALL) if square_distance(s, king) == 1]:
+        if square == queen_square:
+            continue
+        attackers = list(board.attackers(puzzle.pov, square))
+        if attackers == [queen_square]:
+            if board.piece_at(square):
+                return False
+        elif attackers:
+            return False
+    return True
 
 def piece_endgame(puzzle: Puzzle, piece_type: PieceType) -> bool:
     for board in [puzzle.mainline[i].board() for i in [0, 1]]:

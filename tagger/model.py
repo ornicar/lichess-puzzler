@@ -23,6 +23,7 @@ TagKind = Literal[
     "deflection",
     "doubleBishopMate",
     "doubleCheck",
+    "dovetailMate",
     "equality",
     "enPassant",
     "exposedKing",
