@@ -25,6 +25,7 @@ TagKind = Literal[
     "exposedKing",
     "fork",
     "hangingPiece",
+    "hookMate",
     "interference",
     "intermezzo",
     "kingsideAttack",

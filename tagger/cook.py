@@ -29,8 +29,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
         elif back_rank_mate(puzzle):
             tags.append("backRankMate")
         elif anastasia_mate(puzzle):
-            log(puzzle)
             tags.append("anastasiaMate")
+        elif hook_mate(puzzle):
+            tags.append("hookMate")
     elif puzzle.cp > 600:
         tags.append("crushing")
     elif puzzle.cp > 200:
@@ -657,6 +658,23 @@ def anastasia_mate(puzzle: Puzzle) -> bool:
                 if knight is not None and knight.color == puzzle.pov and knight.piece_type == KNIGHT:
                     return True
     return False
+
+def hook_mate(puzzle: Puzzle) -> bool:
+    node = puzzle.game.end()
+    board = node.board()
+    king = board.king(not puzzle.pov)
+    assert king is not None
+    assert isinstance(node, ChildNode)
+    if util.moved_piece_type(node) == ROOK and square_distance(node.move.to_square, king) == 1:
+        for rook_defender_square in board.attackers(puzzle.pov, node.move.to_square):
+            defender = board.piece_at(rook_defender_square)
+            if defender and defender.piece_type == KNIGHT and square_distance(rook_defender_square, king) == 1:
+                for knight_defender_square in board.attackers(puzzle.pov, rook_defender_square):
+                    pawn = board.piece_at(knight_defender_square)
+                    if pawn and pawn.piece_type == PAWN:
+                        return True
+    return False
+
 
 def piece_endgame(puzzle: Puzzle, piece_type: PieceType) -> bool:
     for board in [puzzle.mainline[i].board() for i in [0, 1]]:
