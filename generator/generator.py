@@ -265,7 +265,7 @@ def main() -> None:
                     has_master = True
                 elif util.reject_by_time_control(line, has_master = has_master, master_only = args.master, bullet = args.bullet, mates = args.mates):
                     skip_next = True
-                elif util.exclude_rating(line):
+                elif util.exclude_rating(line, args.mates):
                     skip_next = True
                 elif line.startswith("[Variant ") and not line.startswith("[Variant \"Standard\"]"):
                     skip_next = True

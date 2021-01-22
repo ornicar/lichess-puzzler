@@ -65,10 +65,10 @@ def reject_by_time_control(line: str, has_master: bool, master_only: bool, bulle
     except:
         return True
 
-def exclude_rating(line: str) -> bool:
+def exclude_rating(line: str, mates: bool) -> bool:
     if not line.startswith("[WhiteElo ") and not line.startswith("[BlackElo "):
         return False
     try:
-        return int(line[11:15]) < 1600
+        return int(line[11:15]) < (1501 if mates else 1600)
     except:
         return True
