@@ -173,7 +173,8 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
             logger.debug("Skip duplicate position")
             return score
         mate_solution = cook_mate(engine, copy.deepcopy(node), winner)
-        server.set_seen(node.game())
+        if not args.mates:
+            server.set_seen(node.game())
         return Puzzle(node, mate_solution, 999999999) if mate_solution is not None else score
     elif score >= Cp(200) and win_chances(score) > win_chances(prev_score) + 0.6:
         if score < Cp(400) and material_diff(board, winner) > -1:
@@ -276,7 +277,7 @@ def main() -> None:
                     game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
                     assert(game)
                     game_id = game.headers.get("Site", "?")[20:]
-                    if server.is_seen(game_id):
+                    if not args.mates and server.is_seen(game_id):
                         to_skip = (0 if args.bullet or args.master or args.mates else 5000)
                         logger.info(f'Game was already seen before, skipping {to_skip} - {games}')
                         skip = games + to_skip
