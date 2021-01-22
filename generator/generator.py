@@ -16,7 +16,7 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 37
+version = 38
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -116,7 +116,7 @@ def cook_advantage(engine: SimpleEngine, node: ChildNode, winner: Color) -> Opti
     return [next] + follow_up
 
 
-def analyze_game(server: Server, engine: SimpleEngine, game: Game) -> Optional[Puzzle]:
+def analyze_game(server: Server, engine: SimpleEngine, game: Game, args: argparse.Namespace) -> Optional[Puzzle]:
 
     logger.debug("Analyzing game {}...".format(game.headers.get("Site")))
 
@@ -130,7 +130,7 @@ def analyze_game(server: Server, engine: SimpleEngine, game: Game) -> Optional[P
             logger.debug("Skipping game without eval on ply {}".format(node.ply()))
             return None
 
-        result = analyze_position(server, engine, node, prev_score, current_eval)
+        result = analyze_position(server, engine, node, prev_score, current_eval, args)
 
         if isinstance(result, Puzzle):
             return result
@@ -142,13 +142,16 @@ def analyze_game(server: Server, engine: SimpleEngine, game: Game) -> Optional[P
     return None
 
 
-def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev_score: Score, current_eval: PovScore) -> Union[Puzzle, Score]:
+def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev_score: Score, current_eval: PovScore, args: argparse.Namespace) -> Union[Puzzle, Score]:
 
     board = node.board()
     winner = board.turn
     score = current_eval.pov(winner)
 
     if board.legal_moves.count() < 2:
+        return score
+
+    if args.mates and (not score.is_mate() or score > Mate(3) or score < mate_soon):
         return score
 
     game_url = node.game().headers.get("Site")
@@ -209,6 +212,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--token", help="Server secret token", default="changeme")
     parser.add_argument("--skip", help="How many games to skip from the source", default="0")
     parser.add_argument('--master', help="Only master blitz games", dest='master', default=False, action='store_true')
+    parser.add_argument('--mates', help="Only mates in 3+, looking in blitz games", dest='mates', default=False, action='store_true')
     parser.add_argument('--bullet', help="Only master bullet games (for supergms)", dest='bullet', default=False, action='store_true')
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
 
@@ -259,7 +263,7 @@ def main() -> None:
                         "BOT" not in line
                     ):
                     has_master = True
-                elif util.reject_by_time_control(line, has_master = has_master, master_only = args.master, bullet = args.bullet):
+                elif util.reject_by_time_control(line, has_master = has_master, master_only = args.master, bullet = args.bullet, mates = args.mates):
                     skip_next = True
                 elif util.exclude_rating(line):
                     skip_next = True
@@ -273,13 +277,13 @@ def main() -> None:
                     assert(game)
                     game_id = game.headers.get("Site", "?")[20:]
                     if server.is_seen(game_id):
-                        to_skip = (0 if args.bullet or args.master else 500)
+                        to_skip = (0 if args.bullet or args.master or args.mates else 5000)
                         logger.info(f'Game was already seen before, skipping {to_skip} - {games}')
                         skip = games + to_skip
                         continue
 
                     try:
-                        puzzle = analyze_game(server, engine, game)
+                        puzzle = analyze_game(server, engine, game, args)
                         if puzzle is not None:
                             logger.info(f'v{version} {args.file} {util.avg_knps()} knps, Game {games}')
                             server.post(game_id, puzzle)
