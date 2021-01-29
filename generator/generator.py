@@ -16,14 +16,14 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 38
+version = 39
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
 get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 30_000_000)
 mate_soon = Mate(15)
-allow_one_mater = False
+allow_one_mater = True
 
 # is pair.best the only continuation?
 def is_valid_attack(pair: NextMovePair, engine: SimpleEngine) -> bool:
@@ -151,7 +151,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
     if board.legal_moves.count() < 2:
         return score
 
-    if args.mates and (not score.is_mate() or score > Mate(3) or score < mate_soon):
+    if args.mates and (not score.is_mate() or score > Mate(1 if allow_one_mater else 2) or score < mate_soon):
         return score
 
     game_url = node.game().headers.get("Site")
