@@ -16,22 +16,16 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 39
+version = 40
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
-get_move_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 30_000_000)
-mate_soon = Mate(15)
-allow_one_mater = True
+pair_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 30_000_000)
+mate_defense_limit = chess.engine.Limit(depth = 15, time = 10, nodes = 10_000_000)
 
-# is pair.best the only continuation?
-def is_valid_attack(pair: NextMovePair, engine: SimpleEngine) -> bool:
-    return (
-        pair.second is None or 
-        is_valid_mate_in_one(pair, engine) or 
-        win_chances(pair.best.score) > win_chances(pair.second.score) + 0.7
-    )
+mate_soon = Mate(15)
+allow_one_mater = False
 
 def is_valid_mate_in_one(pair: NextMovePair, engine: SimpleEngine) -> bool:
     if pair.best.score != Mate(1):
@@ -42,78 +36,82 @@ def is_valid_mate_in_one(pair: NextMovePair, engine: SimpleEngine) -> bool:
     if pair.second.score == Mate(1):
         # if there's more than one mate in one, gotta look if the best non-mating move is bad enough
         logger.debug('Looking for best non-mating move...')
-        info = engine.analyse(pair.node.board(), multipv = 5, limit = get_move_limit)
+        info = engine.analyse(pair.node.board(), multipv = 5, limit = pair_limit)
         for score in [pv["score"].pov(pair.winner) for pv in info]:
             if score < Mate(1) and win_chances(score) > non_mate_win_threshold:
                 return False
         return True
     return False
 
-def is_valid_defense(_pair: NextMovePair) -> bool:
-    return True
+# is pair.best the only continuation?
+def is_valid_attack(pair: NextMovePair, engine: SimpleEngine) -> bool:
+    return (
+        pair.second is None or 
+        is_valid_mate_in_one(pair, engine) or 
+        win_chances(pair.best.score) > win_chances(pair.second.score) + 0.7
+    )
 
-def get_next_move(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[NextMovePair]:
-    board = node.board()
-    pair = get_next_move_pair(engine, node, winner, get_move_limit)
-    logger.debug("{} {} {}".format("attack" if board.turn == winner else "defense", pair.best, pair.second))
-    if board.turn == winner and not is_valid_attack(pair, engine):
+def get_next_pair(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[NextMovePair]:
+    pair = get_next_move_pair(engine, node, winner, pair_limit)
+    if node.board().turn == winner and not is_valid_attack(pair, engine):
         logger.debug("No valid attack {}".format(pair))
-        return None
-    if board.turn != winner and not is_valid_defense(pair):
-        logger.debug("No valid defense {}".format(pair))
         return None
     return pair
 
-def cook_mate(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[List[Move]]:
+def get_next_move(engine: SimpleEngine, node: ChildNode, limit: chess.engine.Limit) -> Optional[Move]:
+    result = engine.play(node.board(), limit = limit)
+    return result.move if result else None
 
-    if node.board().is_game_over():
+def cook_mate(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[List[Move]]:
+    
+    board = node.board()
+
+    if board.is_game_over():
         return []
 
-    pair = get_next_move(engine, node, winner)
+    if board.turn == winner:
+        pair = get_next_pair(engine, node, winner)
+        if not pair:
+            return None
+        if pair.best.score < mate_soon:
+            logger.debug("Best move is not a mate, we're probably not searching deep enough")
+            return None
+        move = pair.best.move
+    else:
+        next = get_next_move(engine, node, mate_defense_limit)
+        if not next:
+            return None
+        move = next
 
-    if not pair:
-        return None
-
-    next = pair.best
-
-    if next.score < mate_soon:
-        logger.debug("Best move is not a mate, we're probably not searching deep enough")
-        return None
-
-    follow_up = cook_mate(engine, node.add_main_variation(next.move), winner)
+    follow_up = cook_mate(engine, node.add_main_variation(move), winner)
 
     if follow_up is None:
         return None
 
-    return [next.move] + follow_up
+    return [move] + follow_up
 
 
 def cook_advantage(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[List[NextMovePair]]:
+    
+    board = node.board()
 
-    if node.board().is_repetition(2):
+    if board.is_repetition(2):
         logger.debug("Found repetition, canceling")
         return None
 
-    next = get_next_move(engine, node, winner)
-
-    if not next:
-        logger.debug("No next move")
-        return []
-
-    if next.best.score.is_mate():
-        logger.debug("Expected advantage, got mate?!")
+    pair = get_next_pair(engine, node, winner)
+    if not pair:
         return None
-
-    if next.best.score < Cp(200):
+    if pair.best.score < Cp(200):
         logger.debug("Not winning enough, aborting")
         return None
 
-    follow_up = cook_advantage(engine, node.add_main_variation(next.best.move), winner)
+    follow_up = cook_advantage(engine, node.add_main_variation(pair.best.move), winner)
 
     if follow_up is None:
         return None
 
-    return [next] + follow_up
+    return [pair] + follow_up
 
 
 def analyze_game(server: Server, engine: SimpleEngine, game: Game, args: argparse.Namespace) -> Optional[Puzzle]:
