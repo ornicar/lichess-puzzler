@@ -19,8 +19,8 @@ echo "Themes"
 cd ~/lichess-puzzler
 ./bin/retag.sh
 
-echo "Masters"
+echo "Players"
 cd ~/lichess-puzzler
-./bin/master-theme.sh
+mongo ./bin/set-players.js
 
 cd ~/lichess-puzzler
