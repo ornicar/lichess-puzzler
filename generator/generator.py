@@ -16,7 +16,7 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 41
+version = 42
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -101,7 +101,7 @@ def cook_advantage(engine: SimpleEngine, node: ChildNode, winner: Color) -> Opti
 
     pair = get_next_pair(engine, node, winner)
     if not pair:
-        return None
+        return []
     if pair.best.score < Cp(200):
         logger.debug("Not winning enough, aborting")
         return None
