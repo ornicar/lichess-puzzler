@@ -16,7 +16,7 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 42
+version = 43
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -194,6 +194,9 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
         if not solution or len(solution) == 1:
             logger.debug("Discard one-mover")
             return score
+        if len(solution) == 3:
+            logger.debug("Discard two-mover")
+            return score
         cp = solution[len(solution) - 1].best.score.score()
         return Puzzle(node, [p.best.move for p in solution], 999999998 if cp is None else cp)
     else:
@@ -275,8 +278,8 @@ def main() -> None:
                     game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
                     assert(game)
                     game_id = game.headers.get("Site", "?")[20:]
-                    if not args.mates and server.is_seen(game_id):
-                        to_skip = (0 if args.bullet or args.master else 1000)
+                    if server.is_seen(game_id):
+                        to_skip = 1000
                         logger.info(f'Game was already seen before, skipping {to_skip} - {games}')
                         skip = games + to_skip
                         continue
