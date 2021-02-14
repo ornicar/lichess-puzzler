@@ -16,7 +16,7 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 43
+version = 44
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -149,7 +149,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
     if board.legal_moves.count() < 2:
         return score
 
-    if args.mates and (not score.is_mate() or score > Mate(1 if allow_one_mater else 3) or score < mate_soon):
+    if args.mates and (not score.is_mate() or score > Mate(1 if allow_one_mater else 2) or score < mate_soon):
         return score
 
     game_url = node.game().headers.get("Site")
