@@ -7,6 +7,10 @@ echo "Games"
 cd ~/lichess-mongo-import
 yarn run puzzle-game-all
 
+echo "Users"
+cd ~/lichess-mongo-import
+yarn run game-user-all
+
 cd ~/lichess-puzzler
 echo "Copy"
 mongo puzzler bin/copy-to-play.js
