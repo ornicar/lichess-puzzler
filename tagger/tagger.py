@@ -39,7 +39,7 @@ if __name__ == "__main__":
             db = pymongo.MongoClient()['puzzler']
             round_coll = db['puzzle2_round']
             play_coll = db['puzzle2_puzzle']
-            engine = SimpleEngine.popen_uci('./stockfish')
+            engine = SimpleEngine.popen_uci('stockfish')
             engine.configure({'Threads': 2})
             for doc in round_coll.aggregate([
                 {"$match":{"_id":{"$regex":"^lichess:"},"t":{"$nin":['+zugzwang','-zugzwang']}}},
