@@ -16,7 +16,7 @@ from typing import List, Optional, Union
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
-version = 44
+version = 47
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -25,7 +25,6 @@ pair_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 30_000_000)
 mate_defense_limit = chess.engine.Limit(depth = 15, time = 10, nodes = 10_000_000)
 
 mate_soon = Mate(15)
-allow_one_mater = False
 
 def is_valid_mate_in_one(pair: NextMovePair, engine: SimpleEngine) -> bool:
     if pair.best.score != Mate(1):
@@ -114,9 +113,9 @@ def cook_advantage(engine: SimpleEngine, node: ChildNode, winner: Color) -> Opti
     return [pair] + follow_up
 
 
-def analyze_game(server: Server, engine: SimpleEngine, game: Game, args: argparse.Namespace) -> Optional[Puzzle]:
+def analyze_game(server: Server, engine: SimpleEngine, game: Game, tier: int) -> Optional[Puzzle]:
 
-    logger.debug("Analyzing game {}...".format(game.headers.get("Site")))
+    logger.debug(f'Analyzing tier {tier} {game.headers.get("Site")}...')
 
     prev_score: Score = Cp(20)
 
@@ -128,7 +127,7 @@ def analyze_game(server: Server, engine: SimpleEngine, game: Game, args: argpars
             logger.debug("Skipping game without eval on ply {}".format(node.ply()))
             return None
 
-        result = analyze_position(server, engine, node, prev_score, current_eval, args)
+        result = analyze_position(server, engine, node, prev_score, current_eval, tier)
 
         if isinstance(result, Puzzle):
             return result
@@ -140,16 +139,13 @@ def analyze_game(server: Server, engine: SimpleEngine, game: Game, args: argpars
     return None
 
 
-def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev_score: Score, current_eval: PovScore, args: argparse.Namespace) -> Union[Puzzle, Score]:
+def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev_score: Score, current_eval: PovScore, tier: int) -> Union[Puzzle, Score]:
 
     board = node.board()
     winner = board.turn
     score = current_eval.pov(winner)
 
     if board.legal_moves.count() < 2:
-        return score
-
-    if args.mates and (not score.is_mate() or score > Mate(1 if allow_one_mater else 2) or score < mate_soon):
         return score
 
     game_url = node.game().headers.get("Site")
@@ -162,7 +158,7 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
     if is_up_in_material(board, winner):
         logger.debug("{} already up in material {} {} {}".format(node.ply(), winner, material_count(board, winner), material_count(board, not winner)))
         return score
-    elif score >= Mate(1) and not allow_one_mater:
+    elif score >= Mate(1) and tier < 3:
         logger.debug("{} mate in one".format(node.ply()))
         return score
     elif score > mate_soon:
@@ -171,9 +167,9 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
             logger.debug("Skip duplicate position")
             return score
         mate_solution = cook_mate(engine, copy.deepcopy(node), winner)
-        if not args.mates:
-            server.set_seen(node.game())
-        return Puzzle(node, mate_solution, 999999999) if mate_solution is not None else score
+        if mate_solution is None or (tier == 1 and len(mate_solution) == 3):
+            return score
+        return Puzzle(node, mate_solution, 999999999)
     elif score >= Cp(200) and win_chances(score) > win_chances(prev_score) + 0.6:
         if score < Cp(400) and material_diff(board, winner) > -1:
             logger.debug("Not clearly winning and not from being down in material, aborting")
@@ -191,10 +187,10 @@ def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev
             if not solution[-1].second:
                 logger.debug("Remove final only-move")
             solution = solution[:-1]
-        if not solution or len(solution) == 1:
+        if not solution or len(solution) == 1 :
             logger.debug("Discard one-mover")
             return score
-        if len(solution) == 3:
+        if tier < 3 and len(solution) == 3:
             logger.debug("Discard two-mover")
             return score
         cp = solution[len(solution) - 1].best.score.score()
@@ -213,10 +209,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--url", "-u", help="URL where to post puzzles", default="http://localhost:8000")
     parser.add_argument("--token", help="Server secret token", default="changeme")
     parser.add_argument("--skip", help="How many games to skip from the source", default="0")
-    parser.add_argument('--master', help="Only master blitz games", dest='master', default=False, action='store_true')
-    parser.add_argument('--mates', help="Only mates in 3+, looking in blitz games", dest='mates', default=False, action='store_true')
-    parser.add_argument('--bullet', help="Only master bullet games (for supergms)", dest='bullet', default=False, action='store_true')
     parser.add_argument("--verbose", "-v", help="increase verbosity", action="count")
+    parser.add_argument("--parts", help="how many parts", default="8")
+    parser.add_argument("--part", help="which one of the parts", default="0")
 
     return parser.parse_args()
 
@@ -235,7 +230,6 @@ def open_file(file: str):
 def main() -> None:
     sys.setrecursionlimit(10000) # else node.deepcopy() sometimes fails?
     args = parse_args()
-    args.master = args.master or args.bullet
     if args.verbose == 2:
         logger.setLevel(logging.DEBUG)
     else:
@@ -245,10 +239,13 @@ def main() -> None:
     games = 0
     site = "?"
     has_master = False
+    tier = 0
     skip = int(args.skip)
     logger.info("Skipping first {} games".format(skip))
 
-    print(f'v{version} {args.file}')
+    parts = int(args.parts)
+    part = int(args.part)
+    print(f'v{version} {args.file} {part}/{parts}')
 
     try:
         with open_file(args.file) as pgn:
@@ -258,39 +255,49 @@ def main() -> None:
                     site = line
                     games = games + 1
                     has_master = False
+                    tier = 4
                 elif games < skip:
                     continue
+                elif games % parts != part - 1:
+                    continue
+                if tier == 0:
+                    skip_next = True
+                elif line.startswith("[Variant ") and not line.startswith("[Variant \"Standard\"]"):
+                    skip_next = True
                 elif (
                         (line.startswith("[WhiteTitle ") or line.startswith("[BlackTitle ")) and
                         "BOT" not in line
                     ):
                     has_master = True
-                elif util.reject_by_time_control(line, has_master = has_master, master_only = args.master, bullet = args.bullet, mates = args.mates):
-                    skip_next = True
-                elif util.exclude_rating(line, args.mates):
-                    skip_next = True
-                elif line.startswith("[Variant ") and not line.startswith("[Variant \"Standard\"]"):
-                    skip_next = True
-                elif line.startswith("1. ") and (skip_next or (args.master and not has_master)):
-                    logger.debug("Skip {}".format(site))
-                    skip_next = False
-                elif "%eval" in line:
-                    game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
-                    assert(game)
-                    game_id = game.headers.get("Site", "?")[20:]
-                    if server.is_seen(game_id):
-                        to_skip = 1000
-                        logger.info(f'Game was already seen before, skipping {to_skip} - {games}')
-                        skip = games + to_skip
-                        continue
+                else:
+                    r_tier = util.rating_tier(line)
+                    t_tier = util.time_control_tier(line)
+                    if r_tier is not None:
+                        tier = min(tier, r_tier)
+                    elif t_tier is not None:
+                        tier = min(tier, t_tier)
+                    elif line.startswith("1. ") and skip_next:
+                        logger.debug("Skip {}".format(site))
+                        skip_next = False
+                    elif "%eval" in line:
+                        tier = tier + 1 if has_master else tier
+                        game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
+                        assert(game)
+                        game_id = game.headers.get("Site", "?")[20:]
+                        if server.is_seen(game_id):
+                            to_skip = 0
+                            logger.info(f'Game was already seen before, skipping {to_skip} - {games}')
+                            skip = games + to_skip
+                            continue
 
-                    try:
-                        puzzle = analyze_game(server, engine, game, args)
-                        if puzzle is not None:
-                            logger.info(f'v{version} {args.file} {util.avg_knps()} knps, Game {games}')
-                            server.post(game_id, puzzle)
-                    except Exception as e:
-                        logger.error("Exception on {}: {}".format(game_id, e))
+                        # logger.info(f'https://lichess.org/{game_id} tier {tier}')
+                        try:
+                            puzzle = analyze_game(server, engine, game, tier)
+                            if puzzle is not None:
+                                logger.info(f'v{version} {args.file} {part}/{parts} {util.avg_knps()} knps, tier {tier}, game {games}')
+                                server.post(game_id, puzzle)
+                        except Exception as e:
+                            logger.error("Exception on {}: {}".format(game_id, e))
     except KeyboardInterrupt:
         print(f'v{version} {args.file} Game {games}')
         sys.exit(1)

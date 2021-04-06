@@ -6,6 +6,7 @@ from model import EngineMove, NextMovePair
 from chess import Color, Board
 from chess.pgn import GameNode
 from chess.engine import SimpleEngine, Score
+from typing import Optional
 
 nps = []
 
@@ -45,30 +46,33 @@ def win_chances(score: Score) -> float:
     cp = score.score()
     return 2 / (1 + math.exp(-0.004 * cp)) - 1 if cp is not None else 0
 
-CORRESP_TIME = 999999
-
-def reject_by_time_control(line: str, has_master: bool, master_only: bool, bullet: bool, mates: bool) -> bool:
+def time_control_tier(line: str) -> Optional[int]:
     if not line.startswith("[TimeControl "):
-        return False
-    if master_only and not has_master:
-        return True
+        return None
     try:
         seconds, increment = line[1:][:-2].split()[1].replace("\"", "").split("+")
         total = int(seconds) + int(increment) * 40
-        if master_only or mates:
-            if bullet:
-                return total < 30 or total >= 160
-            else:
-                return total < 160 or total >= 480
-        else:
-            return total < (160 if has_master else 480)
+        if total >= 480:
+            return 3
+        if total >= 180:
+            return 2
+        if total > 60:
+            return 1
+        return 0
     except:
-        return True
+        return 0
 
-def exclude_rating(line: str, mates: bool) -> bool:
+def rating_tier(line: str) -> Optional[int]:
     if not line.startswith("[WhiteElo ") and not line.startswith("[BlackElo "):
-        return False
+        return None
     try:
-        return int(line[11:15]) < (1501 if mates else 1600)
+        rating = int(line[11:15])
+        if rating > 1750:
+            return 3
+        if rating > 1600:
+            return 2
+        if rating > 1500:
+            return 1
+        return 0
     except:
-        return True
+        return 0

@@ -1,6 +1,6 @@
 from chess.pgn import GameNode, ChildNode
 from chess import Move, Color
-from chess.engine import Score, Mate, Cp
+from chess.engine import Score
 from dataclasses import dataclass
 from typing import Tuple, List, Optional
 
