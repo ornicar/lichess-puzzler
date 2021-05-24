@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TARGET=root@study.lichess.ovh
+TARGET=root@rubik.lichess.ovh
 DIR=puzzler-dump
 
 rm -rf $DIR
