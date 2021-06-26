@@ -221,7 +221,7 @@ def hanging_piece(puzzle: Puzzle) -> bool:
             op_capture = puzzle.game.board().piece_at(op_move.to_square)
             if op_capture and util.values[op_capture.piece_type] >= util.values[captured.piece_type] and op_move.to_square == to:
                 return False
-            if len(puzzle.mainline) < 3:
+            if len(puzzle.mainline) < 4:
                 return True
             if material_diff(puzzle.mainline[3].board(), puzzle.pov) >= material_diff(puzzle.mainline[1].board(), puzzle.pov):
                 return True
