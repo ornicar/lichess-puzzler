@@ -12,7 +12,7 @@ from io import StringIO
 from chess import Move, Color
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess.pgn import Game, ChildNode
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Set
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
@@ -26,177 +26,200 @@ mate_defense_limit = chess.engine.Limit(depth = 15, time = 10, nodes = 10_000_00
 
 mate_soon = Mate(15)
 
-def is_valid_mate_in_one(pair: NextMovePair, engine: SimpleEngine) -> bool:
-    if pair.best.score != Mate(1):
+class Generator:
+    def __init__(self, engine: SimpleEngine, server: Server):
+        self.engine = engine
+        self.server = server
+
+    def is_valid_mate_in_one(self, pair: NextMovePair) -> bool:
+        if pair.best.score != Mate(1):
+            return False
+        non_mate_win_threshold = 0.6
+        if not pair.second or win_chances(pair.second.score) <= non_mate_win_threshold:
+            return True
+        if pair.second.score == Mate(1):
+            # if there's more than one mate in one, gotta look if the best non-mating move is bad enough
+            logger.debug('Looking for best non-mating move...')
+            info = self.engine.analyse(pair.node.board(), multipv = 5, limit = pair_limit)
+            for score in [pv["score"].pov(pair.winner) for pv in info]:
+                if score < Mate(1) and win_chances(score) > non_mate_win_threshold:
+                    return False
+            return True
         return False
-    non_mate_win_threshold = 0.6
-    if not pair.second or win_chances(pair.second.score) <= non_mate_win_threshold:
-        return True
-    if pair.second.score == Mate(1):
-        # if there's more than one mate in one, gotta look if the best non-mating move is bad enough
-        logger.debug('Looking for best non-mating move...')
-        info = engine.analyse(pair.node.board(), multipv = 5, limit = pair_limit)
-        for score in [pv["score"].pov(pair.winner) for pv in info]:
-            if score < Mate(1) and win_chances(score) > non_mate_win_threshold:
-                return False
-        return True
-    return False
 
-# is pair.best the only continuation?
-def is_valid_attack(pair: NextMovePair, engine: SimpleEngine) -> bool:
-    return (
-        pair.second is None or 
-        is_valid_mate_in_one(pair, engine) or 
-        win_chances(pair.best.score) > win_chances(pair.second.score) + 0.7
-    )
+    # is pair.best the only continuation?
+    def is_valid_attack(self, pair: NextMovePair) -> bool:
+        return (
+            pair.second is None or 
+            self.is_valid_mate_in_one(pair) or 
+            win_chances(pair.best.score) > win_chances(pair.second.score) + 0.7
+        )
 
-def get_next_pair(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[NextMovePair]:
-    pair = get_next_move_pair(engine, node, winner, pair_limit)
-    if node.board().turn == winner and not is_valid_attack(pair, engine):
-        logger.debug("No valid attack {}".format(pair))
-        return None
-    return pair
+    def get_next_pair(self, node: ChildNode, winner: Color) -> Optional[NextMovePair]:
+        pair = get_next_move_pair(self.engine, node, winner, pair_limit)
+        if node.board().turn == winner and not self.is_valid_attack(pair):
+            logger.debug("No valid attack {}".format(pair))
+            return None
+        return pair
 
-def get_next_move(engine: SimpleEngine, node: ChildNode, limit: chess.engine.Limit) -> Optional[Move]:
-    result = engine.play(node.board(), limit = limit)
-    return result.move if result else None
+    def get_next_move(self, node: ChildNode, limit: chess.engine.Limit) -> Optional[Move]:
+        result = self.engine.play(node.board(), limit = limit)
+        return result.move if result else None
 
-def cook_mate(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[List[Move]]:
-    
-    board = node.board()
+    def cook_mate(self, node: ChildNode, winner: Color) -> Optional[List[Move]]:
 
-    if board.is_game_over():
-        return []
+        board = node.board()
 
-    if board.turn == winner:
-        pair = get_next_pair(engine, node, winner)
+        if board.is_game_over():
+            return []
+
+        if board.turn == winner:
+            pair = self.get_next_pair(node, winner)
+            if not pair:
+                return None
+            if pair.best.score < mate_soon:
+                logger.debug("Best move is not a mate, we're probably not searching deep enough")
+                return None
+            move = pair.best.move
+        else:
+            next = self.get_next_move(node, mate_defense_limit)
+            if not next:
+                return None
+            move = next
+
+        follow_up = self.cook_mate(node.add_main_variation(move), winner)
+
+        if follow_up is None:
+            return None
+
+        return [move] + follow_up
+
+
+    def cook_advantage(self, node: ChildNode, winner: Color) -> Optional[List[NextMovePair]]:
+
+        board = node.board()
+
+        if board.is_repetition(2):
+            logger.debug("Found repetition, canceling")
+            return None
+
+        pair = self.get_next_pair(node, winner)
         if not pair:
-            return None
-        if pair.best.score < mate_soon:
-            logger.debug("Best move is not a mate, we're probably not searching deep enough")
-            return None
-        move = pair.best.move
-    else:
-        next = get_next_move(engine, node, mate_defense_limit)
-        if not next:
-            return None
-        move = next
-
-    follow_up = cook_mate(engine, node.add_main_variation(move), winner)
-
-    if follow_up is None:
-        return None
-
-    return [move] + follow_up
-
-
-def cook_advantage(engine: SimpleEngine, node: ChildNode, winner: Color) -> Optional[List[NextMovePair]]:
-    
-    board = node.board()
-
-    if board.is_repetition(2):
-        logger.debug("Found repetition, canceling")
-        return None
-
-    pair = get_next_pair(engine, node, winner)
-    if not pair:
-        return []
-    if pair.best.score < Cp(200):
-        logger.debug("Not winning enough, aborting")
-        return None
-
-    follow_up = cook_advantage(engine, node.add_main_variation(pair.best.move), winner)
-
-    if follow_up is None:
-        return None
-
-    return [pair] + follow_up
-
-
-def analyze_game(server: Server, engine: SimpleEngine, game: Game, tier: int) -> Optional[Puzzle]:
-
-    logger.debug(f'Analyzing tier {tier} {game.headers.get("Site")}...')
-
-    prev_score: Score = Cp(20)
-
-    for node in game.mainline():
-
-        current_eval = node.eval()
-
-        if not current_eval:
-            logger.debug("Skipping game without eval on ply {}".format(node.ply()))
+            return []
+        if pair.best.score < Cp(200):
+            logger.debug("Not winning enough, aborting")
             return None
 
-        result = analyze_position(server, engine, node, prev_score, current_eval, tier)
+        follow_up = self.cook_advantage(node.add_main_variation(pair.best.move), winner)
 
-        if isinstance(result, Puzzle):
-            return result
+        if follow_up is None:
+            return None
 
-        prev_score = -result
-
-    logger.debug("Found nothing from {}".format(game.headers.get("Site")))
-
-    return None
+        return [pair] + follow_up
 
 
-def analyze_position(server: Server, engine: SimpleEngine, node: ChildNode, prev_score: Score, current_eval: PovScore, tier: int) -> Union[Puzzle, Score]:
+    def analyze_game(self, game: Game, tier: int) -> Optional[Puzzle]:
 
-    board = node.board()
-    winner = board.turn
-    score = current_eval.pov(winner)
+        logger.debug(f'Analyzing tier {tier} {game.headers.get("Site")}...')
 
-    if board.legal_moves.count() < 2:
-        return score
+        prev_score: Score = Cp(20)
+        seen_fens: Set[str] = set()
+        board = game.board()
+        skip_until_irreversible = False
 
-    game_url = node.game().headers.get("Site")
+        for node in game.mainline():
 
-    logger.debug("{} {} to {}".format(node.ply(), node.move.uci() if node.move else None, score))
+            if skip_until_irreversible:
+                if board.is_irreversible(node.move):
+                    skip_until_irreversible = False
+                    seen_fens.clear()
+                else:
+                    board.push(node.move)
+                    continue
 
-    if prev_score > Cp(300) and score < mate_soon:
-        logger.debug("{} Too much of a winning position to start with {} -> {}".format(node.ply(), prev_score, score))
-        return score
-    if is_up_in_material(board, winner):
-        logger.debug("{} already up in material {} {} {}".format(node.ply(), winner, material_count(board, winner), material_count(board, not winner)))
-        return score
-    elif score >= Mate(1) and tier < 3:
-        logger.debug("{} mate in one".format(node.ply()))
-        return score
-    elif score > mate_soon:
-        logger.debug("Mate {}#{} Probing...".format(game_url, node.ply()))
-        if server.is_seen_pos(node):
-            logger.debug("Skip duplicate position")
+            current_eval = node.eval()
+
+            if not current_eval:
+                logger.debug("Skipping game without eval on ply {}".format(node.ply()))
+                return None
+
+            board.push(node.move)
+            fen = board.fen()
+            if fen in seen_fens:
+                skip_until_irreversible = True
+                continue
+            seen_fens.add(fen)
+
+            result = self.analyze_position(node, prev_score, current_eval, tier)
+
+            if isinstance(result, Puzzle):
+                return result
+
+            prev_score = -result
+
+        logger.debug("Found nothing from {}".format(game.headers.get("Site")))
+
+        return None
+
+
+    def analyze_position(self, node: ChildNode, prev_score: Score, current_eval: PovScore, tier: int) -> Union[Puzzle, Score]:
+
+        board = node.board()
+        winner = board.turn
+        score = current_eval.pov(winner)
+
+        if board.legal_moves.count() < 2:
             return score
-        mate_solution = cook_mate(engine, copy.deepcopy(node), winner)
-        if mate_solution is None or (tier == 1 and len(mate_solution) == 3):
+
+        game_url = node.game().headers.get("Site")
+
+        logger.debug("{} {} to {}".format(node.ply(), node.move.uci() if node.move else None, score))
+
+        if prev_score > Cp(300) and score < mate_soon:
+            logger.debug("{} Too much of a winning position to start with {} -> {}".format(node.ply(), prev_score, score))
             return score
-        return Puzzle(node, mate_solution, 999999999)
-    elif score >= Cp(200) and win_chances(score) > win_chances(prev_score) + 0.6:
-        if score < Cp(400) and material_diff(board, winner) > -1:
-            logger.debug("Not clearly winning and not from being down in material, aborting")
+        if is_up_in_material(board, winner):
+            logger.debug("{} already up in material {} {} {}".format(node.ply(), winner, material_count(board, winner), material_count(board, not winner)))
             return score
-        logger.debug("Advantage {}#{} {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
-        if server.is_seen_pos(node):
-            logger.debug("Skip duplicate position")
+        elif score >= Mate(1) and tier < 3:
+            logger.debug("{} mate in one".format(node.ply()))
             return score
-        puzzle_node = copy.deepcopy(node)
-        solution : Optional[List[NextMovePair]] = cook_advantage(engine, puzzle_node, winner)
-        server.set_seen(node.game())
-        if not solution:
+        elif score > mate_soon:
+            logger.debug("Mate {}#{} Probing...".format(game_url, node.ply()))
+            if self.server.is_seen_pos(node):
+                logger.debug("Skip duplicate position")
+                return score
+            mate_solution = self.cook_mate(copy.deepcopy(node), winner)
+            if mate_solution is None or (tier == 1 and len(mate_solution) == 3):
+                return score
+            return Puzzle(node, mate_solution, 999999999)
+        elif score >= Cp(200) and win_chances(score) > win_chances(prev_score) + 0.6:
+            if score < Cp(400) and material_diff(board, winner) > -1:
+                logger.debug("Not clearly winning and not from being down in material, aborting")
+                return score
+            logger.debug("Advantage {}#{} {} -> {}. Probing...".format(game_url, node.ply(), prev_score, score))
+            if self.server.is_seen_pos(node):
+                logger.debug("Skip duplicate position")
+                return score
+            puzzle_node = copy.deepcopy(node)
+            solution : Optional[List[NextMovePair]] = self.cook_advantage(puzzle_node, winner)
+            self.server.set_seen(node.game())
+            if not solution:
+                return score
+            while len(solution) % 2 == 0 or not solution[-1].second:
+                if not solution[-1].second:
+                    logger.debug("Remove final only-move")
+                solution = solution[:-1]
+            if not solution or len(solution) == 1 :
+                logger.debug("Discard one-mover")
+                return score
+            if tier < 3 and len(solution) == 3:
+                logger.debug("Discard two-mover")
+                return score
+            cp = solution[len(solution) - 1].best.score.score()
+            return Puzzle(node, [p.best.move for p in solution], 999999998 if cp is None else cp)
+        else:
             return score
-        while len(solution) % 2 == 0 or not solution[-1].second:
-            if not solution[-1].second:
-                logger.debug("Remove final only-move")
-            solution = solution[:-1]
-        if not solution or len(solution) == 1 :
-            logger.debug("Discard one-mover")
-            return score
-        if tier < 3 and len(solution) == 3:
-            logger.debug("Discard two-mover")
-            return score
-        cp = solution[len(solution) - 1].best.score.score()
-        return Puzzle(node, [p.best.move for p in solution], 999999998 if cp is None else cp)
-    else:
-        return score
 
 
 def parse_args() -> argparse.Namespace:
@@ -236,6 +259,7 @@ def main() -> None:
         logger.setLevel(logging.INFO)
     engine = make_engine(args.engine, args.threads)
     server = Server(logger, args.url, args.token, version)
+    generator = Generator(engine, server)
     games = 0
     site = "?"
     has_master = False
@@ -292,7 +316,7 @@ def main() -> None:
 
                         # logger.info(f'https://lichess.org/{game_id} tier {tier}')
                         try:
-                            puzzle = analyze_game(server, engine, game, tier)
+                            puzzle = generator.analyze_game(game, tier)
                             if puzzle is not None:
                                 logger.info(f'v{version} {args.file} {part}/{parts} {util.avg_knps()} knps, tier {tier}, game {games}')
                                 server.post(game_id, puzzle)
