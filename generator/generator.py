@@ -12,7 +12,7 @@ from io import StringIO
 from chess import Move, Color
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess.pgn import Game, ChildNode
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Set
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
 from server import Server
 
@@ -123,14 +123,32 @@ class Generator:
         logger.debug(f'Analyzing tier {tier} {game.headers.get("Site")}...')
 
         prev_score: Score = Cp(20)
+        seen_fens: Set[str] = set()
+        board = game.board()
+        skip_until_irreversible = False
 
         for node in game.mainline():
+
+            if skip_until_irreversible:
+                if board.is_irreversible(node.move):
+                    skip_until_irreversible = False
+                    seen_fens.clear()
+                else:
+                    board.push(node.move)
+                    continue
 
             current_eval = node.eval()
 
             if not current_eval:
                 logger.debug("Skipping game without eval on ply {}".format(node.ply()))
                 return None
+
+            board.push(node.move)
+            fen = board.fen()
+            if fen in seen_fens:
+                skip_until_irreversible = True
+                continue
+            seen_fens.add(fen)
 
             result = self.analyze_position(node, prev_score, current_eval, tier)
 
