@@ -13,7 +13,7 @@ from chess import Move, Color
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess.pgn import Game, ChildNode
 from typing import List, Optional, Union, Set
-from util import get_next_move_pair, material_count, material_diff, is_up_in_material, win_chances
+from util import get_next_move_pair, material_count, material_diff, is_up_in_material, maximum_castling_rights, win_chances
 from server import Server
 
 version = 47
@@ -149,6 +149,9 @@ class Generator:
                 skip_until_irreversible = True
                 continue
             seen_fens.add(fen)
+
+            if board.castling_rights != maximum_castling_rights(board):
+                continue
 
             result = self.analyze_position(node, prev_score, current_eval, tier)
 
