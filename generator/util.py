@@ -20,6 +20,12 @@ def material_diff(board: Board, side: Color) -> int:
 def is_up_in_material(board: Board, side: Color) -> bool:
     return material_diff(board, side) > 0
 
+def maximum_castling_rights(board: chess.Board) -> chess.Bitboard:
+    return (
+        (board.pieces_mask(chess.ROOK, chess.WHITE) & (chess.BB_A1 | chess.BB_H1) if board.king(chess.WHITE) == chess.E1 else chess.BB_EMPTY) |
+        (board.pieces_mask(chess.ROOK, chess.BLACK) & (chess.BB_A8 | chess.BB_H8) if board.king(chess.BLACK) == chess.E8 else chess.BB_EMPTY)
+    )
+
 
 def get_next_move_pair(engine: SimpleEngine, node: GameNode, winner: Color, limit: chess.engine.Limit) -> NextMovePair:
     info = engine.analyse(node.board(), multipv = 2, limit = limit)
