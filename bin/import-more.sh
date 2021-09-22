@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 echo "Download"
 ~/.scripts/fetch-mongodb-collection root@godot.lichess.ovh puzzler puzzle2
