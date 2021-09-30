@@ -1,5 +1,6 @@
 import unittest
 import logging
+import chess
 from model import Puzzle
 from generator import logger
 from server import Server
@@ -8,13 +9,16 @@ from chess import Move, Color, Board, WHITE, BLACK
 from chess.pgn import Game, GameNode
 from typing import List, Optional, Tuple, Literal, Union
 
-import generator
+from generator import Generator, Server, make_engine
 
 class TestGenerator(unittest.TestCase):
 
-    engine = generator.make_engine("stockfish", 6) # don't use more than 6 threads! it fails at finding mates
-    server = Server(logger, "", "", 0)
-    logger.setLevel(logging.DEBUG)
+    @classmethod
+    def setUpClass(cls):
+        cls.engine = make_engine("stockfish", 6) # don't use more than 6 threads! it fails at finding mates
+        cls.server = Server(logger, "", "", 0)
+        cls.gen = Generator(cls.engine, cls.server)
+        logger.setLevel(logging.DEBUG)
 
     def test_puzzle_1(self) -> None:
         # https://lichess.org/analysis/standard/3q1k2/p7/1p2Q2p/5P1K/1P4P1/P7/8/8_w_-_-_5_57#112
@@ -150,12 +154,18 @@ class TestGenerator(unittest.TestCase):
         self.not_puzzle("8/Pkp3pp/8/4p3/1P2b3/4K3/1P3r1P/R7 b - - 1 30",
                 Cp(0), "f2f3", Cp(5000))
 
+    def test_not_puzzle_17(self) -> None:
+        with open("test_pgn_3fold_uDMCM.pgn") as pgn:
+            game = chess.pgn.read_game(pgn)
+            puzzle = self.gen.analyze_game(game, tier=10)
+            self.assertEqual(puzzle, None)
+
     def get_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
         board = Board(fen)
         game = Game.from_board(board)
         node = game.add_main_variation(Move.from_uci(move))
         current_eval = PovScore(current_score, not board.turn)
-        result = generator.analyze_position(self.server, self.engine, node, prev_score, current_eval)
+        result = self.gen.analyze_position(node, prev_score, current_eval, tier=10)
         self.assert_is_puzzle_with_moves(result, [Move.from_uci(x) for x in moves.split()])
 
 
@@ -164,18 +174,17 @@ class TestGenerator(unittest.TestCase):
         game = Game.from_board(board)
         node = game.add_main_variation(Move.from_uci(move))
         current_eval = PovScore(current_score, not board.turn)
-        result = generator.analyze_position(self.server, self.engine, node, prev_score, current_eval)
+        result = self.gen.analyze_position( node, prev_score, current_eval, tier=10)
         self.assertIsInstance(result, Score)
 
 
     def assert_is_puzzle_with_moves(self, puzzle: Union[Puzzle, Score], moves: List[Move]) -> None:
-        self.assertIsInstance(puzzle, generator.Puzzle)
+        self.assertIsInstance(puzzle, Puzzle)
         if isinstance(puzzle, Puzzle):
             self.assertEqual(puzzle.moves, moves)
 
-
     @classmethod
-    def tearDownClass(cls) -> None:
+    def tearDownClass(cls):
         cls.engine.close()
 
 
