@@ -16,7 +16,7 @@ from typing import List, Optional, Union, Set
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, maximum_castling_rights, win_chances
 from server import Server
 
-version = 47
+version = 48
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -123,16 +123,15 @@ class Generator:
         logger.debug(f'Analyzing tier {tier} {game.headers.get("Site")}...')
 
         prev_score: Score = Cp(20)
-        seen_fens: Set[str] = set()
+        seen_epds: Set[str] = set()
         board = game.board()
         skip_until_irreversible = False
 
         for node in game.mainline():
-
             if skip_until_irreversible:
                 if board.is_irreversible(node.move):
                     skip_until_irreversible = False
-                    seen_fens.clear()
+                    seen_epds.clear()
                 else:
                     board.push(node.move)
                     continue
@@ -144,11 +143,11 @@ class Generator:
                 return None
 
             board.push(node.move)
-            fen = board.fen()
-            if fen in seen_fens:
+            epd = board.epd()
+            if epd in seen_epds:
                 skip_until_irreversible = True
                 continue
-            seen_fens.add(fen)
+            seen_epds.add(epd)
 
             if board.castling_rights != maximum_castling_rights(board):
                 continue
