@@ -27,10 +27,11 @@ def read(doc) -> Puzzle:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='tagger.py', description='automatically tags lichess puzzles')
     parser.add_argument("--zug", "-z", help="only zugzwang", action="store_true")
-    parser.add_argument("--bad_mate", "-e", help="find bad mates", action="store_true")
+    parser.add_argument("--bad_mate", help="find bad mates", action="store_true")
     parser.add_argument("--dry", "-d", help="dry run", action="store_true")
     parser.add_argument("--all", "-a", help="don't skip existing", action="store_true")
     parser.add_argument("--threads", "-t", help="count of cpu threads for engine searches", default="4")
+    parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
     args = parser.parse_args()
 
     if args.zug:
@@ -39,7 +40,7 @@ if __name__ == "__main__":
             db = pymongo.MongoClient()['puzzler']
             round_coll = db['puzzle2_round']
             play_coll = db['puzzle2_puzzle']
-            engine = SimpleEngine.popen_uci('stockfish')
+            engine = SimpleEngine.popen_uci(args.engine)
             engine.configure({'Threads': 2})
             for doc in round_coll.aggregate([
                 {"$match":{"_id":{"$regex":"^lichess:"},"t":{"$nin":['+zugzwang','-zugzwang']}}},
