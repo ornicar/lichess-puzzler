@@ -30,8 +30,8 @@ def maximum_castling_rights(board: chess.Board) -> chess.Bitboard:
 def get_next_move_pair(engine: SimpleEngine, node: GameNode, winner: Color, limit: chess.engine.Limit) -> NextMovePair:
     info = engine.analyse(node.board(), multipv = 2, limit = limit)
     global nps
-    nps.append(info[0]["nps"])
-    nps = nps[-20:]
+    nps.append(info[0]["nps"] / 1000)
+    nps = nps[-50000:]
     # print(info)
     best = EngineMove(info[0]["pv"][0], info[0]["score"].pov(winner))
     second = EngineMove(info[1]["pv"][0], info[1]["score"].pov(winner)) if len(info) > 1 else None
@@ -39,7 +39,7 @@ def get_next_move_pair(engine: SimpleEngine, node: GameNode, winner: Color, limi
 
 def avg_knps():
     global nps
-    return round(sum(nps) / len(nps) / 1000) if nps else 0
+    return round(sum(nps) / len(nps)) if nps else 0
 
 def win_chances(score: Score) -> float:
     """
