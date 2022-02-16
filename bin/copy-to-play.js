@@ -45,6 +45,8 @@ process(buffer);
 
 function makeBlocklist() {
   return `
+N3GXN
+0R3iD
 riW1o
 qQkOv
 10oNe
@@ -936,6 +938,6 @@ Bs8eu
 yW5dr
 nmN23
 `
-    .split(' ')
+    .split('\n')
     .filter(l => l);
 }
