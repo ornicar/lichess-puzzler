@@ -45,6 +45,7 @@ process(buffer);
 
 function makeBlocklist() {
   return `
+KQngr
 N3GXN
 0R3iD
 riW1o

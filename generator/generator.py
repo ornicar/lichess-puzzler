@@ -311,7 +311,7 @@ def main() -> None:
                         assert(game)
                         game_id = game.headers.get("Site", "?")[20:]
                         if server.is_seen(game_id):
-                            to_skip = 0
+                            to_skip = 10000
                             logger.info(f'Game was already seen before, skipping {to_skip} - {games}')
                             skip = games + to_skip
                             continue

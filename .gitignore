@@ -6,6 +6,7 @@ validator/back/config/local.json
 data/
 dist/
 venv/
+target/
 __pycache__/
 .mypy_cache
 .vim
