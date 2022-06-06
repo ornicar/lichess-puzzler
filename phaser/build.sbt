@@ -1,16 +1,16 @@
-scalaVersion := "2.13.3"
+scalaVersion := "2.13.8"
 name := "lichess-puzzler-phaser"
 organization := "org.lichess"
 version := "0.1"
 resolvers += "lila-maven" at "https://raw.githubusercontent.com/ornicar/lila-maven/master"
 
-val akkaVersion = "2.6.10"
-val reactivemongoVersion = "1.0.0"
+val akkaVersion = "2.6.19"
+val reactivemongoVersion = "1.0.10"
 
 libraryDependencies += "org.reactivemongo"          %% "reactivemongo"                % reactivemongoVersion
 libraryDependencies += "org.reactivemongo"          %% "reactivemongo-bson-api"       % reactivemongoVersion
-libraryDependencies += "org.reactivemongo" %% "reactivemongo-akkastream" % "1.0.0"
-libraryDependencies += "org.lichess"                %% "scalachess"                   % "10.1.1"
+libraryDependencies += "org.reactivemongo" %% "reactivemongo-akkastream" % reactivemongoVersion
+libraryDependencies += "org.lichess"                %% "scalachess"                   % "10.4.10"
 libraryDependencies += "com.typesafe.akka"          %% "akka-actor-typed"             % akkaVersion
 libraryDependencies += "com.typesafe.akka"          %% "akka-slf4j"                   % akkaVersion
 libraryDependencies += "com.typesafe.akka"          %% "akka-stream"                   % akkaVersion
