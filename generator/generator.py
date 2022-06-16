@@ -309,6 +309,9 @@ def main() -> None:
                         tier = tier + 1 if has_master else tier
                         game = chess.pgn.read_game(StringIO("{}\n{}".format(site, line)))
                         assert(game)
+                        nb_moves = len(list(game.mainline_moves()))
+                        tier = tier + 1 if nb_moves < 38 else tier
+                        tier = tier + 1 if nb_moves < 21 else tier
                         game_id = game.headers.get("Site", "?")[20:]
                         if server.is_seen(game_id):
                             to_skip = 10000
