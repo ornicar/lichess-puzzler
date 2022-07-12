@@ -21,10 +21,6 @@ cd ~/lichess-puzzler
 echo "Copy"
 mongo puzzler bin/copy-to-play.js
 
-echo "Phase"
-cd ~/lichess-puzzler/phaser
-sbt run
-
 echo "Themes"
 cd ~/lichess-puzzler
 ./bin/retag.sh
