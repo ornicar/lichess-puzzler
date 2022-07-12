@@ -1,21 +1,21 @@
 scalaVersion := "2.13.8"
-name := "lichess-puzzler-phaser"
+name         := "lichess-puzzler-phaser"
 organization := "org.lichess"
-version := "0.1"
+version      := "0.1"
 resolvers += "lila-maven" at "https://raw.githubusercontent.com/ornicar/lila-maven/master"
 
-val akkaVersion = "2.6.19"
+val akkaVersion          = "2.6.19"
 val reactivemongoVersion = "1.0.10"
 
-libraryDependencies += "org.reactivemongo"          %% "reactivemongo"                % reactivemongoVersion
-libraryDependencies += "org.reactivemongo"          %% "reactivemongo-bson-api"       % reactivemongoVersion
+libraryDependencies += "org.reactivemongo" %% "reactivemongo"            % reactivemongoVersion
+libraryDependencies += "org.reactivemongo" %% "reactivemongo-bson-api"   % reactivemongoVersion
 libraryDependencies += "org.reactivemongo" %% "reactivemongo-akkastream" % reactivemongoVersion
-libraryDependencies += "org.lichess"                %% "scalachess"                   % "10.4.10"
-libraryDependencies += "com.typesafe.akka"          %% "akka-actor-typed"             % akkaVersion
-libraryDependencies += "com.typesafe.akka"          %% "akka-slf4j"                   % akkaVersion
-libraryDependencies += "com.typesafe.akka"          %% "akka-stream"                   % akkaVersion
+libraryDependencies += "org.lichess"       %% "scalachess"               % "10.4.10"
+libraryDependencies += "com.typesafe.akka" %% "akka-actor-typed"         % akkaVersion
+libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"               % akkaVersion
+libraryDependencies += "com.typesafe.akka" %% "akka-stream"              % akkaVersion
 // libraryDependencies += "org.slf4j"          %% "slf4j-simple"                   % "1.7.21"
-libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging"                % "3.9.2"
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 
 scalacOptions ++= Seq(
   "-explaintypes",
@@ -55,8 +55,8 @@ scalacOptions ++= Seq(
   /* "-Wvalue-discard" */
 )
 
-sources in (Compile, doc) := Seq.empty
+Compile / doc / sources := Seq.empty
 
-publishArtifact in (Compile, packageDoc) := false
+Compile / packageDoc / publishArtifact := false
 
 /* scalafmtOnCompile := true */
