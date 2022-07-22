@@ -36,7 +36,7 @@ buildColl.find({ _id: { $nin: blocklist } }).forEach(p => {
   if (p.moves.length < 2) return;
   buffer.push(p);
   if (buffer.length >= 1000) {
-    process(buffer);
+    processBuffer(buffer);
     buffer = [];
   }
 });
