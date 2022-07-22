@@ -3,12 +3,12 @@ const playColl = db.puzzle2_puzzle;
 
 const blocklist = makeBlocklist();
 
-buildColl.remove({ _id: { $in: blocklist } });
-playColl.remove({ _id: { $in: blocklist } });
+buildColl.deleteMany({ _id: { $in: blocklist } });
+playColl.deleteMany({ _id: { $in: blocklist } });
 
 buffer = [];
 
-function process(buf) {
+function processBuffer(buf) {
   const existingIds = new Set(playColl.distinct('_id', { _id: { $in: buf.map(p => p._id) } }));
   const missing = buf
     .filter(p => !existingIds.has(p._id))
@@ -41,7 +41,7 @@ buildColl.find({ _id: { $nin: blocklist } }).forEach(p => {
   }
 });
 
-process(buffer);
+processBuffer(buffer);
 
 function makeBlocklist() {
   return `
