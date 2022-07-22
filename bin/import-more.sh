@@ -4,7 +4,7 @@ set -e
 source=192.168.1.200
 
 echo "Tag new puzzles"
-mongo $source:27017/puzzler --eval 'db.puzzle2.update({recent:true},{$unset:{recent:true}});db.puzzle2.updateMany({createdAt:{$gt:new Date(Date.now() - 1000 * 3600 * 24 * 7)}},{$set:{recent:true}})'
+mongosh $source:27017/puzzler --eval 'db.puzzle2.updateMany({recent:true},{$unset:{recent:true}});db.puzzle2.updateMany({createdAt:{$gt:new Date(Date.now() - 1000 * 3600 * 24 * 7)}},{$set:{recent:true}})'
 
 echo "Download"
 mongodump --db=puzzler --collection=puzzle2 --host=$source --gzip --archive --query '{"recent":true}' | mongorestore --gzip --archive --drop
@@ -19,7 +19,7 @@ yarn run puzzle-game-user
 
 cd ~/lichess-puzzler
 echo "Copy"
-mongo puzzler bin/copy-to-play.js
+mongosh puzzler bin/copy-to-play.js
 
 echo "Themes"
 cd ~/lichess-puzzler
@@ -27,7 +27,7 @@ cd ~/lichess-puzzler
 
 echo "Players"
 cd ~/lichess-puzzler
-mongo ./bin/set-players.js
+mongosh ./bin/set-players.js
 
 cd ~/lichess-puzzler
 ./bin/deploy-db.sh
