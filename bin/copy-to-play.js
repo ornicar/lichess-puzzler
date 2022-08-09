@@ -28,6 +28,7 @@ function processBuffer(buf) {
       vd: NumberInt(0),
       line: p.moves.join(' '),
       cp: p.cp,
+      tagMe: true,
     }));
   if (missing.length) playColl.insertMany(missing, { ordered: false });
 }
