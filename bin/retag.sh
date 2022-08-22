@@ -3,7 +3,7 @@
 cd ~/lichess-puzzler/tagger
 . venv/bin/activate
 echo "Themes"
-python tagger.py --threads=6
+python tagger.py --threads=1
 echo "Zug"
 python tagger.py --zug --threads=2
 

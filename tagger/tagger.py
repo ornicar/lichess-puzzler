@@ -74,7 +74,6 @@ if __name__ == "__main__":
     if args.bad_mate:
         threads = int(args.threads)
         def cruncher(thread_id: int):
-            eval_nb = 0
             db = pymongo.MongoClient()['puzzler']
             bad_coll = db['puzzle2_bad_maybe']
             play_coll = db['puzzle2_puzzle']
@@ -112,7 +111,7 @@ if __name__ == "__main__":
         total = 0
         computed = 0
         updated = 0
-        for doc in play_coll.find():
+        for doc in play_coll.find({'themes':[]}):
             total += 1
             if not thread_id and total % 1000 == 0:
                 logger.info(f'{total} / {computed} / {updated}')
