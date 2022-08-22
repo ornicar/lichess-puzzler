@@ -50,7 +50,8 @@ def win_chances(score: Score) -> float:
         return 1 if mate > 0 else -1
 
     cp = score.score()
-    return 2 / (1 + math.exp(-0.004 * cp)) - 1 if cp is not None else 0
+    MULTIPLIER = -0.00368208 # https://github.com/lichess-org/lila/pull/11148
+    return 2 / (1 + math.exp(MULTIPLIER * cp)) - 1 if cp is not None else 0
 
 def time_control_tier(line: str) -> Optional[int]:
     if not line.startswith("[TimeControl "):
