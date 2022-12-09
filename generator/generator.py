@@ -6,7 +6,7 @@ import chess.engine
 import copy
 import sys
 import util
-import bz2
+import zstandard
 from model import Puzzle, NextMovePair
 from io import StringIO
 from chess import Move, Color
@@ -248,8 +248,8 @@ def make_engine(executable: str, threads: int) -> SimpleEngine:
 
 
 def open_file(file: str):
-    if file.endswith(".bz2"):
-        return bz2.open(file, "rt")
+    if file.endswith(".zst"):
+        return zstandard.open(file, "rt")
     return open(file)
 
 def main() -> None:
