@@ -197,6 +197,22 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.queenside_attack(make("Zk4Jr", "3rr1k1/p5pp/2p5/8/1P1bbp2/P1PP1B2/6PP/RK3R2 w - - 0 28", "c3d4 e4d3 b1b2 d3f1")))
         self.assertFalse(cook.queenside_attack(make("umd5a", "r4r1k/5p1p/5qp1/p3b1RP/1p3P2/8/PP1BQ3/2K4R w - - 0 32", "g5e5 f6c6 c1d1 c6h1")))
 
+    def test_underpromotion(self):
+        #unnecessary underpromotion to rook with mate
+        self.assertFalse(cook.under_promotion(make("1nFrQ", "8/1Pp3p1/8/2p5/2P5/5kbp/3p4/7K w - - 0 52", "b7b8q d2d1r")))
+        #underpromotion to knight with mate
+        self.assertTrue(cook.under_promotion(make("2WyFZ", "3R3r/p1P1kp1b/4pnpp/7P/6P1/2p5/P4P2/3R2K1 b - - 0 31", "c3c2 c7c8n")))
+        #Necessary underpromotions to knight, rook & bishop:
+        self.assertTrue(cook.under_promotion(make("0Xyxz", "6k1/p7/4pr2/2P3r1/4Bp1q/1Q3PpP/P4bP1/3R1R1K w - - 1 33", "d1d7 h4h3 g2h3 g3g2 h1h2 g2f1n h2h1 g5g1")))
+        self.assertTrue(cook.under_promotion(make("AB2ON", "R7/P7/8/8/6k1/7p/r7/5K2 b - - 0 51", "g4g3 a8g8 g3h2 a7a8r")))
+        self.assertTrue(cook.under_promotion(make("DzdfL", "6k1/P5P1/1n4K1/8/8/8/8/8 b - - 2 68", "b6c8 a7a8b c8e7 g6f6")))
+        #underpromotion to bishop with mate
+        self.assertFalse(cook.under_promotion(make("iLgxo", "3B4/1pp5/p1b1B3/P3Q1N1/1P5k/2P5/R3R1p1/1q4K1 w - - 2 39", "g1h2 g2g1b")))
+        #promotion to queen with mate(also possible with rook)
+        self.assertFalse(cook.under_promotion(make("00ueM", "2kr4/2pR4/2P1K1P1/8/8/p3n3/8/8 b - - 1 49", "a3a2 d7d8 c8d8 g6g7 a2a1q g7g8q")))
+        self.assertFalse(cook.under_promotion(make("zzzc4", "3r3k/p5pp/8/5R2/1BQ1p3/P3q3/Bb4PP/6K1 w - - 0 28", "g1f1 d8d1 b4e1 e3e1")))
+
+
 class TestUtil(unittest.TestCase):
 
     def test_trapped(self):

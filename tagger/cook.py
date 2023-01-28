@@ -1,5 +1,4 @@
 import logging
-from os import posix_fadvise
 
 from typing import List, Optional, Union
 import chess
@@ -115,7 +114,8 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if promotion(puzzle):
         tags.append("promotion")
-        if under_promotion(puzzle):
+    
+    if under_promotion(puzzle):
             tags.append("underPromotion")
 
     if capturing_defender(puzzle):
@@ -594,7 +594,9 @@ def promotion(puzzle: Puzzle) -> bool:
 
 def under_promotion(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2]:
-        if node.move.promotion and node.move.promotion != QUEEN:
+        if node.board().is_checkmate():
+            return True if node.move.promotion == KNIGHT else False
+        elif node.move.promotion and node.move.promotion != QUEEN:
             return True
     return False
 
