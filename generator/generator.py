@@ -42,8 +42,9 @@ class Generator:
             logger.debug('Looking for best non-mating move...')
             mates = count_mates(copy.deepcopy(pair.node.board()))
             info = self.engine.analyse(pair.node.board(), multipv = mates + 1, limit = pair_limit)
-            for score in [pv["score"].pov(pair.winner) for pv in info]:
-                if score < Mate(1) and win_chances(score) > non_mate_win_threshold:
+            scores =  [pv["score"].pov(pair.winner) for pv in info]
+            # the first non-matein1 move is the last element
+            if scores[-1] < Mate(1) and win_chances(scores[-1]) > non_mate_win_threshold:
                     return False
             return True
         return False
