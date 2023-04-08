@@ -68,6 +68,15 @@ def time_control_tier(line: str) -> Optional[int]:
         return 0
     except:
         return 0
+    
+def count_mates(board:chess.Board) -> int:
+    mates = 0
+    for move in board.legal_moves:
+        board.push(move)
+        if board.is_checkmate():
+            mates += 1
+        board.pop()
+    return mates
 
 def rating_tier(line: str) -> Optional[int]:
     if not line.startswith("[WhiteElo ") and not line.startswith("[BlackElo "):

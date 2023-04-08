@@ -13,7 +13,7 @@ from chess import Move, Color
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess.pgn import Game, ChildNode
 from typing import List, Optional, Union, Set
-from util import get_next_move_pair, material_count, material_diff, is_up_in_material, maximum_castling_rights, win_chances
+from util import get_next_move_pair, material_count, material_diff, is_up_in_material, maximum_castling_rights, win_chances, count_mates
 from server import Server
 
 version = 48
@@ -40,7 +40,8 @@ class Generator:
         if pair.second.score == Mate(1):
             # if there's more than one mate in one, gotta look if the best non-mating move is bad enough
             logger.debug('Looking for best non-mating move...')
-            info = self.engine.analyse(pair.node.board(), multipv = 5, limit = pair_limit)
+            mates = count_mates(copy.deepcopy(pair.node.board()))
+            info = self.engine.analyse(pair.node.board(), multipv = mates + 1, limit = pair_limit)
             for score in [pv["score"].pov(pair.winner) for pv in info]:
                 if score < Mate(1) and win_chances(score) > non_mate_win_threshold:
                     return False
