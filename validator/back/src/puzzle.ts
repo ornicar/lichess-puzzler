@@ -10,16 +10,9 @@ export interface Puzzle {
   ply: number;
   moves: Uci[];
   cp?: number;
-  review?: Review;
   generator: number;
   ip?: string;
   tags?: string[];
-}
-
-export interface Review {
-  by: UserId;
-  at: Date;
-  approved: boolean;
 }
 
 const idChars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';

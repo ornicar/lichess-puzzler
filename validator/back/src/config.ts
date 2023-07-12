@@ -5,7 +5,7 @@ const schema = convict({
     format: ['prod', 'dev', 'local'],
     default: 'dev',
     arg: 'env',
-    env: 'NODE_ENV'
+    env: 'NODE_ENV',
   },
   http: {
     port: {
@@ -16,14 +16,10 @@ const schema = convict({
       format: String,
       default: 'http://localhost:8000',
     },
-    cookieSecret: {
-      format: String,
-      default: 'changeme'
-    }
   },
   generatorToken: {
     format: String,
-    default: 'changeme'
+    default: 'changeme',
   },
   mongodb: {
     url: {
@@ -33,14 +29,8 @@ const schema = convict({
     name: {
       format: String,
       default: 'puzzler',
-    }
-  },
-  oauth: {
-    app: {
-      id: { format: String, default: '' },
-      secret: { format: String, default: '' }
     },
-  }
+  },
 });
 
 schema.loadFile(`config/${schema.get('env')}.json`);
@@ -51,26 +41,12 @@ interface Config {
   http: {
     port: number;
     url: string;
-    cookieSecret: string;
   };
   generatorToken: string;
   mongodb: {
     url: string;
     name: string;
   };
-  oauth: {
-    app: {
-      id: string;
-      secret: string;
-      redirectUri: string;
-      scopes: string[];
-    }
-    server: {
-      tokenHost: string;
-      authorizePath: string;
-      tokenPath: string;
-    }
-  }
 }
 
 export const config: Config = {
@@ -78,17 +54,4 @@ export const config: Config = {
   http: schema.get('http'),
   generatorToken: schema.get('generatorToken'),
   mongodb: schema.get('mongodb'),
-  oauth: {
-    app: {
-      id: schema.get('oauth.app.id'),
-      secret: schema.get('oauth.app.secret'),
-      redirectUri: `${schema.get('http.url')}/oauth-callback`,
-      scopes: []
-    },
-    server: {
-      tokenHost: 'https://oauth.lichess.org',
-      authorizePath: '/oauth/authorize',
-      tokenPath: '/oauth'
-    }
-  }
 };

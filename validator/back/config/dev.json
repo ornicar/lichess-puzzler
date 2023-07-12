@@ -1,14 +1,7 @@
 {
   "http": {
     "port": 8000,
-    "url": "http://localhost:8000",
-    "cookieSecret": "dontPutThatOnProd"
+    "url": "http://localhost:8000"
   },
-  "generatorToken": "changeme",
-  "oauth": {
-    "app": {
-      "id": "yourAppIdHere",
-      "secret": "yourAppSecretHere"
-    }
-  }
+  "generatorToken": "changeme"
 }
