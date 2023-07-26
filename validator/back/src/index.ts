@@ -11,13 +11,6 @@ Env.make().then((env: Env) => {
 
   app.use(bodyParser.json());
 
-  const logger = function (req, _res, next) {
-    console.log(`${req.path}`);
-    next();
-  };
-  app.use(logger);
-  console.log('using logger');
-
   router(app, env);
 
   app.listen(config.http.port, () => {

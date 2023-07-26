@@ -52,8 +52,8 @@ class Generator:
     # is pair.best the only continuation?
     def is_valid_attack(self, pair: NextMovePair) -> bool:
         return (
-            pair.second is None or 
-            self.is_valid_mate_in_one(pair) or 
+            pair.second is None or
+            self.is_valid_mate_in_one(pair) or
             win_chances(pair.best.score) > win_chances(pair.second.score) + 0.7
         )
 
@@ -316,8 +316,8 @@ def main() -> None:
                         tier = tier + 1 if nb_moves < 21 else tier
                         game_id = game.headers.get("Site", "?")[20:]
                         if server.is_seen(game_id):
-                            to_skip = 2000
-                            logger.info(f'Game was already seen before, skipping {to_skip} - {games}')
+                            to_skip = 1
+                            logger.info(f'Game {game_id} was already seen before, skipping {to_skip} - {games}')
                             skip = games + to_skip
                             continue
 

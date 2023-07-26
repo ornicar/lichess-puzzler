@@ -8,7 +8,6 @@ export default function (app: Express.Express, env: Env) {
   let duplicates = 0;
   app.post('/puzzle', async (req, res) => {
     if ((req.query.token as string) != config.generatorToken) return res.status(400).send('Wrong token');
-    console.log(req.body);
     const puzzle: Puzzle = {
       _id: randomId(),
       gameId: req.body.game_id,
@@ -20,9 +19,9 @@ export default function (app: Express.Express, env: Env) {
       createdAt: new Date(),
       ip: req.ip,
     };
-    console.log(puzzle);
     try {
       await env.mongo.puzzle.insert(puzzle);
+      console.log(puzzle.ip);
       return res.send(`Created ${config.http.url}/puzzle/${puzzle._id}`);
     } catch (e: any) {
       const msg = e.code == 11000 ? `Game ${puzzle.gameId} already in the puzzle DB!` : e.message;
@@ -43,6 +42,7 @@ export default function (app: Express.Express, env: Env) {
       const [fen, move] = id.split(':');
       exists = await env.mongo.seen.positionExists(fen, move);
     }
+    process.stdout.write('.');
     return exists ? res.status(200).send() : res.status(404).send();
   });
   app.post('/seen', async (req, res) => {
