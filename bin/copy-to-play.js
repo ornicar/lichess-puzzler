@@ -33,14 +33,16 @@ function processBuffer(buf) {
   if (missing.length) playColl.insertMany(missing, { ordered: false });
 }
 
-buildColl.find({ _id: { $nin: blocklist } }).forEach(p => {
-  if (p.moves.length < 2) return;
-  buffer.push(p);
-  if (buffer.length >= 1000) {
-    processBuffer(buffer);
-    buffer = [];
-  }
-});
+buildColl
+  .find({ _id: { $nin: blocklist }, createdAt: { $gt: new Date(Date.now() - 1000 * 3600 * 24 * 7) } })
+  .forEach(p => {
+    if (p.moves.length < 2) return;
+    buffer.push(p);
+    if (buffer.length >= 1000) {
+      processBuffer(buffer);
+      buffer = [];
+    }
+  });
 
 processBuffer(buffer);
 

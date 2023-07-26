@@ -1,13 +1,13 @@
 #!/bin/sh
 set -e
 
-source=192.168.1.200
-
-echo "Tag new puzzles"
-mongosh $source:27017/puzzler --eval 'db.puzzle2.updateMany({recent:true},{$unset:{recent:true}});db.puzzle2.updateMany({createdAt:{$gt:new Date(Date.now() - 1000 * 3600 * 24 * 7)}},{$set:{recent:true}})'
-
-echo "Download"
-mongodump --db=puzzler --collection=puzzle2 --host=$source --gzip --archive --query '{"recent":true}' | mongorestore --gzip --archive --drop
+# source=192.168.1.2
+#
+# echo "Tag new puzzles"
+# mongosh $source:27017/puzzler --eval 'db.puzzle2.updateMany({recent:true},{$unset:{recent:true}});db.puzzle2.updateMany({createdAt:{$gt:new Date(Date.now() - 1000 * 3600 * 24 * 7)}},{$set:{recent:true}})'
+#
+# echo "Download"
+# mongodump --db=puzzler --collection=puzzle2 --host=$source --gzip --archive --query '{"recent":true}' | mongorestore --gzip --archive --drop
 
 echo "Games"
 cd ~/lichess-mongo-import
