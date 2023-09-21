@@ -30,6 +30,4 @@ cd ~/lichess-puzzler
 mongosh ./bin/set-players.js
 
 cd ~/lichess-puzzler
-./bin/deploy-db.sh
-
-ssh "root@rubik.lichess.ovh" 'cd /home/puzzler-crom-data/puzzler-dump && ./load-puzzles.sh'
+# ./bin/deploy-db.sh
