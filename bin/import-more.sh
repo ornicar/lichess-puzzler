@@ -30,4 +30,4 @@ cd ~/lichess-puzzler
 mongosh ./bin/set-players.js
 
 cd ~/lichess-puzzler
-# ./bin/deploy-db.sh
+./bin/deploy-db.sh
