@@ -16,13 +16,13 @@ from typing import List, Optional, Union, Set
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, maximum_castling_rights, win_chances, count_mates
 from server import Server
 
-version = 48
+version = 49
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
 
-pair_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 30_000_000)
-mate_defense_limit = chess.engine.Limit(depth = 15, time = 10, nodes = 10_000_000)
+pair_limit = chess.engine.Limit(depth = 50, time = 30, nodes = 25_000_000)
+mate_defense_limit = chess.engine.Limit(depth = 15, time = 10, nodes = 8_000_000)
 
 mate_soon = Mate(15)
 
@@ -316,7 +316,7 @@ def main() -> None:
                         tier = tier + 1 if nb_moves < 21 else tier
                         game_id = game.headers.get("Site", "?")[20:]
                         if server.is_seen(game_id):
-                            to_skip = 1
+                            to_skip = 1000
                             logger.info(f'Game {game_id} was already seen before, skipping {to_skip} - {games}')
                             skip = games + to_skip
                             continue
