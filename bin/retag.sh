@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 cd ~/lichess-puzzler/tagger
 . venv/bin/activate

@@ -24,7 +24,7 @@ const schema = convict({
   mongodb: {
     url: {
       format: String,
-      default: 'mongodb://localhost:27017',
+      default: 'mongodb://127.0.0.1:27017',
     },
     name: {
       format: String,

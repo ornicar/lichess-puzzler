@@ -9,13 +9,15 @@ set -e
 # echo "Download"
 # mongodump --db=puzzler --collection=puzzle2 --host=$source --gzip --archive --query '{"recent":true}' | mongorestore --gzip --archive --drop
 
+# --------------------------------------------------------
+
 echo "Games"
 cd ~/lichess-mongo-import
-yarn run puzzle-game-all
+pnpm run puzzle-game-all
 
 echo "Users"
 cd ~/lichess-mongo-import
-yarn run puzzle-game-user
+pnpm run puzzle-game-user
 
 cd ~/lichess-puzzler
 echo "Copy"
@@ -29,5 +31,6 @@ echo "Players"
 cd ~/lichess-puzzler
 mongosh ./bin/set-players.js
 
+echo "Deploy"
 cd ~/lichess-puzzler
 ./bin/deploy-db.sh

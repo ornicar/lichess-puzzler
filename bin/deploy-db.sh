@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TARGET=root@rubik.lichess.ovh
+TARGET=rubik-nokey
 DIR=puzzler-dump
 
 echo "Dumping collections to $DIR"

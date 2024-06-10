@@ -37,12 +37,13 @@ export class PuzzleMongo {
 }
 
 export class SeenMongo {
-  constructor(readonly seenColl: Collection, readonly puzzleColl: Collection) {}
+  constructor(readonly seenColl: Collection, readonly puzzleColl: Collection) { }
 
-  exists = (id: string): Promise<boolean> => this.seenColl.countDocuments({ _id: id }).then(n => n > 0);
+  exists = (id: string): Promise<boolean> =>
+    this.seenColl.countDocuments({ _id: (id as any) }).then(n => n > 0);
 
   positionExists = (fen: string, move: string): Promise<boolean> =>
     this.puzzleColl.countDocuments({ fen: fen, 'moves.0': move }).then(n => n > 0);
 
-  set = (id: string) => this.seenColl.insertOne({ _id: id } as any).catch(() => {});
+  set = (id: string) => this.seenColl.insertOne({ _id: id } as any).catch(() => { });
 }
