@@ -51,10 +51,10 @@ const titledUsers = new Set(lichess.user4.distinct('_id', { title: { $exists: 1,
 
 gms = 0;
 titled = 0;
-// puzzler.puzzle2_puzzle.find({users:{$exists:false}},{gameId:1}).forEach(p => {
-puzzler.puzzle2_puzzle.find({}, { gameId: 1, users: 1 }).forEach(p => {
+puzzler.puzzle2_puzzle.find({ users: { $exists: false } }, { gameId: 1, users: 1 }).forEach(p => {
   if (!p.users) {
     const game = lichess.game5.findOne({ _id: p.gameId });
+    if (!game) throw `Missing game ${p.gameId} for puzzle ${p._id}`;
     p.users = game && game.us;
     if (!p.users) return;
     puzzler.puzzle2_puzzle.update({ _id: p._id }, { $set: { users: p.users } });
