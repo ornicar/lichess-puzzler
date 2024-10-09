@@ -77,7 +77,7 @@ if __name__ == "__main__":
             db = pymongo.MongoClient()['puzzler']
             bad_coll = db['puzzle2_bad_maybe']
             play_coll = db['puzzle2_puzzle']
-            engine = SimpleEngine.popen_uci('./stockfish')
+            engine = SimpleEngine.popen_uci('stockfish')
             engine.configure({'Threads': 4})
             for doc in bad_coll.find({"bad": {"$exists":False}}):
                 try:
