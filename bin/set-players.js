@@ -13,7 +13,7 @@ puzzler.puzzle2_puzzle.find({ users: { $exists: false } }, { gameId: 1, users: 1
     if (!game) throw `Missing game ${p.gameId} for puzzle ${p._id}`;
     p.users = game && game.us;
     if (p.users.length != 2) throw `Invalid users for puzzle ${p._id}: ${game}`;
-    puzzler.puzzle2_puzzle.update({ _id: p._id }, { $set: { users: p.users } });
+    puzzler.puzzle2_puzzle.updateOne({ _id: p._id }, { $set: { users: p.users } });
   }
 
   const masters = p.users.filter(u => titledUsers.has(u)).length;
