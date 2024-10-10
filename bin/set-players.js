@@ -1,7 +1,7 @@
 conn = Mongo();
 lichess = conn.getDB('lichess');
 puzzler = conn.getDB('puzzler');
-supergms = import('./supergms');
+load('bin/super-gms-list.js');
 
 const titledUsers = new Set(lichess.user4.distinct('_id', { title: { $exists: 1, $ne: 'BOT' } }));
 
