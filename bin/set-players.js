@@ -1,51 +1,7 @@
 conn = Mongo();
 lichess = conn.getDB('lichess');
 puzzler = conn.getDB('puzzler');
-
-const supergms = new Set(
-  [
-    'DrNykterstein',
-    'DrDrunkenstein',
-    'DrGrekenstein',
-    'DannyTheDonkey',
-    'ManWithaVan',
-    'Bombegranate',
-    'avalongamemaster',
-    'Konevlad',
-    'alireza2003',
-    'Azerichessss',
-    'Moose959',
-    'AnishGiri',
-    'AnishOnYoutube',
-    'GMVallejo',
-    'Vladimirovich9000',
-    'EvilGenius94',
-    'BakukaDaku87',
-    'Wesley_So',
-    'STL_So',
-    'gmwesleyso1993',
-    'RealDavidNavara',
-    'Dr-BassemAmin',
-    'gmluke',
-    'howitzer14',
-    'Benefactorr',
-    'IGMGataKamsky',
-    'dalmatinac101',
-    'Vladimir201701',
-    'LiviuDieterNisipeanu',
-    'jitanu76',
-    'ArkadijNaiditsch',
-    'R-Ponomariov',
-    'athena-pallada',
-    'Chepursias',
-    'muisback',
-    'VerdeNotte',
-    'KeyzerSose',
-    'NeverEnough',
-    'Sasha',
-    'jlhammer',
-  ].map(n => n.toLowerCase())
-);
+supergms = import('./supergms');
 
 const titledUsers = new Set(lichess.user4.distinct('_id', { title: { $exists: 1, $ne: 'BOT' } }));
 
@@ -56,7 +12,7 @@ puzzler.puzzle2_puzzle.find({ users: { $exists: false } }, { gameId: 1, users: 1
     const game = lichess.game5.findOne({ _id: p.gameId });
     if (!game) throw `Missing game ${p.gameId} for puzzle ${p._id}`;
     p.users = game && game.us;
-    if (!p.users) return;
+    if (p.users.length != 2) throw `Invalid users for puzzle ${p._id}: ${game}`;
     puzzler.puzzle2_puzzle.update({ _id: p._id }, { $set: { users: p.users } });
   }
 
