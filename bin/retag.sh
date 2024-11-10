@@ -11,5 +11,5 @@ python tagger.py --zug --threads=2
 echo "Themes denormalize"
 mongo puzzler ~/lichess-sysadmin/cron/mongodb-puzzle-denormalize-themes.js
 
-echo "Paths"
+# echo "Paths"
 # mongo puzzler ~/lichess-sysadmin/cron/mongodb-puzzle-regen-paths.js

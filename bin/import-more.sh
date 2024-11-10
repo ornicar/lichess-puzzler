@@ -11,6 +11,10 @@ set -e
 
 # --------------------------------------------------------
 
+cd ~/lichess-puzzler
+echo "Copy"
+mongosh puzzler bin/copy-to-play.js
+
 echo "Games"
 cd ~/lichess-mongo-import
 pnpm run puzzle-game-all
@@ -18,10 +22,6 @@ pnpm run puzzle-game-all
 echo "Users"
 cd ~/lichess-mongo-import
 pnpm run puzzle-game-user
-
-cd ~/lichess-puzzler
-echo "Copy"
-mongosh puzzler bin/copy-to-play.js
 
 echo "Themes"
 cd ~/lichess-puzzler
