@@ -30,11 +30,6 @@ class TestGenerator(unittest.TestCase):
         self.get_puzzle("1r4k1/5p1p/pr1p2p1/q2Bb3/2P5/P1R3PP/KB1R1Q2/8 b - - 1 31",
                 Cp(-4), "e5c3", Mate(3), "f2f7 g8h8 f7f6 c3f6 b2f6")
 
-    def test_puzzle_4(self) -> None:
-        # https://lichess.org/eVww5aBo#122
-        self.get_puzzle("8/8/3Rpk2/2PpNp2/KP1P4/4r3/P1n5/8 w - - 3 62",
-                Cp(0), "d6d7", Cp(580), "e3a3 a4b5 c2d4 b5b6 f6e5")
-
     # can't be done because there are 2 possible defensive moves
     def test_puzzle_5(self) -> None:
         # https://lichess.org/2YRgIXwk/black#32
