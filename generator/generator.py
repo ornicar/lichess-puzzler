@@ -100,8 +100,6 @@ class Generator:
     def cook_advantage(self, node: ChildNode, winner: Color) -> Optional[List[NextMovePair]]:
 
         board = node.board()
-        logger.debug(f"cook_advantage, looking at fen : {board.fen()}")
-        print(f"{board.unicode()}")
 
         if board.is_repetition(2):
             logger.debug("Found repetition, canceling")
