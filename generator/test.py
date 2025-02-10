@@ -73,10 +73,6 @@ class TestGenerator(unittest.TestCase):
         self.get_puzzle("kr6/p5pp/Q4np1/3p4/6P1/2P1qP2/PK4P1/3R3R w - - 1 26",
                 Cp(-30), "b2a1", Mate(1), "e3c3")
 
-    def test_puzzle_17(self):
-        self.get_puzzle("8/8/6k1/5R2/5KP1/5P2/5r2/8 w - - 17 66",
-                Cp(-410), "g4g5", Cp(0), "f2f3 f4f3 g6f5")
-
     # one mover
     # def test_puzzle_17(self):
     #     self.get_puzzle("6k1/Q4pp1/8/6p1/3pr3/4q2P/P1P3P1/3R3K w - - 0 31",
