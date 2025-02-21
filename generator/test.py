@@ -1,12 +1,14 @@
 import unittest
 import logging
 import chess
-from model import Puzzle
+from model import Puzzle, NextMovePair, EngineMove, TbPair
 from generator import logger
 from server import Server
+from tb import TbChecker, TB_API
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
 from chess import Move, Color, Board, WHITE, BLACK
 from chess.pgn import Game, GameNode
+from vcr.unittest import VCRTestCase # type: ignore
 from typing import List, Optional, Tuple, Literal, Union
 
 from generator import Generator, Server, make_engine
@@ -139,15 +141,21 @@ class TestGenerator(unittest.TestCase):
     def test_not_puzzle_17(self) -> None:
         with open("test_pgn_3fold_uDMCM.pgn") as pgn:
             game = chess.pgn.read_game(pgn)
-            puzzle = self.gen.analyze_game(game, tier=10)
+            puzzle = self.gen.analyze_game(game, tier=10) # type: ignore
             self.assertEqual(puzzle, None)
+
+    def test_not_puzzle_tb_1(self) -> None:
+        # Adapted from
+        # sU950,5K2/8/7p/1p4P1/7P/k7/8/8 b - - 0 48,b5b4 g5h6 b4b3 h6h7 b3b2 h7h8q b2b1q h8c3 a3a4 c3c6,2255,83,90,81,advancedPawn crushing endgame pawnEndgame promotion veryLong,https://lichess.org/thNXB2dD/black#96
+        # when not using the tb, the generated puzzle at the time was one move too long, because `c3c6` is not the only winning move
+        self.get_puzzle("5K2/8/7p/1p4P1/7P/k7/8/8 b - - 0 48", Cp(0), "b5b4", Cp(800), "g5h6 b4b3 h6h7 b3b2 h7h8q b2b1q h8c3 a3a4")
 
     def get_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
         board = Board(fen)
         game = Game.from_board(board)
         node = game.add_main_variation(Move.from_uci(move))
         current_eval = PovScore(current_score, not board.turn)
-        result = self.gen.analyze_position(node, prev_score, current_eval, tier=10)
+        result = self.gen.analyze_position(node, prev_score, current_eval, tier=10) # type: ignore
         self.assert_is_puzzle_with_moves(result, [Move.from_uci(x) for x in moves.split()])
 
 
@@ -156,7 +164,7 @@ class TestGenerator(unittest.TestCase):
         game = Game.from_board(board)
         node = game.add_main_variation(Move.from_uci(move))
         current_eval = PovScore(current_score, not board.turn)
-        result = self.gen.analyze_position( node, prev_score, current_eval, tier=10)
+        result = self.gen.analyze_position( node, prev_score, current_eval, tier=10) # type: ignore
         self.assertIsInstance(result, Score)
 
 
@@ -168,6 +176,44 @@ class TestGenerator(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.engine.close()
+
+class TestTbChecker(VCRTestCase):
+
+    def test_not_applicable_too_many_pieces(self) -> None:
+        checker = TbChecker(logger)
+        node = chess.pgn.Game()
+        tb_pair = checker.get_only_winning_move(node, WHITE, looking_for_mate=False)
+        self.assertIsNone(tb_pair)
+
+    def test_not_applicable_mate_puzzle(self) -> None:
+        checker = TbChecker(logger)
+        fen = "4k3/8/8/8/8/8/3PPPPP/4K3 w - - 0 1"
+        node = chess.pgn.Game.from_board(Board(fen=fen))
+        tb_pair = checker.get_only_winning_move(node, WHITE, looking_for_mate=True)
+        self.assertIsNone(tb_pair)
+
+    def test_multiple_winning_moves(self) -> None:
+        checker = TbChecker(logger)
+        fen = "4k3/8/8/8/8/8/3PPPPP/4K3 w - - 0 1"
+        node = chess.pgn.Game.from_board(Board(fen=fen))
+        tb_pair = checker.get_only_winning_move(node, WHITE, looking_for_mate=False)
+        #pair = NextMovePair(node, WHITE, EngineMove(Move.from_uci("e2e4"), Cp(0)), None)
+        self.assertFalse(tb_pair.only_winning_move)
+
+    def test_correct_best_move(self) -> None:
+        """The position allow for only one good move, but it is not chosen by the engine for some reason"""
+        checker = TbChecker(logger)
+        fen = "5K2/8/7p/6P1/1p5P/k7/8/8 w - - 0 49"
+        node = chess.pgn.Game.from_board(Board(fen=fen))
+        tb_pair = checker.get_only_winning_move(node, WHITE, looking_for_mate=False)
+        expected = TbPair(
+                    node=node, 
+                    winner=WHITE,
+                    best=EngineMove(Move.from_uci("g5h6"), Cp(999999998)),
+                    second=EngineMove(move=Move.from_uci('h4h5'), score=Cp(0)),
+                    only_winning_move=True
+                    )
+        self.assertEqual(tb_pair, expected)
 
 
 if __name__ == '__main__':
