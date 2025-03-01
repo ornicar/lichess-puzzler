@@ -1,11 +1,13 @@
 import unittest
 import logging
+import zlib
 import chess
 from model import Puzzle, NextMovePair, EngineMove, TbPair
+from pathlib import Path
 from generator import logger
 from server import Server
 from tb import TbChecker, TB_API
-from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
+from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore, InfoDict
 from chess import Move, Color, Board, WHITE, BLACK
 from chess.pgn import Game, GameNode
 from vcr.unittest import VCRTestCase # type: ignore
@@ -13,11 +15,31 @@ from typing import List, Optional, Tuple, Literal, Union
 
 from generator import Generator, Server, make_engine
 
+class CachedEngine(SimpleEngine):
+
+    def analyse(self, board: Board, multipv: int, limit: chess.engine.Limit) -> Union[List[InfoDict], InfoDict]:
+        checksum_arg = f"{board.fen()} {multipv} {limit}".encode()
+        checksum = zlib.adler32(checksum_arg)
+        # named after cassettes in VCR
+        diskette_dir = Path("diskettes")
+        diskette_dir.mkdir(exist_ok=True)
+        path = diskette_dir / f"{checksum}.py"
+        print(f"checksum of args {checksum_arg}, is {checksum}")
+        if path.exists():
+            with open(path) as f:
+                return eval(f.read())
+        res = super().analyse(board=board,multipv=multipv,limit=limit)
+        with open(path, "w") as f:
+            f.write(f"#{checksum_arg}\n")
+            f.write(str(res))
+        return res
+
 class TestGenerator(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.engine = make_engine("stockfish", 6) # don't use more than 6 threads! it fails at finding mates
+        cls.engine = CachedEngine.popen_uci("stockfish")
+        cls.engine.configure({'Threads': 6}) # don't use more than 6 threads! it fails at finding mates
         cls.server = Server(logger, "", "", 0)
         cls.gen = Generator(cls.engine, cls.server)
         logger.setLevel(logging.DEBUG)
@@ -146,9 +168,9 @@ class TestGenerator(unittest.TestCase):
 
     def test_not_puzzle_tb_1(self) -> None:
         # Adapted from
-        # sU950,5K2/8/7p/1p4P1/7P/k7/8/8 b - - 0 48,b5b4 g5h6 b4b3 h6h7 b3b2 h7h8q b2b1q h8c3 a3a4 c3c6,2255,83,90,81,advancedPawn crushing endgame pawnEndgame promotion veryLong,https://lichess.org/thNXB2dD/black#96
-        # when not using the tb, the generated puzzle at the time was one move too long, because `c3c6` is not the only winning move
-        self.get_puzzle("5K2/8/7p/1p4P1/7P/k7/8/8 b - - 0 48", Cp(0), "b5b4", Cp(800), "g5h6 b4b3 h6h7 b3b2 h7h8q b2b1q h8c3")
+        # sewAW,8/8/5p2/3kp3/p5P1/P2K1P2/8/8 w - - 0 44,d3e3 d5c4 e3e4 c4b3 e4f5 b3a3 f5f6 e5e4,2540,83,100,96,crushing endgame master pawnEndgame veryLong,https://lichess.org/1GTYrLgF#87,
+        # when not using the tb, the generated puzzle at the time was one move too long, because `e5e4` is not the only winning move
+        self.get_puzzle("8/8/5p2/3kp3/p5P1/P2K1P2/8/8 w - - 0 44", Cp(0), "d3e3", Cp(400), "d5c4 e3e4 c4b3 e4f5 b3a3")
 
     def get_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
         board = Board(fen)
