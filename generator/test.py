@@ -148,7 +148,7 @@ class TestGenerator(unittest.TestCase):
         # Adapted from
         # sU950,5K2/8/7p/1p4P1/7P/k7/8/8 b - - 0 48,b5b4 g5h6 b4b3 h6h7 b3b2 h7h8q b2b1q h8c3 a3a4 c3c6,2255,83,90,81,advancedPawn crushing endgame pawnEndgame promotion veryLong,https://lichess.org/thNXB2dD/black#96
         # when not using the tb, the generated puzzle at the time was one move too long, because `c3c6` is not the only winning move
-        self.get_puzzle("5K2/8/7p/1p4P1/7P/k7/8/8 b - - 0 48", Cp(0), "b5b4", Cp(800), "g5h6 b4b3 h6h7 b3b2 h7h8q b2b1q h8c3 a3a4")
+        self.get_puzzle("5K2/8/7p/1p4P1/7P/k7/8/8 b - - 0 48", Cp(0), "b5b4", Cp(800), "g5h6 b4b3 h6h7 b3b2 h7h8q b2b1q h8c3")
 
     def get_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
         board = Board(fen)
@@ -212,6 +212,22 @@ class TestTbChecker(VCRTestCase):
                     node=node, 
                     winner=WHITE,
                     best=EngineMove(Move.from_uci("g5h6"), Cp(999999998)),
+                    second=EngineMove(move=Move.from_uci('h4h5'), score=Cp(0)),
+                    only_winning_move=True
+                    )
+        self.assertEqual(tb_pair, expected)
+
+
+    def test_correct_best_move_promotion(self) -> None:
+        """The position allow for only one good promotion (Queen), but it is not chosen by the engine for some reason"""
+        checker = TbChecker(logger)
+        fen = "5K2/7P/8/8/7P/k7/1p6/8 w - - 0 51"
+        node = chess.pgn.Game.from_board(Board(fen=fen))
+        tb_pair = checker.get_only_winning_move(node, WHITE, looking_for_mate=False)
+        expected = TbPair(
+                    node=node, 
+                    winner=WHITE,
+                    best=EngineMove(Move.from_uci("h7h8q"), Cp(999999998)),
                     second=EngineMove(move=Move.from_uci('h4h5'), score=Cp(0)),
                     only_winning_move=True
                     )

@@ -1,4 +1,6 @@
+import datetime
 import logging
+import time
 
 import chess
 import requests
@@ -33,6 +35,17 @@ class TbChecker:
         self.session.mount("http://", ADAPTER)
         self.session.mount("https://", ADAPTER)
         self.log = log
+        self.last_req: Optional[datetime.datetime] = None
+
+    def _probe(self, fen: str) -> Dict[str, Any]:
+        if self.last_req is not None:
+            wait = (self.last_req + datetime.timedelta(milliseconds=550) - datetime.datetime.now()).total_seconds()
+            if wait > 0:
+                time.sleep(wait)
+        resp = self.session.get(TB_API.format(fen),timeout=5).json()
+        # conservative to take last_req after the end of the request
+        self.last_req = datetime.datetime.now()
+        return resp
 
     # `*` is used to force kwarg only for `looking_for_mate`
     def get_only_winning_move(self, node: GameNode, winner: Color, *,looking_for_mate: bool) -> Optional[TbPair]:
@@ -52,7 +65,7 @@ class TbChecker:
             return None
         fen = board.fen()
         try:
-            rep = self.session.get(TB_API.format(fen),timeout=5).json()
+            rep = self._probe(fen)
         except requests.exceptions.RequestException as e:
             self.log.warning(f"req error while checking tb for fen {fen}: {e}")
             return None
@@ -71,6 +84,7 @@ class TbChecker:
             second_winning = moves[1]["category"] in ["loss", "maybe-loss"]
             second = to_engine_move(moves[1], turn=not board.turn, winner=winner)
         only_winning_move = rep["category"] == "win" and not second_winning
+        self.log.debug(f"tb check for {fen}, best move: {best}, second move: {second}, only winning move: {only_winning_move}")
         return TbPair(node=node, winner=winner, best=best, second=second,only_winning_move=only_winning_move)
 
 def to_engine_move(move: Dict[str, Any], *,turn: Color, winner: Color) -> EngineMove:
