@@ -52,7 +52,7 @@ class TbChecker:
             return None
         fen = board.fen()
         try:
-            rep = self.session.get(TB_API.format(fen)).json()
+            rep = self.session.get(TB_API.format(fen),timeout=5).json()
         except requests.exceptions.RequestException as e:
             self.log.warning(f"req error while checking tb for fen {fen}: {e}")
             return None
