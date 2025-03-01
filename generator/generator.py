@@ -7,7 +7,8 @@ import copy
 import sys
 import util
 import zstandard
-from model import Puzzle, NextMovePair
+from model import Puzzle, NextMovePair, TbPair
+from tb import TbChecker
 from io import StringIO
 from chess import Move, Color
 from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
@@ -16,7 +17,7 @@ from typing import List, Optional, Union, Set
 from util import get_next_move_pair, material_count, material_diff, is_up_in_material, maximum_castling_rights, win_chances, count_mates
 from server import Server
 
-version = 49
+version = 50
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M')
@@ -30,6 +31,7 @@ class Generator:
     def __init__(self, engine: SimpleEngine, server: Server):
         self.engine = engine
         self.server = server
+        self.tb     = TbChecker(logger)
 
     def is_valid_mate_in_one(self, pair: NextMovePair) -> bool:
         if pair.best.score != Mate(1):
@@ -53,12 +55,13 @@ class Generator:
     def is_valid_attack(self, pair: NextMovePair) -> bool:
         return (
             pair.second is None or
+            (isinstance(pair, TbPair) and pair.only_winning_move) or
             self.is_valid_mate_in_one(pair) or
             win_chances(pair.best.score) > win_chances(pair.second.score) + 0.7
         )
 
-    def get_next_pair(self, node: ChildNode, winner: Color) -> Optional[NextMovePair]:
-        pair = get_next_move_pair(self.engine, node, winner, pair_limit)
+    def get_next_pair(self, node: ChildNode, winner: Color, looking_for_mate: bool) -> Optional[NextMovePair]:
+        pair = self.tb.get_only_winning_move(node, winner, looking_for_mate=looking_for_mate) or get_next_move_pair(self.engine, node, winner, pair_limit)
         if node.board().turn == winner and not self.is_valid_attack(pair):
             logger.debug("No valid attack {}".format(pair))
             return None
@@ -76,7 +79,7 @@ class Generator:
             return []
 
         if board.turn == winner:
-            pair = self.get_next_pair(node, winner)
+            pair = self.get_next_pair(node, winner,looking_for_mate=True)
             if not pair:
                 return None
             if pair.best.score < mate_soon:
@@ -105,7 +108,7 @@ class Generator:
             logger.debug("Found repetition, canceling")
             return None
 
-        pair = self.get_next_pair(node, winner)
+        pair = self.get_next_pair(node, winner,looking_for_mate=False)
         if not pair:
             return []
         if pair.best.score < Cp(200):

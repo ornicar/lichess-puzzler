@@ -56,19 +56,18 @@ class TbChecker:
         except requests.exceptions.RequestException as e:
             self.log.warning(f"req error while checking tb for fen {fen}: {e}")
             return None
-        # if rep["category"] != "win":
-        #     self.log.debug(f"TB position {fen} is not winning")
-        #     return TbResult(None)
         # The API return results in descending order (best move firsts)
         # So only checking for the first two moves should be enough to know 
         # if there are more than one winning move.
         moves = rep.get("moves", [])
         if not moves:
+            # No legal moves
             return None
         best = to_engine_move(moves[0], turn=not board.turn, winner=winner)
         second = None
         second_winning = False
         if len(moves) > 1:
+            # from opponent's perspective
             second_winning = moves[1]["category"] in ["loss", "maybe-loss"]
             second = to_engine_move(moves[1], turn=not board.turn, winner=winner)
         only_winning_move = rep["category"] == "win" and not second_winning

@@ -197,7 +197,9 @@ class TestTbChecker(VCRTestCase):
         fen = "4k3/8/8/8/8/8/3PPPPP/4K3 w - - 0 1"
         node = chess.pgn.Game.from_board(Board(fen=fen))
         tb_pair = checker.get_only_winning_move(node, WHITE, looking_for_mate=False)
-        #pair = NextMovePair(node, WHITE, EngineMove(Move.from_uci("e2e4"), Cp(0)), None)
+        self.assertIsInstance(tb_pair, TbPair)
+        # for mypy
+        assert isinstance(tb_pair, TbPair)
         self.assertFalse(tb_pair.only_winning_move)
 
     def test_correct_best_move(self) -> None:
