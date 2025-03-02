@@ -17,13 +17,20 @@ from generator import Generator, Server, make_engine
 
 class CachedEngine(SimpleEngine):
 
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.used_checksums = set()
+        # named after cassettes in VCR
+        self.diskette_dir = Path("diskettes")
+        self.diskette_dir.mkdir(exist_ok=True)
+
+    # a more general implementation should use the `inspect` module and `Signature.bind`
     def analyse(self, board: Board, multipv: int, limit: chess.engine.Limit) -> Union[List[InfoDict], InfoDict]:
         checksum_arg = f"{board.fen()} {multipv} {limit}".encode()
         checksum = zlib.adler32(checksum_arg)
-        # named after cassettes in VCR
-        diskette_dir = Path("diskettes")
-        diskette_dir.mkdir(exist_ok=True)
-        path = diskette_dir / f"{checksum}.py"
+        self.used_checksums.add(checksum)
+        path = self.diskette_dir / f"{checksum}.py"
         print(f"checksum of args {checksum_arg}, is {checksum}")
         if path.exists():
             with open(path) as f:
@@ -33,6 +40,10 @@ class CachedEngine(SimpleEngine):
             f.write(f"#{checksum_arg}\n")
             f.write(str(res))
         return res
+
+    def list_unused_evals(self) -> List[int]:
+        # list all files in the diskette directory
+        return [int(x.stem) for x in self.diskette_dir.iterdir() if int(x.stem) not in self.used_checksums]
 
 class TestGenerator(unittest.TestCase):
 
@@ -197,6 +208,8 @@ class TestGenerator(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        unused_evals = cls.engine.list_unused_evals()
+        print(f"unused evals: {unused_evals}")
         cls.engine.close()
 
 class TestTbChecker(VCRTestCase):
