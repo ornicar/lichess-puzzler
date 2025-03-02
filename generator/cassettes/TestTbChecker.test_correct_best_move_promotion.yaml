@@ -1,0 +1,51 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://tablebase.lichess.ovh/standard?fen=5K2/7P/8/8/7P/k7/1p6/8%20w%20-%20-%200%2051
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAEA92VUU+DMBSF/8t97hKFTUgTX3w1MdFXY5ZaCjQWmG0Zccv+u7eNK7jIEmMyNp84
+        99BSPnp72AIvBX+rmBVAc6aMIGAsU+Kbs2ZastouO1mHUXtPNcYEU9amzXPJpcDR7hE4T4W7md0A
+        vSaw0oJLI5b7OrMV0DghkNkOaN0qRYDj5KLRH0DBrUqgatYCF3reQsslumVSpu/oG4bvBGV6+4jF
+        RuhG1gVQq1skOTXbLDqAc4anm8U3Y3j+A+5I4JqXix7LyYmhrg6YsPZI/vrTfmWaddAD5alIAtC9
+        14Hoq+NOvU9/R8oHSF5fPlIxQPL6HyClfeMVTl86kgs9HZgw9J6GUNOE3ligJ4uxxHOB3ueDY3IB
+        H4L84XyZ4l8wvQ6Z7s6XKTr64+33CXN8cJy8nvo4jbVeFB9tvZfdJ+QyZZ33CAAA
+    headers:
+      Access-Control-Allow-Headers:
+      - Accept,If-Modified-Since,Cache-Control,X-Requested-With
+      Access-Control-Allow-Methods:
+      - GET,OPTIONS
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - max-age=1209600
+      - public
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Sat, 01 Mar 2025 14:33:30 GMT
+      Expires:
+      - Sat, 15 Mar 2025 14:33:30 GMT
+      Server:
+      - nginx
+      Transfer-Encoding:
+      - chunked
+    status:
+      code: 200
+      message: OK
+version: 1

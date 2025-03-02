@@ -45,7 +45,7 @@ class CachedEngine(SimpleEngine):
         # list all files in the diskette directory
         return [int(x.stem) for x in self.diskette_dir.iterdir() if int(x.stem) not in self.used_checksums]
 
-class TestGenerator(unittest.TestCase):
+class TestGenerator(VCRTestCase):
 
     @classmethod
     def setUpClass(cls):
