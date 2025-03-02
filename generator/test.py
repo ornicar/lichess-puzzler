@@ -49,6 +49,7 @@ class TestGenerator(VCRTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.engine = CachedEngine.popen_uci("stockfish")
         cls.engine.configure({'Threads': 6}) # don't use more than 6 threads! it fails at finding mates
         cls.server = Server(logger, "", "", 0)
