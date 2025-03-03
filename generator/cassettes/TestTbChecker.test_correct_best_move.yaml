@@ -5,7 +5,7 @@ interactions:
       Accept:
       - '*/*'
       Accept-Encoding:
-      - gzip, deflate
+      - gzip, deflate, zstd
       Connection:
       - keep-alive
       User-Agent:
@@ -14,12 +14,7 @@ interactions:
     uri: http://tablebase.lichess.ovh/standard?fen=5K2/8/7p/6P1/1p5P/k7/8/8%20w%20-%20-%200%2049
   response:
     body:
-      string: !!binary |
-        H4sIAAAAAAAEA92U727CIBTF3+V+xkQXOxteYY+wLIbQCyVSugC1TuO7C8QiLlmWLItGvx0Ofy4/
-        DnAA3iLfdMwjUMG0QwLOM41XzpZZxYxfj8rkUZOne+eyqYwbhFBcYRgdlwjzdO5t/B7ogsCnRa4c
-        rqd24zugZtCaQOPHSfIwXfb2CyjEugS6fouh1PsBBq6CK6v2NdiOhU2B3KXGHm2vjATq7RBQbg03
-        e/lGF42EN1vOf6JLJ3gkE1a7bKuMleSdocLGrxJLIL8k1lg2woVJVrKIKsrHZxI1rnJOb0lnqPNL
-        uvX1+4ekRC0KqqSfggrrIquon4JKFlklfW+qv/7ul69C1LKIKumHhfo4ngCoi/Y7YAcAAA==
+      string: '{"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":null,"dtw":null,"category":"win","moves":[{"uci":"g5h6","san":"gxh6","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":-40,"dtw":null,"category":"loss"},{"uci":"h4h5","san":"h5","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":null,"dtw":null,"category":"draw"},{"uci":"g5g6","san":"g6","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":null,"dtw":null,"category":"draw"},{"uci":"f8e7","san":"Ke7","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":null,"dtw":null,"category":"draw"},{"uci":"f8f7","san":"Kf7","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":null,"dtw":null,"category":"draw"},{"uci":"f8e8","san":"Ke8","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":null,"dtw":null,"category":"draw"},{"uci":"f8g7","san":"Kg7","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":null,"dtw":null,"category":"win"},{"uci":"f8g8","san":"Kg8","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":null,"dtw":null,"category":"win"}]}'
     headers:
       Access-Control-Allow-Headers:
       - Accept,If-Modified-Since,Cache-Control,X-Requested-With
@@ -37,9 +32,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Sat, 01 Mar 2025 14:19:33 GMT
+      - Mon, 03 Mar 2025 14:50:12 GMT
       Expires:
-      - Sat, 15 Mar 2025 14:19:33 GMT
+      - Mon, 17 Mar 2025 14:50:12 GMT
       Server:
       - nginx
       Transfer-Encoding:

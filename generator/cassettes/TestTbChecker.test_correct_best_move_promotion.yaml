@@ -5,7 +5,7 @@ interactions:
       Accept:
       - '*/*'
       Accept-Encoding:
-      - gzip, deflate
+      - gzip, deflate, zstd
       Connection:
       - keep-alive
       User-Agent:
@@ -14,13 +14,7 @@ interactions:
     uri: http://tablebase.lichess.ovh/standard?fen=5K2/7P/8/8/7P/k7/1p6/8%20w%20-%20-%200%2051
   response:
     body:
-      string: !!binary |
-        H4sIAAAAAAAEA92VUU+DMBSF/8t97hKFTUgTX3w1MdFXY5ZaCjQWmG0Zccv+u7eNK7jIEmMyNp84
-        99BSPnp72AIvBX+rmBVAc6aMIGAsU+Kbs2ZastouO1mHUXtPNcYEU9amzXPJpcDR7hE4T4W7md0A
-        vSaw0oJLI5b7OrMV0DghkNkOaN0qRYDj5KLRH0DBrUqgatYCF3reQsslumVSpu/oG4bvBGV6+4jF
-        RuhG1gVQq1skOTXbLDqAc4anm8U3Y3j+A+5I4JqXix7LyYmhrg6YsPZI/vrTfmWaddAD5alIAtC9
-        14Hoq+NOvU9/R8oHSF5fPlIxQPL6HyClfeMVTl86kgs9HZgw9J6GUNOE3ligJ4uxxHOB3ueDY3IB
-        H4L84XyZ4l8wvQ6Z7s6XKTr64+33CXN8cJy8nvo4jbVeFB9tvZfdJ+QyZZ33CAAA
+      string: '{"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":37,"dtw":null,"category":"win","moves":[{"uci":"h7h8q","san":"h8=Q","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":-36,"dtw":null,"category":"loss"},{"uci":"h4h5","san":"h5","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":0,"dtw":null,"category":"draw"},{"uci":"f8e7","san":"Ke7","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":0,"dtw":null,"category":"draw"},{"uci":"f8f7","san":"Kf7","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":0,"dtw":null,"category":"draw"},{"uci":"f8g7","san":"Kg7","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":0,"dtw":null,"category":"draw"},{"uci":"f8g8","san":"Kg8","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":0,"dtw":null,"category":"draw"},{"uci":"h7h8r","san":"h8=R","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":75,"dtw":null,"category":"win"},{"uci":"h7h8n","san":"h8=N","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":35,"dtw":null,"category":"win"},{"uci":"h7h8b","san":"h8=B","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":27,"dtw":null,"category":"win"},{"uci":"f8e8","san":"Ke8","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":23,"dtw":null,"category":"win"}]}'
     headers:
       Access-Control-Allow-Headers:
       - Accept,If-Modified-Since,Cache-Control,X-Requested-With
@@ -38,9 +32,9 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Sat, 01 Mar 2025 14:33:30 GMT
+      - Mon, 03 Mar 2025 14:50:18 GMT
       Expires:
-      - Sat, 15 Mar 2025 14:33:30 GMT
+      - Mon, 17 Mar 2025 14:50:18 GMT
       Server:
       - nginx
       Transfer-Encoding:
