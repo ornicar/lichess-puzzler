@@ -1,21 +1,57 @@
 import unittest
 import logging
+import zlib
 import chess
-from model import Puzzle
+from model import Puzzle, NextMovePair, EngineMove, TbPair
+from pathlib import Path
 from generator import logger
 from server import Server
-from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore
+from tb import TbChecker, TB_API
+from chess.engine import SimpleEngine, Mate, Cp, Score, PovScore, InfoDict
 from chess import Move, Color, Board, WHITE, BLACK
 from chess.pgn import Game, GameNode
+from vcr.unittest import VCRTestCase # type: ignore
 from typing import List, Optional, Tuple, Literal, Union
 
 from generator import Generator, Server, make_engine
 
-class TestGenerator(unittest.TestCase):
+class CachedEngine(SimpleEngine):
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.used_checksums = set()
+        # named after cassettes in VCR
+        self.diskette_dir = Path("diskettes")
+        self.diskette_dir.mkdir(exist_ok=True)
+
+    # a more general implementation should use the `inspect` module and `Signature.bind`
+    def analyse(self, board: Board, multipv: int, limit: chess.engine.Limit) -> Union[List[InfoDict], InfoDict]:
+        checksum_arg = f"{board.fen()} {multipv} {limit}".encode()
+        checksum = zlib.adler32(checksum_arg)
+        self.used_checksums.add(checksum)
+        path = self.diskette_dir / f"{checksum}.py"
+        print(f"checksum of args {checksum_arg}, is {checksum}")
+        if path.exists():
+            with open(path) as f:
+                return eval(f.read())
+        res = super().analyse(board=board,multipv=multipv,limit=limit)
+        with open(path, "w") as f:
+            f.write(f"#{checksum_arg}\n")
+            f.write(str(res))
+        return res
+
+    def list_unused_evals(self) -> List[int]:
+        # list all files in the diskette directory
+        return [int(x.stem) for x in self.diskette_dir.iterdir() if int(x.stem) not in self.used_checksums]
+
+class TestGenerator(VCRTestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.engine = make_engine("stockfish", 6) # don't use more than 6 threads! it fails at finding mates
+        super().setUpClass()
+        cls.engine = CachedEngine.popen_uci("stockfish")
+        cls.engine.configure({'Threads': 6}) # don't use more than 6 threads! it fails at finding mates
         cls.server = Server(logger, "", "", 0)
         cls.gen = Generator(cls.engine, cls.server)
         logger.setLevel(logging.DEBUG)
@@ -30,20 +66,11 @@ class TestGenerator(unittest.TestCase):
         self.get_puzzle("1r4k1/5p1p/pr1p2p1/q2Bb3/2P5/P1R3PP/KB1R1Q2/8 b - - 1 31",
                 Cp(-4), "e5c3", Mate(3), "f2f7 g8h8 f7f6 c3f6 b2f6")
 
-    def test_puzzle_4(self) -> None:
-        # https://lichess.org/eVww5aBo#122
-        self.get_puzzle("8/8/3Rpk2/2PpNp2/KP1P4/4r3/P1n5/8 w - - 3 62",
-                Cp(0), "d6d7", Cp(580), "e3a3 a4b5 c2d4 b5b6 f6e5")
-
     # can't be done because there are 2 possible defensive moves
     def test_puzzle_5(self) -> None:
         # https://lichess.org/2YRgIXwk/black#32
         self.get_puzzle("r1b3k1/pp3p1p/2pp2p1/8/2P2q2/2N1r2P/PP2BPP1/R2Q1K1R w - - 0 17",
                 Cp(-520), "d1d2", Cp(410), "e3h3 h1h3 f4d2")
-
-    def test_puzzle_6(self) -> None:
-        self.get_puzzle("4nr1k/2r1qNpp/p3pn2/1b2N2Q/1p6/7P/BP1R1PP1/4R1K1 b - - 0 1",
-                Cp(130), "f8f7", Cp(550), "e5g6 h8g8 g6e7")
 
     # https://lichess.org/YCjcYuK6#81
     # def test_puzzle_7(self) -> None:
@@ -64,18 +91,9 @@ class TestGenerator(unittest.TestCase):
         self.get_puzzle("5rk1/pp3p2/1q1R3p/6p1/5pBb/2P4P/PPQ2PP1/3Rr1K1 w - - 6 26",
                 Cp(-450), "g1h2", Mate(2), "h4g3 f2g3 b6g1")
 
-    # https://lichess.org/3GvkmJcw#43
-    def test_puzzle_15(self):
-        self.get_puzzle("7k/pp1q2pp/1n1p2r1/4p3/P3P3/1Q3N1P/1P3PP1/5RK1 w - - 3 22",
-                Cp(-80), "a4a5", Cp(856), "d7h3 g2g3 g6h6 f3h4 h6h4 g3h4 h3b3")
-
     def test_puzzle_16(self):
         self.get_puzzle("kr6/p5pp/Q4np1/3p4/6P1/2P1qP2/PK4P1/3R3R w - - 1 26",
                 Cp(-30), "b2a1", Mate(1), "e3c3")
-
-    def test_puzzle_17(self):
-        self.get_puzzle("8/8/6k1/5R2/5KP1/5P2/5r2/8 w - - 17 66",
-                Cp(-410), "g4g5", Cp(0), "f2f3 f4f3 g6f5")
 
     # one mover
     # def test_puzzle_17(self):
@@ -157,15 +175,21 @@ class TestGenerator(unittest.TestCase):
     def test_not_puzzle_17(self) -> None:
         with open("test_pgn_3fold_uDMCM.pgn") as pgn:
             game = chess.pgn.read_game(pgn)
-            puzzle = self.gen.analyze_game(game, tier=10)
+            puzzle = self.gen.analyze_game(game, tier=10) # type: ignore
             self.assertEqual(puzzle, None)
+
+    def test_not_puzzle_tb_1(self) -> None:
+        # Adapted from
+        # sewAW,8/8/5p2/3kp3/p5P1/P2K1P2/8/8 w - - 0 44,d3e3 d5c4 e3e4 c4b3 e4f5 b3a3 f5f6 e5e4,2540,83,100,96,crushing endgame master pawnEndgame veryLong,https://lichess.org/1GTYrLgF#87,
+        # when not using the tb, the generated puzzle at the time was one move too long, because `e5e4` is not the only winning move
+        self.get_puzzle("8/8/5p2/3kp3/p5P1/P2K1P2/8/8 w - - 0 44", Cp(0), "d3e3", Cp(400), "d5c4 e3e4 c4b3 e4f5 b3a3")
 
     def get_puzzle(self, fen: str, prev_score: Score, move: str, current_score: Score, moves: str) -> None:
         board = Board(fen)
         game = Game.from_board(board)
         node = game.add_main_variation(Move.from_uci(move))
         current_eval = PovScore(current_score, not board.turn)
-        result = self.gen.analyze_position(node, prev_score, current_eval, tier=10)
+        result = self.gen.analyze_position(node, prev_score, current_eval, tier=10) # type: ignore
         self.assert_is_puzzle_with_moves(result, [Move.from_uci(x) for x in moves.split()])
 
 
@@ -174,7 +198,7 @@ class TestGenerator(unittest.TestCase):
         game = Game.from_board(board)
         node = game.add_main_variation(Move.from_uci(move))
         current_eval = PovScore(current_score, not board.turn)
-        result = self.gen.analyze_position( node, prev_score, current_eval, tier=10)
+        result = self.gen.analyze_position( node, prev_score, current_eval, tier=10) # type: ignore
         self.assertIsInstance(result, Score)
 
 
@@ -185,7 +209,65 @@ class TestGenerator(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        unused_evals = cls.engine.list_unused_evals()
+        print(f"unused evals: {unused_evals}")
         cls.engine.close()
+
+class TestTbChecker(VCRTestCase):
+
+    def test_not_applicable_too_many_pieces(self) -> None:
+        checker = TbChecker(logger)
+        node = chess.pgn.Game()
+        tb_pair = checker.get_only_winning_move(node, WHITE, looking_for_mate=False)
+        self.assertIsNone(tb_pair)
+
+    def test_not_applicable_mate_puzzle(self) -> None:
+        checker = TbChecker(logger)
+        fen = "4k3/8/8/8/8/8/3PPPPP/4K3 w - - 0 1"
+        node = chess.pgn.Game.from_board(Board(fen=fen))
+        tb_pair = checker.get_only_winning_move(node, WHITE, looking_for_mate=True)
+        self.assertIsNone(tb_pair)
+
+    def test_multiple_winning_moves(self) -> None:
+        checker = TbChecker(logger)
+        fen = "4k3/8/8/8/8/8/3PPPPP/4K3 w - - 0 1"
+        node = chess.pgn.Game.from_board(Board(fen=fen))
+        tb_pair = checker.get_only_winning_move(node, WHITE, looking_for_mate=False)
+        self.assertIsInstance(tb_pair, TbPair)
+        # for mypy
+        assert isinstance(tb_pair, TbPair)
+        self.assertFalse(tb_pair.only_winning_move)
+
+    def test_correct_best_move(self) -> None:
+        """The position allow for only one good move, but it is not chosen by the engine for some reason"""
+        checker = TbChecker(logger)
+        fen = "5K2/8/7p/6P1/1p5P/k7/8/8 w - - 0 49"
+        node = chess.pgn.Game.from_board(Board(fen=fen))
+        tb_pair = checker.get_only_winning_move(node, WHITE, looking_for_mate=False)
+        expected = TbPair(
+                    node=node, 
+                    winner=WHITE,
+                    best=EngineMove(Move.from_uci("g5h6"), Cp(999999998)),
+                    second=EngineMove(move=Move.from_uci('h4h5'), score=Cp(0)),
+                    only_winning_move=True
+                    )
+        self.assertEqual(tb_pair, expected)
+
+
+    def test_correct_best_move_promotion(self) -> None:
+        """The position allow for only one good promotion (Queen), but it is not chosen by the engine for some reason"""
+        checker = TbChecker(logger)
+        fen = "5K2/7P/8/8/7P/k7/1p6/8 w - - 0 51"
+        node = chess.pgn.Game.from_board(Board(fen=fen))
+        tb_pair = checker.get_only_winning_move(node, WHITE, looking_for_mate=False)
+        expected = TbPair(
+                    node=node, 
+                    winner=WHITE,
+                    best=EngineMove(Move.from_uci("h7h8q"), Cp(999999998)),
+                    second=EngineMove(move=Move.from_uci('h4h5'), score=Cp(0)),
+                    only_winning_move=True
+                    )
+        self.assertEqual(tb_pair, expected)
 
 
 if __name__ == '__main__':

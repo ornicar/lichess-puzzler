@@ -1,0 +1,45 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://tablebase.lichess.ovh/standard?fen=5K2/8/7p/6P1/1p5P/k7/8/8%20w%20-%20-%200%2049
+  response:
+    body:
+      string: '{"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":null,"dtw":null,"category":"win","moves":[{"uci":"g5h6","san":"gxh6","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":-40,"dtw":null,"category":"loss"},{"uci":"h4h5","san":"h5","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":null,"dtw":null,"category":"draw"},{"uci":"g5g6","san":"g6","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":null,"dtw":null,"category":"draw"},{"uci":"f8e7","san":"Ke7","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":null,"dtw":null,"category":"draw"},{"uci":"f8f7","san":"Kf7","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":null,"dtw":null,"category":"draw"},{"uci":"f8e8","san":"Ke8","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":0,"precise_dtz":0,"dtm":null,"dtw":null,"category":"draw"},{"uci":"f8g7","san":"Kg7","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":null,"dtw":null,"category":"win"},{"uci":"f8g8","san":"Kg8","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":null,"dtw":null,"category":"win"}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - Accept,If-Modified-Since,Cache-Control,X-Requested-With
+      Access-Control-Allow-Methods:
+      - GET,OPTIONS
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - max-age=1209600
+      - public
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 03 Mar 2025 14:50:12 GMT
+      Expires:
+      - Mon, 17 Mar 2025 14:50:12 GMT
+      Server:
+      - nginx
+      Transfer-Encoding:
+      - chunked
+    status:
+      code: 200
+      message: OK
+version: 1
