@@ -35,6 +35,7 @@ function processBuffer(buf) {
       cp: p.cp,
       tagMe: true,
     }));
+  print(`Inserting ${missing.length}/${buf.length}`)
   if (missing.length) playColl.insertMany(missing, { ordered: false });
 }
 
