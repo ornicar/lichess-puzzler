@@ -1,0 +1,45 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://tablebase.lichess.ovh/standard?fen=4k3/8/8/8/8/8/3PPPPP/4K3%20w%20-%20-%200%201
+  response:
+    body:
+      string: '{"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":null,"dtw":null,"category":"win","moves":[{"uci":"d2d3","san":"d3","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"e2e3","san":"e3","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"f2f3","san":"f3","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"g2g3","san":"g3","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"h2h3","san":"h3","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"d2d4","san":"d4","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"e2e4","san":"e4","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"f2f4","san":"f4","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"g2g4","san":"g4","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"h2h4","san":"h4","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"e1d1","san":"Kd1","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"e1f1","san":"Kf1","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - Accept,If-Modified-Since,Cache-Control,X-Requested-With
+      Access-Control-Allow-Methods:
+      - GET,OPTIONS
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - max-age=1209600
+      - public
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 03 Mar 2025 14:50:18 GMT
+      Expires:
+      - Mon, 17 Mar 2025 14:50:18 GMT
+      Server:
+      - nginx
+      Transfer-Encoding:
+      - chunked
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -1,0 +1,45 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.32.3
+    method: GET
+    uri: http://tablebase.lichess.ovh/standard?fen=8/8/5p2/4p3/p3K1P1/k4P2/8/8%20b%20-%20-%201%2047
+  response:
+    body:
+      string: '{"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":3,"precise_dtz":null,"dtm":null,"dtw":null,"category":"win","moves":[{"uci":"a3b2","san":"Kb2","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"a3b3","san":"Kb3","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"a3b4","san":"Kb4","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-2,"precise_dtz":-2,"dtm":null,"dtw":null,"category":"loss"},{"uci":"a3a2","san":"Ka2","zeroing":false,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":-4,"precise_dtz":null,"dtm":null,"dtw":null,"category":"loss"},{"uci":"f6f5","san":"f5+","zeroing":true,"checkmate":false,"stalemate":false,"variant_win":false,"variant_loss":false,"insufficient_material":false,"dtz":1,"precise_dtz":1,"dtm":null,"dtw":null,"category":"win"}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - Accept,If-Modified-Since,Cache-Control,X-Requested-With
+      Access-Control-Allow-Methods:
+      - GET,OPTIONS
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - max-age=1209600
+      - public
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 03 Mar 2025 14:50:29 GMT
+      Expires:
+      - Mon, 17 Mar 2025 14:50:29 GMT
+      Server:
+      - nginx
+      Transfer-Encoding:
+      - chunked
+    status:
+      code: 200
+      message: OK
+version: 1
