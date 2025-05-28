@@ -11,6 +11,6 @@ mongodump --db puzzler --collection puzzle2 --out $DIR
 mongodump --db puzzler --collection puzzle2_blocklist --out $DIR
 
 echo "Sending $DIR to $TARGET"
-rsync -av $DIR $TARGET:/home/puzzler-crom-data
+rsync -av $DIR $TARGET:/home/puzzler
 
-ssh $TARGET 'cd /home/puzzler-crom-data/puzzler-dump && ./load-puzzles.sh'
+ssh $TARGET 'cd /home/puzzler/puzzler-dump && ./load-puzzles.sh'
