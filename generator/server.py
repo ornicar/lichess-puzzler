@@ -17,7 +17,7 @@ http = requests.Session()
 http.mount("https://", adapter)
 http.mount("http://", adapter)
 
-TIMEOUT = 5
+TIMEOUT = 4
 
 class Server:
 
@@ -73,7 +73,7 @@ class Server:
             print(json)
             return None
         try:
-            r = http.post("{}/puzzle?token={}".format(self.url, self.token), json=json)
+            r = http.post("{}/puzzle?token={}".format(self.url, self.token), json=json, timeout = TIMEOUT)
             self.logger.info(r.text if r.ok else "FAILURE {}".format(r.text))
         except Exception as e:
             self.logger.error("Couldn't post puzzle: {}".format(e))
