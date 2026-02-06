@@ -1,16 +1,11 @@
 #!/bin/sh
 
-TARGET=thonk-nokey
-DIR=puzzler-dump
+TARGET=mongodb://localhost:27517/puzzler
 
-echo "Dumping collections to $DIR"
-rm -rf $DIR
-mongodump --db puzzler --collection puzzle2_puzzle --out $DIR
-mongodump --db puzzler --collection puzzle2_round --out $DIR
-mongodump --db puzzler --collection puzzle2 --out $DIR
-mongodump --db puzzler --collection puzzle2_blocklist --out $DIR
+for collection in puzzle2_puzzle puzzle2_round puzzle2_blocklist; do
+  echo "Deploying $collection"
+  mongodump -d puzzler -c $collection --archive | mongorestore -d puzzler -c $collection --archive $target
+done
 
-echo "Sending $DIR to $TARGET"
-rsync -av $DIR $TARGET:/home/puzzler
-
-ssh $TARGET 'cd /home/puzzler/puzzler-dump && ./load-puzzles.sh'
+echo "Removing blocked puzzles"
+mongosh $TARGET --eval 'db.puzzle2_blocklist.find().forEach(p => db.puzzle2_puzzle.deleteOne(p))'
