@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TARGET=rubik-nokey
+TARGET=thonk-nokey
 DIR=puzzler-dump
 
 echo "Dumping collections to $DIR"

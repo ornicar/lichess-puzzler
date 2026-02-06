@@ -1,5 +1,5 @@
 #!/bin/sh
-# This script belongs on rubik:/home/puzzler/puzzler-dump/load-puzzles.sh
+# This script belongs on thonk:/home/puzzler/puzzler-dump/load-puzzles.sh
 # And is called by deploy-db.sh
 
 mongorestore mongodb://localhost:27017 --db puzzler --collection puzzle2_puzzle puzzler/puzzle2_puzzle.bson --writeConcern '{w:0}' --noIndexRestore
