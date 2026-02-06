@@ -34,3 +34,5 @@ mongosh ./bin/set-players.js
 echo "Deploy"
 cd ~/lichess-puzzler
 ./bin/deploy-db.sh
+
+echo "Done!"
