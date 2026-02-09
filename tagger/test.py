@@ -211,6 +211,16 @@ class TestTagger(unittest.TestCase):
         #promotion to queen with mate(also possible with rook)
         self.assertFalse(cook.under_promotion(make("00ueM", "2kr4/2pR4/2P1K1P1/8/8/p3n3/8/8 b - - 1 49", "a3a2 d7d8 c8d8 g6g7 a2a1q g7g8q")))
 
+    def test_collinear(self):
+        # bishop vs bishop collinear
+        self.assertTrue(cook.collinear(make("col01", "r1bq1r1k/1p2bp1n/p1n1p2Q/8/3P3B/2N5/PP2BPPP/2R2RK1 b - - 0 1", "a6a5 h4f6")))
+        # Janssen vs Sokolov, Dutch Championship 2002 (double collinear, rook vs rook then bishop vs bishop)
+        self.assertTrue(cook.collinear(make("col02", "3r2k1/1p3ppp/2p1p3/p3P2b/Pb2PP2/1QN3Pq/1P2B2P/5R1K w - - 0 23", "f1d1 d8d2 d1d2 h5f3 e2f3 h3f1")))
+        # Maroczy vs Romi, San Remo 1930 (queen vs rook collinear)
+        self.assertTrue(cook.collinear(make("col03", "2b1k2r/pp2P3/2p3RQ/3r4/5P2/7P/Pq4PK/4R3 b - - 2 40", "d5d2 h6h5")))
+        # rook blocks check on same line as opponent queen, but capture is illegal
+        self.assertFalse(cook.collinear(make("col04", "4k3/8/8/8/1r5Q/8/8/R5K1 w - - 0 1", "a1e1 b4e4")))
+
 
 class TestUtil(unittest.TestCase):
 

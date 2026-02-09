@@ -16,7 +16,7 @@ from chess import WHITE, BLACK
 from chess.pgn import ChildNode
 from model import Puzzle, TagKind
 import util
-from util import material_diff
+from util import material_diff, squares_are_collinear
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -102,6 +102,9 @@ def cook(puzzle: Puzzle) -> List[TagKind]:
 
     if skewer(puzzle):
         tags.append("skewer")
+
+    if collinear(puzzle):
+        tags.append("collinear")
 
     if self_interference(puzzle) or interference(puzzle):
         tags.append("interference")
@@ -723,6 +726,38 @@ def en_passant(puzzle: Puzzle) -> bool:
             and not node.parent.board().piece_at(node.move.to_square)
         ):
             return True
+    return False
+
+
+
+
+def collinear(puzzle: Puzzle) -> bool:
+    # 1. player moves a ray piece without capturing
+    for node in puzzle.mainline[1::2]:
+        moving_piece = util.moved_piece_type(node)
+        if moving_piece not in util.ray_piece_types:
+            continue
+        prev_board = node.parent.board()
+        if util.is_capture(node):
+            continue
+        from_sq = node.move.from_square
+        to_sq = node.move.to_square
+        for square in prev_board.attacks(from_sq):
+            piece = prev_board.piece_at(square)
+            if not piece or piece.color == puzzle.pov or piece.piece_type not in util.ray_piece_types:
+                continue
+            # 2. from, opponent piece, and destination are all on the same line
+            if not squares_are_collinear(from_sq, square, to_sq):
+                continue
+            # 3. opponent piece can also move along this line type
+            is_orthogonal = square_rank(from_sq) == square_rank(square) or square_file(from_sq) == square_file(square)
+            if is_orthogonal and piece.piece_type == BISHOP:
+                continue
+            if not is_orthogonal and piece.piece_type == ROOK:
+                continue
+            # 4. capture was legal but player chose to stay on the line
+            if chess.Move(from_sq, square) in prev_board.legal_moves:
+                return True
     return False
 
 
