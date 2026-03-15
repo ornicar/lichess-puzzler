@@ -34,8 +34,9 @@ if __name__ == "__main__":
     parser.add_argument("--engine", "-e", help="analysis engine", default="stockfish")
     args = parser.parse_args()
 
+    threads = int(args.threads)
+    
     if args.zug:
-        threads = int(args.threads)
         def cruncher(thread_id: int):
             db = pymongo.MongoClient()['puzzler']
             round_coll = db['puzzle2_round']
@@ -67,12 +68,11 @@ if __name__ == "__main__":
                     exit(1)
             engine.close()
         with Pool(processes=threads) as pool:
-            for i in range(int(args.threads)):
+            for i in range(threads):
                 Process(target=cruncher, args=(i,)).start()
         exit(0)
 
     if args.bad_mate:
-        threads = int(args.threads)
         def cruncher(thread_id: int):
             db = pymongo.MongoClient()['puzzler']
             bad_coll = db['puzzle2_bad_maybe']
@@ -98,11 +98,9 @@ if __name__ == "__main__":
                 except Exception as e:
                     logger.error(e)
         with Pool(processes=threads) as pool:
-            for i in range(int(args.threads)):
+            for i in range(threads):
                 Process(target=cruncher, args=(i,)).start()
         exit(0)
-
-    threads = int(args.threads)
 
     def cruncher(thread_id: int):
         db = pymongo.MongoClient()['puzzler']
@@ -140,8 +138,8 @@ if __name__ == "__main__":
                         }
                     }, upsert = True);
                     play_coll.update_many({"_id":id},{"$set":{"dirty":True}})
-        print(f'{thread_id}/{args.threads} done')
+        print(f'{thread_id}/{threads} done')
 
     with Pool(processes=threads) as pool:
-        for i in range(int(args.threads)):
+        for i in range(threads):
             Process(target=cruncher, args=(i,)).start()
