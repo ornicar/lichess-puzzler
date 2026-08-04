@@ -4,9 +4,9 @@ set -e
 cd ~/lichess-puzzler/tagger
 . venv/bin/activate
 echo "Themes"
-python tagger.py --threads=1
+python tagger.py
 echo "Zug"
-python tagger.py --zug --threads=2
+python tagger.py --zug
 
 echo "Themes denormalize"
 mongosh puzzler ~/lila/cron/mongodb-puzzle-denormalize-themes.js
