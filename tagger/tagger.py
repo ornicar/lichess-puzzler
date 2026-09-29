@@ -60,6 +60,8 @@ if __name__ == "__main__":
                 logger.error(e)
                 engine.close()
                 exit(1)
+        print("Zug done!")
+        engine.quit()
         exit(0)
 
     if args.bad_mate:
