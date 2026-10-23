@@ -216,26 +216,25 @@ def x_ray(puzzle: Puzzle) -> bool:
 
 def fork(puzzle: Puzzle) -> bool:
     for node in puzzle.mainline[1::2][:-1]:
-        if util.moved_piece_type(node) is not KING:
-            board = node.board()
-            if util.is_in_bad_spot(board, node.move.to_square):
+        board = node.board()
+        if util.is_in_bad_spot(board, node.move.to_square):
+            continue
+        nb = 0
+        for piece, square in util.attacked_opponent_squares(
+            board, node.move.to_square, puzzle.pov
+        ):
+            if piece.piece_type == PAWN:
                 continue
-            nb = 0
-            for piece, square in util.attacked_opponent_squares(
-                board, node.move.to_square, puzzle.pov
+            if util.king_values[piece.piece_type] > util.king_values[
+                util.moved_piece_type(node)
+            ] or (
+                util.is_hanging(board, piece, square)
+                and square
+                not in board.attackers(not puzzle.pov, node.move.to_square)
             ):
-                if piece.piece_type == PAWN:
-                    continue
-                if util.king_values[piece.piece_type] > util.king_values[
-                    util.moved_piece_type(node)
-                ] or (
-                    util.is_hanging(board, piece, square)
-                    and square
-                    not in board.attackers(not puzzle.pov, node.move.to_square)
-                ):
-                    nb += 1
-            if nb > 1:
-                return True
+                nb += 1
+        if nb > 1:
+            return True
     return False
 
 

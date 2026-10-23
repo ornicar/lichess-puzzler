@@ -67,6 +67,7 @@ class TestTagger(unittest.TestCase):
         self.assertFalse(cook.fork(make("2eqdQ", "r4rk1/pp2qppp/5p2/1b1p4/1b1Q4/2N1B3/PPP2PPP/2KR3R b - - 7 13", "b4c5 d4c5 e7c5 e3c5")))
         self.assertFalse(cook.fork(make("QNrtc", "r2qr1k1/5p1p/pn3bp1/1p6/3P2bN/1P1B2PP/PB3PQ1/R3R1K1 b - - 0 19", "f6d4 e1e8 d8e8 b2d4")))
         self.assertFalse(cook.fork(make("J72FN", "6k1/7p/3R2p1/8/5p2/P4P2/1P1N2PP/3r1nK1 w - - 0 33", "d2e4 f1d2 g1f2 d2e4")))
+        self.assertTrue(cook.fork(make("00ZSZ", "3r4/6pp/pNnNpk2/1p6/3pR3/8/PPP2PPK/8 w - - 4 32", "e4f4 f6e5 d6f7 e5f4 f7d8 c6d8")))
         # can't detect ray-defended bishop
         # self.assertTrue(cook.fork(make("q0ot7", "3q1rk1/1p1bbppp/8/1PrQP3/8/5N2/1B3PPP/R4RK1 w - - 1 26", "d5b7 c5b5 b7a6 b5b2")))
 
